@@ -6,32 +6,18 @@ import sqlg3.runtime.TypeMappers;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
 
-public final class Main extends Options {
+public final class Main {
 
-    private Path workTmpDir = null;
+    private final Options o;
 
     public Main(Options o) {
-        super(o);
-    }
-
-    private Path getTmpDir() throws IOException {
-        if (workTmpDir == null) {
-            workTmpDir = Files.createTempDirectory(tmpDir, "sqlg");
-        }
-        return workTmpDir;
-    }
-
-    private Path getTmpOutFile(InputFile src) throws IOException {
-        Path dir = ClassUtils.packageDir(getTmpDir(), src.pack);
-        Files.createDirectories(dir);
-        return dir.resolve(src.path.getFileName());
+        this.o = o;
     }
 
     private static final class Source {
@@ -104,28 +90,30 @@ public final class Main extends Options {
 
     private RowTypeInfo checkCompatibility(Class<?> rowType, List<RowTypeInfo> rowTypes) throws ParseException {
         return RowTypeInfo.checkCompatibility(rowType, rowTypes, warning -> {
-            if (warn == SQLGWarn.error) {
+            if (o.warn == SQLGWarn.error) {
                 throw new ParseException(warning);
-            } else if (warn == SQLGWarn.warn) {
-                System.err.println("WARNING: " + warning);
+            } else if (o.warn == SQLGWarn.warn) {
+                Options.getWarnLog().println("WARNING: " + warning);
             }
         });
     }
 
-    private void doWorkFiles(List<Path> files) throws Throwable {
+    public void workFiles(List<Path> in) throws Throwable {
+        o.validate();
+
         // 1. Parse & check modification time
         List<InputFile> inputs = new ArrayList<>();
         Map<String, RowTypeCutPaste> rowTypeMap = new HashMap<>();
-        boolean isAnyModified = !checkTime;
-        for (Path file : files) {
+        boolean isAnyModified = !o.checkTime;
+        for (Path file : in) {
             String fileName = file.getFileName().toString();
             String java = ".java";
             if (!fileName.toLowerCase().endsWith(java))
                 throw new IllegalArgumentException("File " + fileName + " should have " + java + " extension");
             String simpleClassName = fileName.substring(0, fileName.length() - java.length());
-            String pack = getPackage(srcRoot, file);
+            String pack = getPackage(o.srcRoot, file);
             String fullClassName = pack == null ? simpleClassName : pack + "." + simpleClassName;
-            String text = FileUtils.readFile(file, encoding);
+            String text = FileUtils.readFile(file, o.encoding);
             Parser parser = new Parser(text, simpleClassName, fullClassName, rowTypeMap);
             ParseResult parsed = parser.parseAll();
             Source src;
@@ -133,52 +121,57 @@ public final class Main extends Options {
                 src = null;
             } else {
                 String interfaceName = "I" + simpleClassName;
-                String interfacePackage = ClassUtils.resolvePackage(pack, ifacePack);
-                Path interfaceFile = ClassUtils.packageDir(destRoot, interfacePackage).resolve(interfaceName + java);
+                String interfacePackage = ClassUtils.resolvePackage(pack, o.ifacePack);
+                Path interfaceFile = ClassUtils.packageDir(o.destRoot, interfacePackage).resolve(interfaceName + java);
                 src = new Source(parsed, interfaceFile, interfaceName, interfacePackage);
-                if (checkTime) {
+                if (o.checkTime) {
                     isAnyModified |= isModified(file, interfaceFile);
                 }
             }
             inputs.add(new InputFile(file, simpleClassName, fullClassName, pack, src));
         }
-        if (!isAnyModified)
+        if (!isAnyModified || inputs.isEmpty())
             return;
-        // 2. Copy to temp
-        Path[] compFiles = new Path[inputs.size()];
-        for (int i = 0; i < inputs.size(); i++) {
-            InputFile input = inputs.get(i);
-            compFiles[i] = getTmpOutFile(input);
-            if (input.src != null) {
-                ParseResult parsed = input.src.parsed;
-                String newText = parsed.doCutPaste();
-                FileUtils.writeFile(compFiles[i], newText, encoding);
-            } else {
-                Files.copy(input.path, compFiles[i], StandardCopyOption.REPLACE_EXISTING);
-            }
-        }
+
         List<Path> srcRoots = new ArrayList<>();
-        srcRoots.add(srcRoot);
-        if (!Objects.equals(srcRoot, destRoot)) {
-            srcRoots.add(destRoot);
+        srcRoots.add(o.srcRoot);
+        if (!Objects.equals(o.srcRoot, o.destRoot)) {
+            srcRoots.add(o.destRoot);
         }
-        // 3. Run methods
-        TypeMappers mappers = new TypeMappers(); // todo: fill with custom shit!!!
-        mappers.registerDefault();
         List<RunResult> runResults = new ArrayList<>();
         Map<Class<?>, List<RowTypeInfo>> generatedIn;
         Map<Class<?>, List<RowTypeInfo>> generatedOut;
-        try (RunGlobalContext runGlobal = new RunGlobalContext(driverClass, url, user, pass, checkerClass, mapperClass)) {
+        try (RunGlobalContext runGlobal = new RunGlobalContext(o)) {
+            // 2. Copy to temp
+            Path tmpDir = runGlobal.getTmpDir();
+            Path[] compFiles = new Path[inputs.size()];
+            for (int i = 0; i < inputs.size(); i++) {
+                InputFile input = inputs.get(i);
+                Path dir = ClassUtils.packageDir(tmpDir, input.pack);
+                Files.createDirectories(dir);
+                compFiles[i] = dir.resolve(input.path.getFileName());
+                if (input.src != null) {
+                    ParseResult parsed = input.src.parsed;
+                    String newText = parsed.doCutPaste();
+                    FileUtils.writeFile(compFiles[i], newText, o.encoding);
+                } else {
+                    Files.copy(input.path, compFiles[i], StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+
+            // 3. Run methods
+            TypeMappers mappers = new TypeMappers(); // todo: fill with custom shit!!!
+            mappers.registerDefault();
             for (int i = 0; i < inputs.size(); i++) {
                 InputFile input = inputs.get(i);
                 Source src = input.src;
                 if (src == null)
                     continue;
                 ParseResult parsed = src.parsed;
-                Class<?> cls = new ClassCompiler(getTmpDir()).compileAndLoad(srcRoots, compFiles[i], input.fullClassName, encoding, classpath);
+                Class<?> cls = new ClassCompiler(tmpDir).compileAndLoad(srcRoots, compFiles[i], input.fullClassName, o.encoding, o.classpath);
                 if (GBase.class.isAssignableFrom(cls)) {
                     MethodRunner runner = new MethodRunner(
-                        runGlobal.getTest(), mappers, cls, input.simpleClassName, parsed.entries, log
+                        runGlobal.getTest(), mappers, cls, input.simpleClassName, parsed.entries, o.getLog()
                     );
                     List<RunMethod> runMethods = runner.checkEntries(parsed.bindMap, parsed.parameters);
                     runResults.add(new RunResult(input, cls, runMethods));
@@ -187,8 +180,9 @@ public final class Main extends Options {
             generatedIn = runGlobal.generatedIn;
             generatedOut = runGlobal.generatedOut;
         }
+
         // 4. Generate row types
-        String tab = getTab();
+        String tab = o.getTab();
         for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedIn.entrySet()) {
             Class<?> cls = entry.getKey();
             RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
@@ -203,8 +197,9 @@ public final class Main extends Options {
             Class<?> cls = entry.getKey();
             RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
             String body = rowType.generateRowTypeBody("", tab, cls);
-            CodeGenerator.generateImplOut(srcRoots, encoding, cls, body);
+            CodeGenerator.generateImplOut(srcRoots, o.encoding, cls, body);
         }
+
         // 5. Generate interfaces & write back sources
         for (RunResult rr : runResults) {
             InputFile input = rr.input;
@@ -213,7 +208,7 @@ public final class Main extends Options {
                 continue;
             ParseResult parsed = src.parsed;
             Files.createDirectories(src.interfaceFile.getParent());
-            try (PrintWriter pw = FileUtils.open(src.interfaceFile, encoding)) {
+            try (PrintWriter pw = FileUtils.open(src.interfaceFile, o.encoding)) {
                 CodeGenerator g = new CodeGenerator(pw, tab, src.interfaceName, src.interfacePackage);
                 g.start(rr.cls);
                 for (RunMethod runMethod : rr.methods) {
@@ -225,34 +220,7 @@ public final class Main extends Options {
                 g.finish();
             }
             String newText = parsed.doCutPaste();
-            FileUtils.writeFile(input.path, newText, encoding);
-        }
-    }
-
-    public void workFiles(List<Path> in) throws Throwable {
-        try {
-            doWorkFiles(in);
-        } finally {
-            if (cleanup && workTmpDir != null) {
-                deleteRecursively(workTmpDir);
-            }
-        }
-    }
-
-    private static void deleteRecursively(Path path) {
-        if (Files.isDirectory(path)) {
-            try (DirectoryStream<Path> children = Files.newDirectoryStream(path)) {
-                for (Path child : children) {
-                    deleteRecursively(child);
-                }
-            } catch (IOException ex) {
-                // ignore
-            }
-        }
-        try {
-            Files.deleteIfExists(path);
-        } catch (IOException ex) {
-            // ignore
+            FileUtils.writeFile(input.path, newText, o.encoding);
         }
     }
 }

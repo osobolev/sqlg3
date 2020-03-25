@@ -4,6 +4,7 @@ import sqlg3.runtime.GContext;
 import sqlg3.runtime.GTest;
 import sqlg3.runtime.TypeMappers;
 
+import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -20,10 +21,10 @@ final class MethodRunner {
     private final Class<?> cls;
     private final String displayClassName;
     private final List<MethodEntry> entries;
-    private final boolean log;
+    private final PrintStream log;
 
     MethodRunner(GTestImpl test, TypeMappers mappers, Class<?> cls, String displayClassName,
-                 List<MethodEntry> entries, boolean log) {
+                 List<MethodEntry> entries, PrintStream log) {
         this.test = test;
         this.mappers = mappers;
         this.cls = cls;
@@ -60,8 +61,8 @@ final class MethodRunner {
 
     List<RunMethod> checkEntries(Map<String, List<ParamCutPaste>> bindMap, List<String> allParameters) throws Throwable {
         Map<String, List<Method>> methodMap = Arrays.stream(cls.getDeclaredMethods()).collect(Collectors.groupingBy(Method::getName));
-        if (log) {
-            System.out.println(cls.getCanonicalName());
+        if (log != null) {
+            log.println(cls.getCanonicalName());
         }
         test.startClass(bindMap);
         List<RunMethod> entryMethods = new ArrayList<>();
@@ -86,16 +87,16 @@ final class MethodRunner {
                 toCall.setAccessible(true);
             }
             entryMethods.add(new RunMethod(entry, toCall));
-            if (log) {
-                System.out.println(toCall.getName());
+            if (log != null) {
+                log.println(toCall.getName());
             }
             test.startCall(displayEntryName);
-            Constructor<?> cons = cls.getConstructor(GContext.class);
+            Constructor<?> constructor = cls.getConstructor(GContext.class);
             try (CallContext call = new CallContext(test.connection);
                  GContext ctx = GTest.testContext(call.connection, test.checker.getSpecific(), mappers)) {
-                Object inst = cons.newInstance(ctx);
                 try {
-                    toCall.invoke(inst, getTestParams(toCall));
+                    Object instance = constructor.newInstance(ctx);
+                    toCall.invoke(instance, getTestParams(toCall));
                 } catch (InvocationTargetException itex) {
                     throw itex.getTargetException();
                 }

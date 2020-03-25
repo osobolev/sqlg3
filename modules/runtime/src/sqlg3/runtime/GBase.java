@@ -473,7 +473,7 @@ public class GBase implements ISimpleTransaction {
     ///////////////////////////////// Class statements /////////////////////////////////
 
     private <T> T fetchFromResultSet(Class<T> rowType, ResultSet rs, boolean meta) throws SQLException {
-        RowTypeFactory<T> factory = ctx.global.caches.getRowTypeFactory(rowType, meta);
+        RowTypeFactory<T> factory = ctx.global.getRowTypeFactory(rowType, meta);
         return factory.fetch(ctx.global.mappers, rs);
     }
 
@@ -529,7 +529,7 @@ public class GBase implements ISimpleTransaction {
             if (test != null) {
                 test.getRowTypeFields(rowType, rs, meta);
             } else {
-                RowTypeFactory<T> factory = ctx.global.caches.getRowTypeFactory(rowType, meta);
+                RowTypeFactory<T> factory = ctx.global.getRowTypeFactory(rowType, meta);
                 while (rs.next()) {
                     T row = factory.fetch(ctx.global.mappers, rs);
                     result.add(row);
@@ -704,7 +704,7 @@ public class GBase implements ISimpleTransaction {
                 return null;
             };
         } else {
-            RowTypeFactory<T> factory = ctx.global.caches.getRowTypeFactory(rowType, meta);
+            RowTypeFactory<T> factory = ctx.global.getRowTypeFactory(rowType, meta);
             return () -> {
                 if (rs.next()) {
                     return factory.fetch(ctx.global.mappers, rs);

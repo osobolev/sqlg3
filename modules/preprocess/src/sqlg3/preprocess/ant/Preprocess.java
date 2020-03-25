@@ -18,6 +18,8 @@ import java.util.List;
 
 /**
  * ANT task for SQLG preprocessor.
+ * todo: check if instantiated for each call!!!
+ * todo: make normal camel-case properties!!!
  */
 public class Preprocess extends Task {
 
@@ -26,73 +28,17 @@ public class Preprocess extends Task {
     private final Options options = new Options();
 
     /**
+     * Preprocessor temporary files folder
+     */
+    public void setTmpdir(File tmpdir) {
+        options.tmpDir = tmpdir.toPath();
+    }
+
+    /**
      * Sets flag to clean up temporary files.
      */
     public void setCleanup(boolean on) {
         options.cleanup = on;
-    }
-
-    /**
-     * Sets source files encoding.
-     */
-    public void setEncoding(String encoding) {
-        options.encoding = Charset.forName(encoding);
-    }
-
-    /**
-     * Sets tab size (&lt;0 for tab character).
-     */
-    public void setTabsize(int size) {
-        options.tabSize = size;
-    }
-
-    /**
-     * Sets subpackage name for row type implementation classes.
-     */
-    public void setIfacepack(String sub) {
-        options.ifacePack = sub;
-    }
-
-    /**
-     * {@link sqlg3.preprocess.Mapper} implementation class name.
-     */
-    public void setMapperclass(String cls) {
-        options.mapperClass = cls;
-    }
-
-    /**
-     * {@link sqlg3.runtime.DBSpecific} implementation class name.
-     */
-    public void setCheckerclass(String cls) {
-        options.checkerClass = cls;
-    }
-
-    /**
-     * JDBC driver class name to be used during preprocess.
-     */
-    public void setDriverclass(String driver) {
-        options.driverClass = driver;
-    }
-
-    /**
-     * JDBC URL to be used during preprocess.
-     */
-    public void setUrl(String url) {
-        options.url = url;
-    }
-
-    /**
-     * DB user name to be used during preprocess.
-     */
-    public void setUser(String user) {
-        options.user = user;
-    }
-
-    /**
-     * DB user password to be used during preprocess.
-     */
-    public void setPassword(String password) {
-        options.pass = password;
     }
 
     /**
@@ -121,6 +67,76 @@ public class Preprocess extends Task {
     }
 
     /**
+     * Destination files source root.
+     */
+    public void setDestroot(File destroot) {
+        options.destRoot = destroot.toPath();
+    }
+
+    /**
+     * Sets subpackage name for row type implementation classes.
+     */
+    public void setIfacepack(String sub) {
+        options.ifacePack = sub;
+    }
+
+    /**
+     * Sets source files encoding.
+     */
+    public void setEncoding(String encoding) {
+        options.encoding = Charset.forName(encoding);
+    }
+
+    /**
+     * Sets tab size (&lt;0 for tab character).
+     */
+    public void setTabsize(int size) {
+        options.tabSize = size;
+    }
+
+    /**
+     * JDBC driver class name to be used during preprocess.
+     */
+    public void setDriverclass(String driver) {
+        options.driverClass = driver;
+    }
+
+    /**
+     * {@link sqlg3.preprocess.Mapper} implementation class name.
+     */
+    public void setMapperclass(String cls) {
+        options.mapperClass = cls;
+    }
+
+    /**
+     * {@link sqlg3.runtime.DBSpecific} implementation class name.
+     */
+    public void setCheckerclass(String cls) {
+        options.checkerClass = cls;
+    }
+
+    /**
+     * JDBC URL to be used during preprocess.
+     */
+    public void setUrl(String url) {
+        options.url = url;
+    }
+
+    /**
+     * DB user name to be used during preprocess.
+     */
+    public void setUser(String user) {
+        options.user = user;
+    }
+
+    /**
+     * DB user password to be used during preprocess.
+     */
+    public void setPassword(String password) {
+        options.pass = password;
+    }
+
+    /**
      * Warning output mode
      */
     public void setWarn(SQLGWarn warn) {
@@ -136,13 +152,6 @@ public class Preprocess extends Task {
 
     public void setRuntimemapperclass(String cls) {
         options.runtimeMapperClass = cls;
-    }
-
-    /**
-     * Preprocessor temporary files folder
-     */
-    public void setTmpdir(File tmpdir) {
-        options.tmpDir = tmpdir.toPath();
     }
 
     /**

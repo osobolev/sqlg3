@@ -1,0 +1,77 @@
+subprojects {
+    group = 'com.github.osobolev.sqlg3'
+    version = '1.0'
+
+    apply plugin: 'java'
+    apply plugin: 'maven'
+
+    compileJava.options.encoding = 'UTF-8'
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+    sourceSets.main.java.srcDirs = ['src']
+    sourceSets.test.java.srcDirs = ['test']
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    jar {
+        manifest {
+            attributes('Implementation-Version': version)
+        }
+    }
+
+    javadoc.enabled = false
+}
+
+project(':sqlg3-core') {
+}
+
+project(':sqlg3-runtime') {
+    dependencies {
+        compile project(':sqlg3-core')
+    }
+}
+
+project(':sqlg3-preprocess') {
+
+    configurations { antlr }
+
+    dependencies {
+        compile project(':sqlg3-runtime')
+        compile 'org.antlr:antlr4-runtime:4.7.2'
+        compileOnly 'org.apache.ant:ant:1.9.5'
+
+        testCompile 'org.postgresql:postgresql:42.2.9'
+
+        antlr 'org.antlr:antlr4:4.7.2'
+    }
+
+    task lexer(type: JavaExec) {
+        onlyIf { file('grammar/Java8Lexer.g4').lastModified() > file('src/sqlg3/preprocess/lexer/Java8Lexer.java').lastModified() }
+        main = 'org.antlr.v4.Tool'
+        classpath = configurations.antlr
+        args '-package', 'sqlg3.preprocess.lexer', '-o', 'src/sqlg3/preprocess/lexer', '-encoding', 'UTF-8', 'grammar/Java8Lexer.g4'
+    }
+    compileJava.dependsOn lexer
+}
+
+project(':sqlg3-remote-common') {
+    dependencies {
+        compile project(':sqlg3-core')
+    }
+}
+
+project(':sqlg3-remote-client') {
+    dependencies {
+        compile project(':sqlg3-remote-common')
+    }
+}
+
+project(':sqlg3-remote-server') {
+    dependencies {
+        compile project(':sqlg3-remote-common')
+        compile project(':sqlg3-runtime')
+    }
+}

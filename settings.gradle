@@ -1,0 +1,14 @@
+rootProject.name = 'sqlg3'
+
+def add(name) {
+    def mname = "modules/$name"
+    include mname
+    project(":$mname").name = "sqlg3-$name"
+}
+
+add('core')
+add('preprocess')
+add('remote-client')
+add('remote-common')
+add('remote-server')
+add('runtime')

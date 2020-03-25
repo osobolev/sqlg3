@@ -156,7 +156,9 @@ public final class Main {
                 if (src == null)
                     continue;
                 ParseResult parsed = src.parsed;
-                Class<?> cls = new ClassCompiler(tmpDir).compileAndLoad(srcRoots, compFiles[i], input.fullClassName, o.encoding, o.classpath);
+                Class<?> cls = new ClassCompiler(tmpDir).compileAndLoad(
+                    srcRoots, compFiles[i], input.fullClassName, o.encoding, o.classpath, o.javacOptions
+                );
                 if (GBase.class.isAssignableFrom(cls)) {
                     MethodRunner runner = new MethodRunner(
                         runGlobal.getTest(), cls, input.simpleClassName, parsed.entries, o.getLog()

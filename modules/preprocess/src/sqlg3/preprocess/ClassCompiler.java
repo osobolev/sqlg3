@@ -24,10 +24,11 @@ final class ClassCompiler {
         this.tmpDir = tmpDir;
     }
 
-    private void compile(List<Path> srcRoots, Charset encoding, String classpath, Path file) throws ParseException {
+    private void compile(List<Path> srcRoots, Charset encoding, String classpath, List<String> javacOptions, Path file) throws ParseException {
         List<String> params = new ArrayList<>(Arrays.asList(
             "-sourcepath", srcRoots.stream().map(p -> p.toAbsolutePath().toString()).collect(Collectors.joining(File.pathSeparator))
         ));
+        params.addAll(javacOptions);
         if (classpath != null) {
             params.addAll(Arrays.asList(
                 "-classpath", classpath
@@ -65,8 +66,9 @@ final class ClassCompiler {
         }
     }
 
-    Class<?> compileAndLoad(List<Path> srcRoots, Path file, String className, Charset encoding, String classpath) throws MalformedURLException, ClassNotFoundException, ParseException {
-        compile(srcRoots, encoding, classpath, file);
+    Class<?> compileAndLoad(List<Path> srcRoots, Path file, String className, Charset encoding, String classpath,
+                            List<String> javacOptions) throws MalformedURLException, ClassNotFoundException, ParseException {
+        compile(srcRoots, encoding, classpath, javacOptions, file);
 
         StringTokenizer tok = new StringTokenizer(classpath, File.pathSeparator);
         URL[] urls = new URL[1 + tok.countTokens()];

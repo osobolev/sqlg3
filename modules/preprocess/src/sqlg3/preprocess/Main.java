@@ -3,12 +3,10 @@ package sqlg3.preprocess;
 import sqlg3.preprocess.ant.SQLGWarn;
 import sqlg3.runtime.GBase;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.FileTime;
 import java.util.*;
 
 public final class Main {
@@ -77,16 +75,6 @@ public final class Main {
         return buf.toString();
     }
 
-    private static boolean isModified(Path src, Path target) throws IOException {
-        if (Files.exists(target)) {
-            FileTime srcLastModified = Files.getLastModifiedTime(src);
-            FileTime targetLastModified = Files.getLastModifiedTime(target);
-            return srcLastModified.compareTo(targetLastModified) > 0;
-        } else {
-            return true;
-        }
-    }
-
     private RowTypeInfo checkCompatibility(Class<?> rowType, List<RowTypeInfo> rowTypes) throws ParseException {
         return RowTypeInfo.checkCompatibility(rowType, rowTypes, warning -> {
             if (o.warn == SQLGWarn.error) {
@@ -97,17 +85,23 @@ public final class Main {
         });
     }
 
-    public void workFiles(List<Path> in) throws Throwable {
+    public void workFiles(List<Path> inputFiles) throws Throwable {
+        List<Path> in;
+        if (inputFiles.isEmpty()) {
+            in = new ArrayList<>();
+            FileUtils.listAllJavaFiles(o.srcRoot, in);
+        } else {
+            in = inputFiles;
+        }
+
         // 1. Parse & check modification time
         List<InputFile> inputs = new ArrayList<>();
         Map<String, RowTypeCutPaste> rowTypeMap = new HashMap<>();
         boolean isAnyModified = !o.checkTime;
         for (Path file : in) {
-            String fileName = file.getFileName().toString();
-            String java = ".java";
-            if (!fileName.toLowerCase().endsWith(java))
-                throw new IllegalArgumentException("File " + fileName + " should have " + java + " extension");
-            String simpleClassName = fileName.substring(0, fileName.length() - java.length());
+            String simpleClassName = FileUtils.getJavaClassName(file);
+            if (simpleClassName == null)
+                throw new IllegalArgumentException("File " + file + " should have " + FileUtils.JAVA_EXTENSION + " extension");
             String pack = getPackage(o.srcRoot, file);
             String fullClassName = pack == null ? simpleClassName : pack + "." + simpleClassName;
             String text = FileUtils.readFile(file, o.encoding);
@@ -119,10 +113,10 @@ public final class Main {
             } else {
                 String interfaceName = "I" + simpleClassName;
                 String interfacePackage = ClassUtils.resolvePackage(pack, o.ifacePack);
-                Path interfaceFile = ClassUtils.packageDir(o.destRoot, interfacePackage).resolve(interfaceName + java);
+                Path interfaceFile = ClassUtils.packageDir(o.destRoot, interfacePackage).resolve(interfaceName + FileUtils.JAVA_EXTENSION);
                 src = new Source(parsed, interfaceFile, interfaceName, interfacePackage);
                 if (o.checkTime) {
-                    isAnyModified |= isModified(file, interfaceFile);
+                    isAnyModified |= FileUtils.isModified(file, interfaceFile);
                 }
             }
             inputs.add(new InputFile(file, simpleClassName, fullClassName, pack, src));

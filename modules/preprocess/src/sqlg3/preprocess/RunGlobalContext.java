@@ -4,7 +4,6 @@ import sqlg3.runtime.GTest;
 import sqlg3.runtime.RuntimeMapper;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -90,24 +89,7 @@ final class RunGlobalContext implements AutoCloseable {
             }
         }
         if (cleanup && workTmpDir != null) {
-            deleteRecursively(workTmpDir);
-        }
-    }
-
-    private static void deleteRecursively(Path path) {
-        if (Files.isDirectory(path)) {
-            try (DirectoryStream<Path> children = Files.newDirectoryStream(path)) {
-                for (Path child : children) {
-                    deleteRecursively(child);
-                }
-            } catch (IOException ex) {
-                // ignore
-            }
-        }
-        try {
-            Files.deleteIfExists(path);
-        } catch (IOException ex) {
-            // ignore
+            FileUtils.deleteRecursively(workTmpDir);
         }
     }
 }

@@ -22,7 +22,7 @@ final class GTestImpl extends GTest {
 
     final Connection connection;
     final SqlChecker checker;
-    final Mapper mapper;
+    private final Mapper mapper;
     private final Map<Class<?>, List<RowTypeInfo>> generatedIn;
     private final Map<Class<?>, List<RowTypeInfo>> generatedOut;
 

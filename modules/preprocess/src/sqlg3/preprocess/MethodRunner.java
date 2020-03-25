@@ -108,19 +108,10 @@ final class MethodRunner {
     }
 
     private static void checkParamTypes(List<String> allParameters, Map<String, Class<?>> paramTypeMap) throws ParseException {
-        Set<String> missingParams = new HashSet<>(allParameters);
+        Set<String> missingParams = new LinkedHashSet<>(allParameters);
         missingParams.removeAll(paramTypeMap.keySet());
-        if (missingParams.size() > 0) {
-            StringBuilder buf = new StringBuilder();
-            for (String param : allParameters) {
-                if (missingParams.contains(param)) {
-                    if (buf.length() > 0) {
-                        buf.append(", ");
-                    }
-                    buf.append(param);
-                }
-            }
-            throw new ParseException("Type is not known for parameters: " + buf);
+        if (!missingParams.isEmpty()) {
+            throw new ParseException("Type is not known for parameters: " + String.join(", ", missingParams));
         }
     }
 }

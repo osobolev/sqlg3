@@ -17,14 +17,15 @@ final class RowTypeInfo {
         this.meta = meta;
     }
 
-    String generateRowTypeBody(String start, String tab, Class<?> cls) {
+    // todo: special case for records
+    String generateRowTypeBody(String start, String tab, Class<?> rowType) {
         StringBuilder fields = new StringBuilder();
 
         fields.append("\n\n");
 
         StringBuilder constructor = new StringBuilder();
         constructor.append('\n');
-        constructor.append(start).append(tab).append("public " + cls.getSimpleName() + "(");
+        constructor.append(start).append(tab).append("public " + rowType.getSimpleName() + "(");
 
         StringBuilder getters = new StringBuilder();
         getters.append('\n');

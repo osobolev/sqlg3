@@ -365,7 +365,7 @@ final class Parser extends ParserBase {
         String lastComment = null;
         String lastIdent = null;
         String identBeforeParen = null;
-        Token prevDot = null;
+        Token prevNonWhitespace = null;
         while (!eof()) {
             Token t = get();
             int id = t.getType();
@@ -382,7 +382,7 @@ final class Parser extends ParserBase {
                 }
                 lastComment = null;
                 identBeforeParen = null;
-                prevDot = null;
+                prevNonWhitespace = null;
                 continue;
             } else if (id == Java8Lexer.RBRACE) {
                 next();
@@ -392,17 +392,35 @@ final class Parser extends ParserBase {
                 parseMethodBody(identBeforeParen);
                 lastComment = null;
                 identBeforeParen = null;
-                prevDot = null;
+                prevNonWhitespace = null;
                 continue;
             } else if (id == Java8Lexer.LPAREN) {
                 identBeforeParen = lastIdent;
             } else if (id == Java8Lexer.Identifier) {
-                lastIdent = t.getText();
+                String ident = t.getText();
+                if ("record".equals(ident) && prevNonWhitespace != null && prevNonWhitespace.getType() == Java8Lexer.PUBLIC) {
+                    next();
+                    skipSpaces();
+                    if (!eof()) {
+                        Token name = get();
+                        if (name.getType() == Java8Lexer.Identifier) {
+                            String recordName = name.getText();
+                            Token lpar = skipTo(Java8Lexer.LPAREN);
+                            if (lpar != null && !eof()) {
+                                // todo: parse record
+                            }
+                        }
+                    }
+                    prevNonWhitespace = null;
+                    continue;
+                } else {
+                    lastIdent = ident;
+                }
             } else if (id == Java8Lexer.COMMENT) {
                 lastComment = t.getText();
             } else if (id == Java8Lexer.CLASS) {
-                next();
-                if (prevDot == null) {
+                if (prevNonWhitespace == null || prevNonWhitespace.getType() != Java8Lexer.DOT) {
+                    next();
                     skipSpaces();
                     if (!eof()) {
                         Token name = get();
@@ -414,14 +432,12 @@ final class Parser extends ParserBase {
                             }
                         }
                     }
+                    prevNonWhitespace = null;
+                    continue;
                 }
-                prevDot = null;
-                continue;
             }
-            if (id == Java8Lexer.DOT) {
-                prevDot = t;
-            } else if (!isWhitespace(id)) {
-                prevDot = null;
+            if (!isWhitespace(id)) {
+                prevNonWhitespace = t;
             }
             next();
         }

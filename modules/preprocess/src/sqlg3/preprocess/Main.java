@@ -3,7 +3,6 @@ package sqlg3.preprocess;
 import sqlg3.preprocess.ant.SQLGWarn;
 import sqlg3.runtime.GBase;
 
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -197,17 +196,17 @@ public final class Main {
                 continue;
             ParseResult parsed = src.parsed;
             Files.createDirectories(src.interfaceFile.getParent());
-            try (PrintWriter pw = FileUtils.open(src.interfaceFile, o.encoding)) {
-                CodeGenerator g = new CodeGenerator(pw, tab, src.interfaceName, src.interfacePackage);
-                g.start(rr.cls);
-                for (RunMethod runMethod : rr.methods) {
-                    MethodEntry entry = runMethod.entry;
-                    if (!entry.publish)
-                        continue;
-                    g.addMethod(runMethod.method, entry.javadoc, entry.paramNames);
-                }
-                g.finish();
+            CodeGenerator g = new CodeGenerator(tab, src.interfaceName, src.interfacePackage);
+            g.start(rr.cls);
+            for (RunMethod runMethod : rr.methods) {
+                MethodEntry entry = runMethod.entry;
+                if (!entry.publish)
+                    continue;
+                g.addMethod(runMethod.method, entry.javadoc, entry.paramNames);
             }
+            String ifaceText = g.finish();
+            FileUtils.writeFile(src.interfaceFile, ifaceText, o.encoding);
+
             String newText = parsed.doCutPaste();
             FileUtils.writeFile(input.path, newText, o.encoding);
         }

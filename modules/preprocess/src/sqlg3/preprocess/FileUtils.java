@@ -2,7 +2,6 @@ package sqlg3.preprocess;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
@@ -28,16 +27,11 @@ final class FileUtils {
         }
     }
 
-    // todo: remove this in Java 11:
     static void writeFile(Path file, String text, Charset encoding) throws IOException {
-        try (Writer wr = open(file, encoding)) {
-            wr.write(text);
+        try (Writer writer = Files.newBufferedWriter(file, encoding);
+             EolnWriter ew = new EolnWriter(writer)) {
+            ew.write(text);
         }
-    }
-
-    static PrintWriter open(Path file, Charset encoding) throws IOException {
-        Writer writer = Files.newBufferedWriter(file, encoding);
-        return new PrintWriter(new EolnWriter(writer));
     }
 
     static boolean isModified(Path src, Path target) throws IOException {

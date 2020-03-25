@@ -99,8 +99,6 @@ public final class Main {
     }
 
     public void workFiles(List<Path> in) throws Throwable {
-        o.validate();
-
         // 1. Parse & check modification time
         List<InputFile> inputs = new ArrayList<>();
         Map<String, RowTypeCutPaste> rowTypeMap = new HashMap<>();

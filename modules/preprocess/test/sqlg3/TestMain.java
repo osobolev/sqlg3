@@ -1,7 +1,7 @@
 package sqlg3;
 
 import sqlg3.preprocess.Main;
-import sqlg3.preprocess.Options;
+import sqlg3.preprocess.OptionsBuilder;
 import sqlg3.preprocess.checker.Postgres;
 
 import java.nio.file.Path;
@@ -12,7 +12,7 @@ import java.util.List;
 final class TestMain {
 
     public static void main(String[] args) throws Throwable {
-        Options o = new Options();
+        OptionsBuilder o = new OptionsBuilder();
         o.cleanup = false;
         o.checkTime = false;
         o.tmpDir = Paths.get("C:/TEMP");
@@ -31,6 +31,6 @@ final class TestMain {
         o.destRoot = Paths.get("sample/dto/src");
         List<Path> files = Collections.singletonList(o.srcRoot.resolve("danew/Example2.java"));
 
-        new Main(o).workFiles(files);
+        new Main(o.build()).workFiles(files);
     }
 }

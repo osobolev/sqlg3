@@ -1,49 +1,55 @@
 package sqlg3.preprocess;
 
 import sqlg3.preprocess.ant.SQLGWarn;
-import sqlg3.preprocess.checker.Generic;
 
 import java.io.PrintStream;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public final class Options {
 
-    public Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"));
-    public boolean cleanup = true;
-    public String classpath = null;
-    public boolean checkTime = true;
+    public final Path tmpDir;
+    public final boolean cleanup;
+    public final String classpath;
+    public final boolean checkTime;
 
-    public Path srcRoot = Paths.get(".");
+    public final Path srcRoot;
 
-    public Path destRoot;
-    public String ifacePack = ".";
+    public final Path destRoot;
+    public final String ifacePack;
 
-    public Charset encoding = StandardCharsets.UTF_8;
-    public int tabSize = 4;
+    public final Charset encoding;
+    public final int tabSize;
 
-    public String driverClass;
-    public String mapperClass = MapperImpl.class.getName();
-    public String checkerClass = Generic.class.getName();
-    public String url;
-    public String user;
-    public String pass;
-    public SQLGWarn warn = SQLGWarn.warn;
-    public boolean log = false;
-    public String runtimeMapperClass = null; // todo!!!
+    public final String driverClass;
+    public final String mapperClass;
+    public final String checkerClass;
+    public final String url;
+    public final String user;
+    public final String pass;
+    public final SQLGWarn warn;
+    public final boolean log;
+    public final String runtimeMapperClass;
 
-    void validate() throws ParseException {
-        if (driverClass == null) {
-            throw new ParseException("Property 'driverClass' not set");
-        }
-        if (url == null) {
-            throw new ParseException("Property 'url' not set");
-        }
-        if (destRoot == null) {
-            destRoot = srcRoot;
-        }
+    Options(Path tmpDir, boolean cleanup, String classpath, boolean checkTime, Path srcRoot, Path destRoot, String ifacePack, Charset encoding, int tabSize, String driverClass, String mapperClass, String checkerClass, String url, String user, String pass, SQLGWarn warn, boolean log, String runtimeMapperClass) {
+        this.tmpDir = tmpDir;
+        this.cleanup = cleanup;
+        this.classpath = classpath;
+        this.checkTime = checkTime;
+        this.srcRoot = srcRoot;
+        this.destRoot = destRoot;
+        this.ifacePack = ifacePack;
+        this.encoding = encoding;
+        this.tabSize = tabSize;
+        this.driverClass = driverClass;
+        this.mapperClass = mapperClass;
+        this.checkerClass = checkerClass;
+        this.url = url;
+        this.user = user;
+        this.pass = pass;
+        this.warn = warn;
+        this.log = log;
+        this.runtimeMapperClass = runtimeMapperClass;
     }
 
     String getTab() {

@@ -6,7 +6,7 @@ import org.apache.tools.ant.Location;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
 import sqlg3.preprocess.Main;
-import sqlg3.preprocess.Options;
+import sqlg3.preprocess.OptionsBuilder;
 import sqlg3.preprocess.ParseException;
 import sqlg3.runtime.GBase;
 
@@ -18,14 +18,12 @@ import java.util.List;
 
 /**
  * ANT task for SQLG preprocessor.
- * todo: check if instantiated for each call!!!
- * todo: make normal camel-case properties!!!
  */
 public class Preprocess extends Task {
 
     private final List<FileSet> filesets = new ArrayList<>();
 
-    private final Options options = new Options();
+    private final OptionsBuilder options = new OptionsBuilder();
 
     /**
      * Preprocessor temporary files folder
@@ -175,7 +173,7 @@ public class Preprocess extends Task {
             }
         }
         try {
-            new Main(options).workFiles(files);
+            new Main(options.build()).workFiles(files);
         } catch (ParseException ex) {
             String at = ex.at;
             if (at == null) {

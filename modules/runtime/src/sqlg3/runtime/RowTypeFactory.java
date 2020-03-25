@@ -9,5 +9,5 @@ import java.sql.SQLException;
  */
 interface RowTypeFactory<T> {
 
-    T fetch(TypeMappers mappers, ResultSet rs) throws SQLException;
+    T fetch(RuntimeMapper mappers, ResultSet rs) throws SQLException;
 }

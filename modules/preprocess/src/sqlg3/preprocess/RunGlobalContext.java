@@ -1,6 +1,7 @@
 package sqlg3.preprocess;
 
 import sqlg3.runtime.GTest;
+import sqlg3.runtime.RuntimeMapper;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -21,6 +22,7 @@ final class RunGlobalContext implements AutoCloseable {
     private final String pass;
     private final String checkerClass;
     private final String mapperClass;
+    private final String runtimeMapperClass;
     private final boolean cleanup;
     private final Path tmpDir;
 
@@ -38,6 +40,7 @@ final class RunGlobalContext implements AutoCloseable {
         this.pass = o.pass;
         this.checkerClass = o.checkerClass;
         this.mapperClass = o.mapperClass;
+        this.runtimeMapperClass = o.runtimeMapperClass;
         this.cleanup = o.cleanup;
         this.tmpDir = o.tmpDir;
     }
@@ -46,15 +49,17 @@ final class RunGlobalContext implements AutoCloseable {
         if (test == null) {
             Mapper mapper = (Mapper) Class.forName(mapperClass).newInstance();
             SqlChecker checker;
+            RuntimeMapper runtimeMapper;
             try {
                 Class.forName(driverClass);
                 checker = (SqlChecker) Class.forName(checkerClass).newInstance();
+                runtimeMapper = (RuntimeMapper) Class.forName(runtimeMapperClass).newInstance();
             } catch (ClassNotFoundException ex) {
                 throw new SQLException(ex);
             }
             Connection connection = DriverManager.getConnection(url, user, pass);
             connection.setAutoCommit(false);
-            test = new GTestImpl(connection, checker, mapper, generatedIn, generatedOut);
+            test = new GTestImpl(connection, checker, mapper, runtimeMapper, generatedIn, generatedOut);
             GTest.setTest(test);
         }
         return test;

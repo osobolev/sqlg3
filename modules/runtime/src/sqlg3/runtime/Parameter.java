@@ -84,7 +84,7 @@ public final class Parameter {
         }
     }
 
-    private TypeMapper<Object> getMapper(TypeMappers mappers) {
+    private TypeMapper<Object> getMapper(RuntimeMapper mappers) {
         return mappers.getMapper(cls);
     }
 
@@ -95,7 +95,7 @@ public final class Parameter {
      *
      * @param in values array
      */
-    static void setParameters(TypeMappers mappers, PreparedStatement st, Parameter[] in) throws SQLException {
+    static void setParameters(RuntimeMapper mappers, PreparedStatement st, Parameter[] in) throws SQLException {
         if (in == null)
             return;
         int index = 1;
@@ -115,7 +115,7 @@ public final class Parameter {
         }
     }
 
-    static void getOutParameters(TypeMappers mappers, CallableStatement cs, Parameter[] params) throws SQLException {
+    static void getOutParameters(RuntimeMapper mappers, CallableStatement cs, Parameter[] params) throws SQLException {
         if (params == null)
             return;
         int index = 1;

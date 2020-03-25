@@ -2,7 +2,6 @@ package sqlg3.preprocess;
 
 import sqlg3.preprocess.ant.SQLGWarn;
 import sqlg3.runtime.GBase;
-import sqlg3.runtime.TypeMappers;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -158,8 +157,6 @@ public final class Main {
             }
 
             // 3. Run methods
-            TypeMappers mappers = new TypeMappers(); // todo: fill with custom shit!!!
-            mappers.registerDefault();
             for (int i = 0; i < inputs.size(); i++) {
                 InputFile input = inputs.get(i);
                 Source src = input.src;
@@ -169,7 +166,7 @@ public final class Main {
                 Class<?> cls = new ClassCompiler(tmpDir).compileAndLoad(srcRoots, compFiles[i], input.fullClassName, o.encoding, o.classpath);
                 if (GBase.class.isAssignableFrom(cls)) {
                     MethodRunner runner = new MethodRunner(
-                        runGlobal.getTest(), mappers, cls, input.simpleClassName, parsed.entries, o.getLog()
+                        runGlobal.getTest(), cls, input.simpleClassName, parsed.entries, o.getLog()
                     );
                     List<RunMethod> runMethods = runner.checkEntries(parsed.bindMap, parsed.parameters);
                     runResults.add(new RunResult(input, cls, runMethods));

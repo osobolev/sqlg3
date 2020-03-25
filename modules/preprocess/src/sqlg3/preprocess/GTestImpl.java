@@ -3,6 +3,7 @@ package sqlg3.preprocess;
 import sqlg3.core.SQLGException;
 import sqlg3.runtime.GTest;
 import sqlg3.runtime.Parameter;
+import sqlg3.runtime.RuntimeMapper;
 import sqlg3.runtime.queries.QueryParser;
 
 import java.lang.reflect.Proxy;
@@ -23,14 +24,16 @@ final class GTestImpl extends GTest {
     final Connection connection;
     final SqlChecker checker;
     private final Mapper mapper;
+    final RuntimeMapper mappers;
     private final Map<Class<?>, List<RowTypeInfo>> generatedIn;
     private final Map<Class<?>, List<RowTypeInfo>> generatedOut;
 
-    GTestImpl(Connection connection, SqlChecker checker, Mapper mapper,
+    GTestImpl(Connection connection, SqlChecker checker, Mapper mapper, RuntimeMapper mappers,
               Map<Class<?>, List<RowTypeInfo>> generatedIn, Map<Class<?>, List<RowTypeInfo>> generatedOut) {
         this.connection = connection;
         this.checker = checker;
         this.mapper = mapper;
+        this.mappers = mappers;
         this.generatedIn = generatedIn;
         this.generatedOut = generatedOut;
     }
@@ -58,7 +61,7 @@ final class GTestImpl extends GTest {
 
     @Override
     public void getRowTypeFields(Class<?> rowType, ResultSet rs, boolean meta) throws SQLException {
-        List<ColumnInfo> columns = mapper.getFields(rs.getMetaData(), meta);
+        List<ColumnInfo> columns = mapper.getFields(rs.getMetaData(), meta, mappers);
         RowTypeInfo info = new RowTypeInfo(displayEntryName, columns, meta);
 
         Map<Class<?>, List<RowTypeInfo>> generated = rowType.getDeclaringClass() == null ? generatedOut : generatedIn;
@@ -66,7 +69,7 @@ final class GTestImpl extends GTest {
     }
 
     private ColumnInfo getOneColumn(ResultSet rs) throws SQLException {
-        List<ColumnInfo> columns = mapper.getFields(rs.getMetaData(), false);
+        List<ColumnInfo> columns = mapper.getFields(rs.getMetaData(), false, mappers);
         if (columns.size() != 1) {
             throw new SQLException("More than one column in result set");
         }

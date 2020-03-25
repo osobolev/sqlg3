@@ -1,5 +1,7 @@
 package sqlg3.preprocess;
 
+import sqlg3.runtime.RuntimeMapper;
+
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
@@ -30,7 +32,7 @@ public interface Mapper {
      * @param rsmd result set meta-data
      * @param meta true if extract meta-info from result set
      */
-    List<ColumnInfo> getFields(ResultSetMetaData rsmd, boolean meta) throws SQLException;
+    List<ColumnInfo> getFields(ResultSetMetaData rsmd, boolean meta, RuntimeMapper mappers) throws SQLException;
 
     /**
      * Returns type of the query parameter when actual parameter type is {@code cls}. This method is called by

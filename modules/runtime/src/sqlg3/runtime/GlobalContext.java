@@ -16,25 +16,25 @@ public final class GlobalContext {
 
     public final SQLGLogger logger;
     final DBSpecific db;
-    final TypeMappers mappers;
+    final RuntimeMapper mappers;
     final SqlTrace trace;
 
     public volatile boolean checkRowTypes = false;
 
     private final ConcurrentMap<Class<?>, RowTypeFactory<?>> rowTypeFactoryMap = new ConcurrentHashMap<>();
 
-    public GlobalContext(SQLGLogger logger, DBSpecific db, TypeMappers mappers, SqlTrace trace) {
+    public GlobalContext(SQLGLogger logger, DBSpecific db, RuntimeMapper mappers, SqlTrace trace) {
         this.logger = logger;
         this.db = db;
         this.mappers = mappers;
         this.trace = trace;
     }
 
-    public GlobalContext(SQLGLogger logger, DBSpecific db, TypeMappers mappers) {
+    public GlobalContext(SQLGLogger logger, DBSpecific db, RuntimeMapper mappers) {
         this(logger, db, mappers, SqlTrace.createDefault(logger));
     }
 
-    private static <T> int fetchParameter(TypeMappers mappers, Class<T> parameterType, ResultSet rs, int index,
+    private static <T> int fetchParameter(RuntimeMapper mappers, Class<T> parameterType, ResultSet rs, int index,
                                           Object[] params, int i) throws SQLException {
         TypeMapper<T> mapper = mappers.getMapper(parameterType);
         params[i] = mapper.fetch(rs, index);

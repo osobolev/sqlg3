@@ -2,6 +2,7 @@ package sqlg3.preprocess;
 
 import sqlg3.preprocess.ant.SQLGWarn;
 import sqlg3.preprocess.checker.Generic;
+import sqlg3.runtime.RuntimeMapperImpl;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -31,7 +32,7 @@ public final class OptionsBuilder {
     public String pass;
     public SQLGWarn warn = SQLGWarn.warn;
     public boolean log = false;
-    public String runtimeMapperClass = null; // todo!!!
+    public String runtimeMapperClass = RuntimeMapperImpl.class.getName();
 
     public Options build() throws ParseException {
         if (driverClass == null) {

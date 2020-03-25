@@ -1,6 +1,8 @@
 package sqlg3.preprocess;
 
 import sqlg3.core.SQLGException;
+import sqlg3.runtime.TypeMapper;
+import sqlg3.runtime.RuntimeMapper;
 import sqlg3.runtime.queries.QueryParser;
 
 import java.lang.reflect.Array;
@@ -14,23 +16,12 @@ import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Default {@link Mapper} implementation
  */
 public class MapperImpl implements Mapper {
-
-    // todo: remove it???
-    public static final class SpecialType {
-
-        public final int paramCount;
-        public final Class<?> cls;
-
-        public SpecialType(int paramCount, Class<?> cls) {
-            this.paramCount = paramCount;
-            this.cls = cls;
-        }
-    }
 
     public Object getTestObject(Class<?> paramType) {
         if (paramType.equals(Integer.TYPE) || paramType.equals(Integer.class)) {
@@ -102,12 +93,11 @@ public class MapperImpl implements Mapper {
         }
     }
 
-    protected enum DecimalType {
+    public enum DecimalType {
         FLOAT, INT, LONG
     }
 
     protected DecimalType getDecimalType(int scale, int precision) {
-        // todo: Oracle-specific
         if (scale == -127 || scale > 0 || precision == 0) {
             return DecimalType.FLOAT;
         } else {
@@ -171,14 +161,18 @@ public class MapperImpl implements Mapper {
         case Types.DATE:
             return getDateClass();
         case Types.TIME:
+        case Types.TIME_WITH_TIMEZONE:
             return Time.class;
         case Types.TIMESTAMP:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
+            // todo: test Oracle & postgres for timestamp with/without timezone - retrieval/insert
             return Timestamp.class;
         case Types.CHAR:
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
         case Types.NCHAR:
         case Types.NVARCHAR:
+        case Types.LONGNVARCHAR:
         case Types.CLOB:
         case Types.NCLOB:
             return String.class;
@@ -261,7 +255,7 @@ public class MapperImpl implements Mapper {
         return new ColumnInfo(type, name);
     }
 
-    public List<ColumnInfo> getFields(ResultSetMetaData rsmd, boolean meta) throws SQLException {
+    public List<ColumnInfo> getFields(ResultSetMetaData rsmd, boolean meta, RuntimeMapper mappers) throws SQLException {
         int count = rsmd.getColumnCount();
         List<ColumnInfo> columns = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
@@ -282,6 +276,8 @@ public class MapperImpl implements Mapper {
                     specialType = converter;
                 }
                 QueryParser.Range range = QueryParser.Range.parseRange(specialType);
+                if (range == null)
+                    throw new SQLGException("Cannot parse special type " + specialType);
                 if (specialName == null) {
                     if (range.from == range.to) {
                         specialName = getColumnName(rsmd, range.from);
@@ -291,15 +287,17 @@ public class MapperImpl implements Mapper {
                 }
                 specialName = getFieldName(specialName);
                 specialType = range.name;
-                SpecialType type = getSpecialType(specialType);
-                if (type == null)
+                Class<?> javaType = getCustomType(specialType);
+                if (javaType == null)
                     throw new SQLGException("Cannot map " + specialType);
+                TypeMapper<?> mapper = mappers.getMapper(javaType);
                 int from = range.from;
                 int to = range.to;
-                int paramCount = range.to - range.from + 1;
-                if (type.paramCount >= 0 && type.paramCount != paramCount)
-                    throw new SQLGException("Wrong number of parameters for " + specialType + ": expected " + type.paramCount + ", actual " + paramCount);
-                columns.set(from - 1, new ColumnInfo(type.cls, specialName));
+                int columnCount = range.to - range.from + 1;
+                int required = mapper.getResultSetColumns();
+                if (required != columnCount)
+                    throw new SQLGException("Wrong number of parameters for " + specialType + ": expected " + required + ", actual " + columnCount);
+                columns.set(from - 1, new ColumnInfo(javaType, specialName));
                 for (int k = from; k < to; k++) {
                     columns.set(k, null);
                 }
@@ -307,20 +305,15 @@ public class MapperImpl implements Mapper {
                 columns.add(getSimpleColumnInfo(rsmd, j, columnName));
             }
         }
-        List<ColumnInfo> ret = new ArrayList<>(columns.size());
-        for (ColumnInfo ci : columns) {
-            if (ci != null) {
-                ret.add(ci);
-            }
-        }
-        return ret;
+        columns.removeIf(Objects::isNull);
+        return columns;
     }
 
     /**
-     * Defines mapping between custom-mapped columns and Java code (field name, type and fetch method).
+     * Defines mapping between custom-mapped columns and Java code (field name and type).
      */
-    protected SpecialType getSpecialType(String type) {
-        return new SpecialType(-1, Object.class);
+    protected Class<?> getCustomType(String type) {
+        return null;
     }
 
     public Class<?> getParameterClass(Class<?> cls) {

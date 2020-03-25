@@ -10,7 +10,7 @@ public abstract class GTest {
         GBase.test = test;
     }
 
-    public static GContext testContext(Connection connection, DBSpecific specific, TypeMappers mappers) {
+    public static GContext testContext(Connection connection, DBSpecific specific, RuntimeMapper mappers) {
         SqlTrace noTrace = (ok, time, getMessages) -> {};
         GlobalContext global = new GlobalContext(new SQLGLogger.Simple(), specific, mappers, noTrace);
         return new GContext(

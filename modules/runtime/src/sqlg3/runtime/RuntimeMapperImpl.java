@@ -6,14 +6,11 @@ import java.sql.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * This class defines custom Java/SQL mapping.
- */
-public final class TypeMappers {
+public class RuntimeMapperImpl implements RuntimeMapper {
 
     private final Map<Class<?>, TypeMapper<?>> mappers = new ConcurrentHashMap<>();
 
-    public <T> void register(TypeMapper<T> mapper) {
+    public final <T> void register(TypeMapper<T> mapper) {
         mappers.put(mapper.cls, mapper);
     }
 
@@ -24,7 +21,8 @@ public final class TypeMappers {
      * @return mapping for the class {@code cls}
      */
     @SuppressWarnings("unchecked")
-    <T> TypeMapper<T> getMapper(Class<T> cls) {
+    @Override
+    public <T> TypeMapper<T> getMapper(Class<T> cls) {
         TypeMapper<?> mapper = mappers.get(cls);
         if (mapper == null) {
             throw new SQLGException("Cannot find mapping for class " + cls.getCanonicalName());
@@ -47,27 +45,15 @@ public final class TypeMappers {
         T get(CallableStatement cs, int index) throws SQLException;
     }
 
-    public static final class PrimitiveMapper<T> extends TypeMapper<T> {
+    public abstract static class AbstractBasicMapper<T> extends TypeMapper<T> {
 
         private final int jdbcType;
         private final PSSetter<T> setter;
-        private final RSGetter<T> rsGetter;
-        private final CSGetter<T> csGetter;
 
-        public PrimitiveMapper(Class<T> cls, int jdbcType, PSSetter<T> setter, RSGetter<T> rsGetter, CSGetter<T> csGetter) {
+        protected AbstractBasicMapper(Class<T> cls, int jdbcType, PSSetter<T> setter) {
             super(cls);
             this.jdbcType = jdbcType;
             this.setter = setter;
-            this.rsGetter = rsGetter;
-            this.csGetter = csGetter;
-        }
-
-        @Override
-        public T fetch(ResultSet rs, int index) throws SQLException {
-            T value = rsGetter.get(rs, index);
-            if (rs.wasNull())
-                return null;
-            return value;
         }
 
         @Override
@@ -83,6 +69,48 @@ public final class TypeMappers {
         public void register(CallableStatement cs, int index) throws SQLException {
             cs.registerOutParameter(index, jdbcType);
         }
+    }
+
+    public static final class BasicMapper<T> extends AbstractBasicMapper<T> {
+
+        private final RSGetter<T> rsGetter;
+        private final CSGetter<T> csGetter;
+
+        public BasicMapper(Class<T> cls, int jdbcType, PSSetter<T> setter, RSGetter<T> rsGetter, CSGetter<T> csGetter) {
+            super(cls, jdbcType, setter);
+            this.rsGetter = rsGetter;
+            this.csGetter = csGetter;
+        }
+
+        @Override
+        public T fetch(ResultSet rs, int index) throws SQLException {
+            return rsGetter.get(rs, index);
+        }
+
+        @Override
+        public T get(CallableStatement cs, int index) throws SQLException {
+            return csGetter.get(cs, index);
+        }
+    }
+
+    public static final class WrapperMapper<T> extends AbstractBasicMapper<T> {
+
+        private final RSGetter<T> rsGetter;
+        private final CSGetter<T> csGetter;
+
+        public WrapperMapper(Class<T> cls, int jdbcType, PSSetter<T> setter, RSGetter<T> rsGetter, CSGetter<T> csGetter) {
+            super(cls, jdbcType, setter);
+            this.rsGetter = rsGetter;
+            this.csGetter = csGetter;
+        }
+
+        @Override
+        public T fetch(ResultSet rs, int index) throws SQLException {
+            T value = rsGetter.get(rs, index);
+            if (rs.wasNull())
+                return null;
+            return value;
+        }
 
         @Override
         public T get(CallableStatement cs, int index) throws SQLException {
@@ -93,32 +121,52 @@ public final class TypeMappers {
         }
     }
 
+    public RuntimeMapperImpl() {
+        registerDefault();
+    }
+
     public void registerDefault() {
-        register(new PrimitiveMapper<>(
+        register(new BasicMapper<>(
+            Boolean.TYPE, Types.BOOLEAN, PreparedStatement::setBoolean, ResultSet::getBoolean, CallableStatement::getBoolean
+        ));
+        register(new WrapperMapper<>(
             Boolean.class, Types.BOOLEAN, PreparedStatement::setBoolean, ResultSet::getBoolean, CallableStatement::getBoolean
         ));
-        register(new PrimitiveMapper<>(
+
+        register(new BasicMapper<>(
+            Integer.TYPE, Types.INTEGER, PreparedStatement::setInt, ResultSet::getInt, CallableStatement::getInt
+        ));
+        register(new WrapperMapper<>(
             Integer.class, Types.INTEGER, PreparedStatement::setInt, ResultSet::getInt, CallableStatement::getInt
         ));
-        register(new PrimitiveMapper<>(
+
+        register(new BasicMapper<>(
+            Long.TYPE, Types.BIGINT, PreparedStatement::setLong, ResultSet::getLong, CallableStatement::getLong
+        ));
+        register(new WrapperMapper<>(
             Long.class, Types.BIGINT, PreparedStatement::setLong, ResultSet::getLong, CallableStatement::getLong
         ));
-        register(new PrimitiveMapper<>(
+
+        register(new BasicMapper<>(
+            Double.TYPE, Types.DOUBLE, PreparedStatement::setDouble, ResultSet::getDouble, CallableStatement::getDouble
+        ));
+        register(new WrapperMapper<>(
             Double.class, Types.DOUBLE, PreparedStatement::setDouble, ResultSet::getDouble, CallableStatement::getDouble
         ));
-        register(new PrimitiveMapper<>(
+
+        register(new BasicMapper<>(
             String.class, Types.VARCHAR, PreparedStatement::setString, ResultSet::getString, CallableStatement::getString
         ));
-        register(new PrimitiveMapper<>(
+        register(new BasicMapper<>(
             byte[].class, Types.VARBINARY, PreparedStatement::setBytes, ResultSet::getBytes, CallableStatement::getBytes
         ));
-        register(new TypeMappers.PrimitiveMapper<>(
+        register(new BasicMapper<>(
             Timestamp.class, Types.TIMESTAMP, PreparedStatement::setTimestamp, ResultSet::getTimestamp, CallableStatement::getTimestamp
         ));
-        register(new TypeMappers.PrimitiveMapper<>(
+        register(new BasicMapper<>(
             Date.class, Types.DATE, PreparedStatement::setDate, ResultSet::getDate, CallableStatement::getDate
         ));
-        register(new TypeMappers.PrimitiveMapper<>(
+        register(new BasicMapper<>(
             Time.class, Types.TIME, PreparedStatement::setTime, ResultSet::getTime, CallableStatement::getTime
         ));
     }

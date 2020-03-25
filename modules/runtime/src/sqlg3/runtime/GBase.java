@@ -356,7 +356,7 @@ public class GBase implements ISimpleTransaction {
      * preprocess-time exception).
      * Closes statement after execution.
      *
-     * @param cls class with user-defined mapping (see {@link TypeMappers})
+     * @param cls class with user-defined mapping (see {@link RuntimeMapper})
      */
     public final <T> T singleRowQueryReturning(Class<T> cls, PreparedStatement stmt) throws SQLException {
         return singleOrOptionalRowQueryReturningT(cls, stmt, false);
@@ -399,7 +399,7 @@ public class GBase implements ISimpleTransaction {
      * Same as {@link #singleRowQueryReturning(Class, PreparedStatement)} but returns
      * null when no rows found.
      *
-     * @param cls class with user-defined mapping (see {@link TypeMappers})
+     * @param cls class with user-defined mapping (see {@link RuntimeMapper})
      */
     public final <T> T optionalRowQueryReturning(Class<T> cls, PreparedStatement stmt) throws SQLException {
         return singleOrOptionalRowQueryReturningT(cls, stmt, true);
@@ -411,7 +411,7 @@ public class GBase implements ISimpleTransaction {
      * Executes select query returning single column of T.
      * Closes statement after execution.
      *
-     * @param cls class with user-defined mapping (see {@link TypeMappers})
+     * @param cls class with user-defined mapping (see {@link RuntimeMapper})
      */
     public final <T> List<T> columnOf(Class<T> cls, PreparedStatement stmt) throws SQLException {
         TypeMapper<T> mapper = getMapper(cls);

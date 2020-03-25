@@ -2,7 +2,6 @@ package sqlg3.preprocess;
 
 import sqlg3.runtime.GContext;
 import sqlg3.runtime.GTest;
-import sqlg3.runtime.TypeMappers;
 
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
@@ -17,16 +16,14 @@ import java.util.stream.Collectors;
 final class MethodRunner {
 
     private final GTestImpl test;
-    private final TypeMappers mappers;
     private final Class<?> cls;
     private final String displayClassName;
     private final List<MethodEntry> entries;
     private final PrintStream log;
 
-    MethodRunner(GTestImpl test, TypeMappers mappers, Class<?> cls, String displayClassName,
+    MethodRunner(GTestImpl test, Class<?> cls, String displayClassName,
                  List<MethodEntry> entries, PrintStream log) {
         this.test = test;
-        this.mappers = mappers;
         this.cls = cls;
         this.displayClassName = displayClassName;
         this.entries = entries;
@@ -93,7 +90,7 @@ final class MethodRunner {
             test.startCall(displayEntryName);
             Constructor<?> constructor = cls.getConstructor(GContext.class);
             try (CallContext call = new CallContext(test.connection);
-                 GContext ctx = GTest.testContext(call.connection, test.checker.getSpecific(), mappers)) {
+                 GContext ctx = GTest.testContext(call.connection, test.checker.getSpecific(), test.mappers)) {
                 try {
                     Object instance = constructor.newInstance(ctx);
                     toCall.invoke(instance, getTestParams(toCall));

@@ -1,7 +1,5 @@
 package sqlg3.runtime;
 
-import sqlg3.core.SQLGLogger;
-
 import java.sql.*;
 
 public abstract class GTest {
@@ -12,7 +10,7 @@ public abstract class GTest {
 
     public static GContext testContext(Connection connection, DBSpecific specific, RuntimeMapper mappers) {
         SqlTrace noTrace = (ok, time, getMessages) -> {};
-        GlobalContext global = new GlobalContext(new SQLGLogger.Simple(), specific, mappers, noTrace);
+        GlobalContext global = new GlobalContext(specific, mappers, noTrace);
         return new GContext(
             global,
             new TransactionContext(global, new SingleConnectionManager(connection))

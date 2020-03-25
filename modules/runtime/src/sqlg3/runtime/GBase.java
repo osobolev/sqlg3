@@ -3,7 +3,6 @@ package sqlg3.runtime;
 import sqlg3.core.IDBCommon;
 import sqlg3.core.ISimpleTransaction;
 import sqlg3.core.SQLGException;
-import sqlg3.core.SQLGLogger;
 import sqlg3.runtime.queries.QueryParser;
 
 import java.sql.*;
@@ -715,7 +714,7 @@ public class GBase implements ISimpleTransaction {
         }
     }
 
-    public final SQLGLogger getLogger() {
-        return ctx.global.logger;
+    public final GlobalContext getGlobal() {
+        return ctx.global;
     }
 }

@@ -1,4 +1,4 @@
-package sqlg3.core;
+package sqlg3.remote.common;
 
 public interface SQLGLogger {
 

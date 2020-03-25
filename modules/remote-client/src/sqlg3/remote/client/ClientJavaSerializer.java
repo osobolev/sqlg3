@@ -1,7 +1,6 @@
 package sqlg3.remote.client;
 
 import sqlg3.core.IDBCommon;
-import sqlg3.core.SQLGLogger;
 import sqlg3.remote.common.*;
 
 import java.io.*;

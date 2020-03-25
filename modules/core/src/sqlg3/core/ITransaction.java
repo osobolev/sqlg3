@@ -26,4 +26,17 @@ public interface ITransaction extends ISimpleTransaction {
      * Commits transaction.
      */
     void commit() throws SQLException;
+
+    interface Action<T> {
+
+        T run(ISimpleTransaction t) throws SQLException;
+    }
+
+    static <T> T runAction(IDBInterface db, Action<T> action) throws SQLException {
+        try (TransactionRunContext ctx = new TransactionRunContext(db.getTransaction())) {
+            T result = action.run(ctx.trans);
+            ctx.setOk(true);
+            return result;
+        }
+    }
 }

@@ -2,7 +2,7 @@ package sqlg3.remote.server;
 
 import sqlg3.core.IDBCommon;
 import sqlg3.core.ISimpleTransaction;
-import sqlg3.core.SQLGLogger;
+import sqlg3.remote.common.SQLGLogger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;

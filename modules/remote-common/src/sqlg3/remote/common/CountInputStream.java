@@ -1,7 +1,5 @@
 package sqlg3.remote.common;
 
-import sqlg3.core.SQLGLogger;
-
 import java.io.IOException;
 import java.io.InputStream;
 

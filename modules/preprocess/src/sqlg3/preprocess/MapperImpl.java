@@ -1,8 +1,8 @@
 package sqlg3.preprocess;
 
 import sqlg3.core.SQLGException;
-import sqlg3.runtime.TypeMapper;
 import sqlg3.runtime.RuntimeMapper;
+import sqlg3.runtime.TypeMapper;
 import sqlg3.runtime.queries.QueryParser;
 
 import java.lang.reflect.Array;
@@ -165,7 +165,6 @@ public class MapperImpl implements Mapper {
             return Time.class;
         case Types.TIMESTAMP:
         case Types.TIMESTAMP_WITH_TIMEZONE:
-            // todo: test Oracle & postgres for timestamp with/without timezone - retrieval/insert
             return Timestamp.class;
         case Types.CHAR:
         case Types.VARCHAR:

@@ -125,9 +125,9 @@ public final class HttpDispatcher {
         });
     }
 
-    public HttpDispatcher(String application, SessionFactory sessionFactory, GlobalContext global) {
+    public HttpDispatcher(String application, SessionFactory sessionFactory, SQLGLogger logger, GlobalContext global) {
         this.application = application;
-        this.lw = new LocalConnectionFactory(sessionFactory, global, true);
+        this.lw = new LocalConnectionFactory(sessionFactory, logger, global, true);
         this.watcher = new WatcherThread(1, lw::checkActivity);
         this.watcher.runThread();
     }
@@ -165,7 +165,7 @@ public final class HttpDispatcher {
     }
 
     private void log(Throwable ex) {
-        lw.global.logger.error(ex);
+        lw.logger.error(ex);
     }
 
     private Object dispatch(HttpId id, HttpCommand command,

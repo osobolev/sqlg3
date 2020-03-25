@@ -2,7 +2,6 @@ package sqlg3.runtime;
 
 import sqlg3.core.MetaColumn;
 import sqlg3.core.SQLGException;
-import sqlg3.core.SQLGLogger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -14,7 +13,6 @@ import java.util.concurrent.ConcurrentMap;
 
 public final class GlobalContext {
 
-    public final SQLGLogger logger;
     final DBSpecific db;
     final RuntimeMapper mappers;
     final SqlTrace trace;
@@ -23,15 +21,10 @@ public final class GlobalContext {
 
     private final ConcurrentMap<Class<?>, RowTypeFactory<?>> rowTypeFactoryMap = new ConcurrentHashMap<>();
 
-    public GlobalContext(SQLGLogger logger, DBSpecific db, RuntimeMapper mappers, SqlTrace trace) {
-        this.logger = logger;
+    public GlobalContext(DBSpecific db, RuntimeMapper mappers, SqlTrace trace) {
         this.db = db;
         this.mappers = mappers;
         this.trace = trace;
-    }
-
-    public GlobalContext(SQLGLogger logger, DBSpecific db, RuntimeMapper mappers) {
-        this(logger, db, mappers, SqlTrace.createDefault(logger));
     }
 
     private static <T> int fetchParameter(RuntimeMapper mappers, Class<T> parameterType, ResultSet rs, int index,

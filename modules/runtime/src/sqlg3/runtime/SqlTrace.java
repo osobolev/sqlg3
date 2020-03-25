@@ -1,8 +1,7 @@
 package sqlg3.runtime;
 
-import sqlg3.core.SQLGLogger;
-
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -10,15 +9,15 @@ import java.util.function.Supplier;
  */
 public interface SqlTrace {
 
-    static void doTrace(SQLGLogger logger, String header, Supplier<List<String>> getMessages) {
+    static void doTrace(Consumer<String> logger, String header, Supplier<List<String>> getMessages) {
         List<String> messages = getMessages.get();
-        logger.error(header);
+        logger.accept(header);
         for (String message : messages) {
-            logger.error(message);
+            logger.accept(message);
         }
     }
 
-    static SqlTrace createDefault(SQLGLogger logger) {
+    static SqlTrace createDefault(Consumer<String> logger) {
         return (ok, time, getMessages) -> {
             if (!ok) {
                 doTrace(logger, "SQL not completed properly", getMessages);

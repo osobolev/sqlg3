@@ -2,6 +2,7 @@ package sqlg3.remote.server;
 
 import sqlg3.remote.common.IConnectionFactory;
 import sqlg3.remote.common.IRemoteDBInterface;
+import sqlg3.remote.common.SQLGLogger;
 import sqlg3.remote.common.SessionInfo;
 import sqlg3.runtime.ConnectionManager;
 import sqlg3.runtime.GlobalContext;
@@ -34,6 +35,7 @@ public final class LocalConnectionFactory implements IConnectionFactory {
 
     private final boolean server;
     private final SessionFactory sessionFactory;
+    final SQLGLogger logger;
     final GlobalContext global;
 
     private final AtomicLong connectionCount = new AtomicLong(0);
@@ -43,12 +45,13 @@ public final class LocalConnectionFactory implements IConnectionFactory {
     /**
      * Constructor.
      */
-    public LocalConnectionFactory(SessionFactory sessionFactory, GlobalContext global) {
-        this(sessionFactory, global, false);
+    public LocalConnectionFactory(SessionFactory sessionFactory, SQLGLogger logger, GlobalContext global) {
+        this(sessionFactory, logger, global, false);
     }
 
-    LocalConnectionFactory(SessionFactory sessionFactory, GlobalContext global, boolean server) {
+    LocalConnectionFactory(SessionFactory sessionFactory, SQLGLogger logger, GlobalContext global, boolean server) {
         this.sessionFactory = sessionFactory;
+        this.logger = logger;
         this.global = global;
         this.server = server;
     }
@@ -70,7 +73,7 @@ public final class LocalConnectionFactory implements IConnectionFactory {
     }
 
     private DBInterface openConnection(String user, String password, String host, boolean background) throws SQLException {
-        SessionFactory.SessionData loginData = sessionFactory.login(global.logger, user, password);
+        SessionFactory.SessionData loginData = sessionFactory.login(logger, user, password);
         return newDBInterface(loginData.cman, user, password, loginData.userObject, host, background);
     }
 

@@ -2,8 +2,8 @@ package sqlg3.remote.server;
 
 import sqlg3.core.ISimpleTransaction;
 import sqlg3.core.ITransaction;
-import sqlg3.core.SQLGLogger;
 import sqlg3.remote.common.IRemoteDBInterface;
+import sqlg3.remote.common.SQLGLogger;
 import sqlg3.remote.common.SessionInfo;
 import sqlg3.remote.common.WatcherThread;
 import sqlg3.runtime.ConnectionManager;
@@ -40,7 +40,7 @@ final class DBInterface implements IRemoteDBInterface {
         this.cman = cman;
         this.fact = fact;
         this.global = fact.global;
-        this.logger = global.logger;
+        this.logger = fact.logger;
         this.userObject = userObject;
         this.sessionOrderId = sessionOrderId;
         this.sessionLongId = sessionLongId;
@@ -59,7 +59,7 @@ final class DBInterface implements IRemoteDBInterface {
     }
 
     public ISimpleTransaction getAsyncTransaction() {
-        return new AsyncTransaction(this, global.logger);
+        return new AsyncTransaction(this, logger);
     }
 
     public ITransaction getTransaction() {

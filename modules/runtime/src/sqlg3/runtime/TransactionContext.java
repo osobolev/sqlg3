@@ -1,11 +1,9 @@
 package sqlg3.runtime;
 
 import sqlg3.core.IDBCommon;
-import sqlg3.core.Impl;
 import sqlg3.core.InformationException;
 import sqlg3.core.SQLGException;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -42,13 +40,10 @@ final class TransactionContext {
             Object result = null;
             Throwable error = null;
             try {
-                // todo: cache class/constructor???
-                Impl sqlg = iface.getAnnotation(Impl.class);
-                Class<?> dao = classLoader.loadClass(sqlg.value());
-                Constructor<?> constructor = dao.getConstructor(GContext.class);
-                Method daoMethod = dao.getMethod(method.getName(), method.getParameterTypes());
+                ImplCache cached = global.getImpl(iface);
+                Method daoMethod = cached.dao.getMethod(method.getName(), method.getParameterTypes());
                 try (GContext ctx = new GContext(global, this)) {
-                    Object instance = constructor.newInstance(ctx);
+                    Object instance = cached.constructor.newInstance(ctx);
                     result = daoMethod.invoke(instance, args);
                     ctx.ok();
                 }
@@ -61,7 +56,7 @@ final class TransactionContext {
                 }
                 error = target;
             } catch (ReflectiveOperationException ex) {
-                error = new SQLGException("Error calling DAO method", ex);
+                error = new SQLGException("Error calling DAO method " + iface.getCanonicalName() + "." + method.getName(), ex);
             } catch (Throwable ex) {
                 error = ex;
             }

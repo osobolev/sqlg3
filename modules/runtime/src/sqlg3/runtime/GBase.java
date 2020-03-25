@@ -272,11 +272,10 @@ public class GBase implements ISimpleTransaction {
      */
     public static Parameter outP(Object value, String paramId) {
         if (test != null) {
-            Class<?> componentType = value.getClass().getComponentType();
-            if (componentType == null)
-                throw new SQLGException("outP parameter should be an array");
-            test.setParamType(paramId, componentType);
-            return out(value);
+            if (value == null || !value.getClass().isArray())
+                throw new SQLGException("Parameter should be an array");
+            test.setParamType(paramId, value.getClass().getComponentType());
+            return Parameter.out(value);
         } else {
             throw new SQLGException("No type is defined for out parameter " + paramId);
         }

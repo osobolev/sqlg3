@@ -1,5 +1,6 @@
 package sqlg3.runtime;
 
+import sqlg3.core.Impl;
 import sqlg3.core.MetaColumn;
 import sqlg3.core.SQLGException;
 
@@ -19,7 +20,8 @@ public final class GlobalContext {
 
     public volatile boolean checkRowTypes = false;
 
-    private final ConcurrentMap<Class<?>, RowTypeFactory<?>> rowTypeFactoryMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<?>, RowTypeFactory<?>> rowTypeFactoryCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<?>, ImplCache> implCache = new ConcurrentHashMap<>();
 
     public GlobalContext(DBSpecific db, RuntimeMapper mappers, SqlTrace trace) {
         this.db = db;
@@ -59,7 +61,7 @@ public final class GlobalContext {
                 }
                 for (int i = 0; i < parameterTypes.length; i++) {
                     if (!MetaColumn.class.equals(parameterTypes[i]))
-                        throw new SQLGException("Meta row type should contain only MetaColumns");
+                        throw new SQLGException("Meta row type should contain only MetaColumns in " + rowType.getCanonicalName());
                     int index = i + 1;
                     params[i] = new MetaColumn(
                         rsmd.isNullable(index) == ResultSetMetaData.columnNoNulls,
@@ -78,13 +80,28 @@ public final class GlobalContext {
             try {
                 return constructor.newInstance(params);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
-                throw new SQLGException("Cannot invoke row constructor", ex);
+                throw new SQLGException("Cannot invoke row constructor for " + rowType.getCanonicalName(), ex);
             }
         };
     }
 
     @SuppressWarnings("unchecked")
     <T> RowTypeFactory<T> getRowTypeFactory(Class<T> rowType, boolean meta) {
-        return (RowTypeFactory<T>) rowTypeFactoryMap.computeIfAbsent(rowType, c -> createRowTypeFactory(c, meta, checkRowTypes));
+        return (RowTypeFactory<T>) rowTypeFactoryCache.computeIfAbsent(rowType, c -> createRowTypeFactory(c, meta, checkRowTypes));
+    }
+
+    private static ImplCache createImpl(Class<?> iface) {
+        try {
+            Impl sqlg = iface.getAnnotation(Impl.class);
+            Class<?> dao = iface.getClassLoader().loadClass(sqlg.value());
+            Constructor<?> constructor = dao.getConstructor(GContext.class);
+            return new ImplCache(dao, constructor);
+        } catch (ClassNotFoundException | NoSuchMethodException ex) {
+            throw new SQLGException("Cannot find implementation for " + iface.getCanonicalName());
+        }
+    }
+
+    ImplCache getImpl(Class<?> iface) {
+        return implCache.computeIfAbsent(iface, i -> createImpl(iface));
     }
 }

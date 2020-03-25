@@ -37,12 +37,11 @@ final class CodeGenerator {
             buf.append("\n");
         }
         Class<?>[] ifaces = cls.getInterfaces();
-        StringBuilder buf = new StringBuilder();
+        StringBuilder addIface = new StringBuilder();
         for (Class<?> iface : ifaces) {
-            buf.append(", ");
-            buf.append(iface.getName());
+            addIface.append(", ");
+            addIface.append(iface.getName());
         }
-        String addIface = buf.toString();
         buf.append(GENERATED_WARNING + "\n");
         buf.append("@SuppressWarnings({\"UnnecessaryInterfaceModifier\", \"UnnecessaryFullyQualifiedName\", \"RedundantSuppression\"})\n");
         buf.append("@sqlg3.core.Impl(\"" + cls.getName() + "\")\n");

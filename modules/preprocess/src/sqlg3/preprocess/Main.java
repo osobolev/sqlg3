@@ -1,5 +1,6 @@
 package sqlg3.preprocess;
 
+import sqlg3.preprocess.ant.SQLGWarn;
 import sqlg3.runtime.GBase;
 import sqlg3.runtime.TypeMappers;
 
@@ -101,9 +102,14 @@ public final class Main extends Options {
         }
     }
 
-    private static RowTypeInfo checkCompatibiity(List<RowTypeInfo> rowTypes) {
-        // todo: check compatibility & widen if necessary
-        return rowTypes.get(0);
+    private RowTypeInfo checkCompatibility(Class<?> rowType, List<RowTypeInfo> rowTypes) throws ParseException {
+        return RowTypeInfo.checkCompatibility(rowType, rowTypes, warning -> {
+            if (warn == SQLGWarn.error) {
+                throw new ParseException(warning);
+            } else if (warn == SQLGWarn.warn) {
+                System.err.println("WARNING: " + warning);
+            }
+        });
     }
 
     private void doWorkFiles(List<Path> files) throws Throwable {
@@ -184,8 +190,8 @@ public final class Main extends Options {
         // 4. Generate row types
         String tab = getTab();
         for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedIn.entrySet()) {
-            RowTypeInfo rowType = checkCompatibiity(entry.getValue());
             Class<?> cls = entry.getKey();
+            RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
             String key = cls.getDeclaringClass().getName() + "." + cls.getSimpleName();
             RowTypeCutPaste cp = rowTypeMap.get(key);
             if (cp == null)
@@ -194,8 +200,8 @@ public final class Main extends Options {
             cp.replaceTo = body + tab;
         }
         for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedOut.entrySet()) {
-            RowTypeInfo rowType = checkCompatibiity(entry.getValue());
             Class<?> cls = entry.getKey();
+            RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
             String body = rowType.generateRowTypeBody("", tab, cls);
             CodeGenerator.generateImplOut(srcRoots, encoding, cls, body);
         }

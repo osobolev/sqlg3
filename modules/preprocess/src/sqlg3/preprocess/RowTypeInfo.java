@@ -4,19 +4,17 @@ import java.util.List;
 
 final class RowTypeInfo {
 
-    final Class<?> cls;
     private final String displayEntryName;
     private final List<ColumnInfo> columns;
     private final boolean meta;
 
-    RowTypeInfo(Class<?> cls, String displayEntryName, List<ColumnInfo> columns, boolean meta) {
-        this.cls = cls;
+    RowTypeInfo(String displayEntryName, List<ColumnInfo> columns, boolean meta) {
         this.displayEntryName = displayEntryName;
         this.columns = columns;
         this.meta = meta;
     }
 
-    String generateRowTypeBody(String start, String tab) {
+    String generateRowTypeBody(String start, String tab, Class<?> cls) {
         StringBuilder fields = new StringBuilder();
 
         fields.append("\n\n");

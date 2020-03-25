@@ -7,34 +7,32 @@ import sqlg3.runtime.queries.QueryParser;
 
 import java.lang.reflect.Proxy;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 final class GTestImpl extends GTest {
 
-    static final GTestImpl INSTANCE = new GTestImpl();
+    private final Map<String, Class<?>> paramTypeMap = new HashMap<>();
+    private Map<String, List<ParamCutPaste>> bindMap;
 
-    // todo: do better!!! final fields
-    Connection connection = null;
-    SqlChecker checker = null;
-    Mapper mapper = null;
-
-    // todo: save SELECT results into Map<Class<?>, List<ColumnInfo>> with key of row type class
-    List<ColumnInfo> columns = null;
-    boolean meta;
-    Class<?> returnClass = null; // todo: remove
-    final Map<String, Class<?>> paramTypeMap = new HashMap<>();
-    Map<String, List<ParamCutPaste>> bindMap = null;
+    private String displayEntryName;
     private final Map<Statement, String> stmtMap = new HashMap<>();
 
-    private GTestImpl() {
-    }
+    final Connection connection;
+    final SqlChecker checker;
+    final Mapper mapper;
+    private final Map<Class<?>, List<RowTypeInfo>> generatedIn;
+    private final Map<Class<?>, List<RowTypeInfo>> generatedOut;
 
-    void init(Connection connection, SqlChecker checker, Mapper mapper) {
+    GTestImpl(Connection connection, SqlChecker checker, Mapper mapper,
+              Map<Class<?>, List<RowTypeInfo>> generatedIn, Map<Class<?>, List<RowTypeInfo>> generatedOut) {
         this.connection = connection;
         this.checker = checker;
         this.mapper = mapper;
+        this.generatedIn = generatedIn;
+        this.generatedOut = generatedOut;
     }
 
     private Object getValue(Class<?> cls) {
@@ -60,24 +58,19 @@ final class GTestImpl extends GTest {
 
     @Override
     public void getRowTypeFields(Class<?> rowType, ResultSet rs, boolean meta) throws SQLException {
-        ResultSetMetaData rsmd = rs.getMetaData();
-        columns = mapper.getFields(rsmd, meta);
-        // todo: save info for later use
-        this.meta = meta;
-        if (rowType != null) {
-            returnClass = rowType;
-        }
+        List<ColumnInfo> columns = mapper.getFields(rs.getMetaData(), meta);
+        RowTypeInfo info = new RowTypeInfo(displayEntryName, columns, meta);
+
+        Map<Class<?>, List<RowTypeInfo>> generated = rowType.getDeclaringClass() == null ? generatedOut : generatedIn;
+        generated.computeIfAbsent(rowType, k -> new ArrayList<>()).add(info);
     }
 
     private ColumnInfo getOneColumn(ResultSet rs) throws SQLException {
-        getRowTypeFields(null, rs, false);
-        if (columns == null || columns.size() != 1) {
+        List<ColumnInfo> columns = mapper.getFields(rs.getMetaData(), false);
+        if (columns.size() != 1) {
             throw new SQLException("More than one column in result set");
         }
-        ColumnInfo col1 = columns.get(0);
-        columns = null;
-        returnClass = null;
-        return col1;
+        return columns.get(0);
     }
 
     @Override
@@ -247,10 +240,17 @@ final class GTestImpl extends GTest {
         checker.checkSequenceExists(connection, sequence);
     }
 
-    void startCall() {
-        columns = null;
-        meta = false;
-        stmtMap.clear();
-        returnClass = null;
+    void startClass(Map<String, List<ParamCutPaste>> bindMap) {
+        this.bindMap = bindMap;
+        this.paramTypeMap.clear();
+    }
+
+    Map<String, Class<?>> endClass() {
+        return paramTypeMap;
+    }
+
+    void startCall(String displayEntryName) {
+        this.displayEntryName = displayEntryName;
+        this.stmtMap.clear();
     }
 }

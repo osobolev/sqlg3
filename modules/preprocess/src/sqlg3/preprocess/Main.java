@@ -8,10 +8,8 @@ import java.io.PrintWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.*;
 
 public final class Main extends Options {
@@ -129,7 +127,7 @@ public final class Main extends Options {
                 src = null;
             } else {
                 String interfaceName = "I" + simpleClassName;
-                String interfacePackage = pack; // todo: get from pack and Options.ifacePack
+                String interfacePackage = ClassUtils.resolvePackage(pack, ifacePack);
                 Path interfaceFile = ClassUtils.packageDir(destRoot, interfacePackage).resolve(interfaceName + java);
                 src = new Source(parsed, interfaceFile, interfaceName, interfacePackage);
                 if (checkTime) {
@@ -150,7 +148,7 @@ public final class Main extends Options {
                 String newText = parsed.doCutPaste();
                 FileUtils.writeFile(compFiles[i], newText, encoding);
             } else {
-                FileUtils.copyFile(input.path, compFiles[i]);
+                Files.copy(input.path, compFiles[i], StandardCopyOption.REPLACE_EXISTING);
             }
         }
         List<Path> srcRoots = new ArrayList<>();
@@ -161,55 +159,45 @@ public final class Main extends Options {
         // 3. Run methods
         TypeMappers mappers = new TypeMappers(); // todo: fill with custom shit!!!
         mappers.registerDefault();
-        boolean inited = false;
-        Map<String, List<RowTypeInfo>> generatedIn = new LinkedHashMap<>();
-        Map<String, List<RowTypeInfo>> generatedOut = new LinkedHashMap<>();
         List<RunResult> runResults = new ArrayList<>();
-        for (int i = 0; i < inputs.size(); i++) {
-            InputFile input = inputs.get(i);
-            Source src = input.src;
-            if (src == null)
-                continue;
-            ParseResult parsed = src.parsed;
-            if (!inited) {
-                Mapper mapper = (Mapper) Class.forName(mapperClass).newInstance();
-                SqlChecker checker;
-                try {
-                    Class.forName(driverClass);
-                    checker = (SqlChecker) Class.forName(checkerClass).newInstance();
-                } catch (ClassNotFoundException ex) {
-                    throw new SQLException(ex);
+        Map<Class<?>, List<RowTypeInfo>> generatedIn;
+        Map<Class<?>, List<RowTypeInfo>> generatedOut;
+        try (RunGlobalContext runGlobal = new RunGlobalContext(driverClass, url, user, pass, checkerClass, mapperClass)) {
+            for (int i = 0; i < inputs.size(); i++) {
+                InputFile input = inputs.get(i);
+                Source src = input.src;
+                if (src == null)
+                    continue;
+                ParseResult parsed = src.parsed;
+                Class<?> cls = new ClassCompiler(getTmpDir()).compileAndLoad(srcRoots, compFiles[i], input.fullClassName, encoding, classpath);
+                if (GBase.class.isAssignableFrom(cls)) {
+                    MethodRunner runner = new MethodRunner(
+                        runGlobal.getTest(), mappers, cls, input.simpleClassName, parsed.entries, log
+                    );
+                    List<RunMethod> runMethods = runner.checkEntries(parsed.bindMap, parsed.parameters);
+                    runResults.add(new RunResult(input, cls, runMethods));
                 }
-                Connection connection = DriverManager.getConnection(url, user, pass);
-                connection.setAutoCommit(false);
-                GTestImpl.INSTANCE.init(connection, checker, mapper);
-                inited = true;
             }
-            Class<?> cls = new ClassCompiler(getTmpDir()).compileAndLoad(srcRoots, compFiles[i], input.fullClassName, encoding, classpath);
-            if (GBase.class.isAssignableFrom(cls)) {
-                MethodRunner runner = new MethodRunner(
-                    mappers, cls, input.simpleClassName, parsed.entries, log, generatedIn, generatedOut
-                );
-                List<RunMethod> runMethods = runner.checkEntries(parsed.bindMap, parsed.parameters);
-                runResults.add(new RunResult(input, cls, runMethods));
-            }
+            generatedIn = runGlobal.generatedIn;
+            generatedOut = runGlobal.generatedOut;
         }
         // 4. Generate row types
         String tab = getTab();
-        for (Map.Entry<String, List<RowTypeInfo>> entry : generatedIn.entrySet()) {
+        for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedIn.entrySet()) {
             RowTypeInfo rowType = checkCompatibiity(entry.getValue());
-            Class<?> cls = rowType.cls;
+            Class<?> cls = entry.getKey();
             String key = cls.getDeclaringClass().getName() + "." + cls.getSimpleName();
             RowTypeCutPaste cp = rowTypeMap.get(key);
             if (cp == null)
                 throw new ParseException("Row type " + key + " definition not found");
-            String body = rowType.generateRowTypeBody(tab, tab);
+            String body = rowType.generateRowTypeBody(tab, tab, cls);
             cp.replaceTo = body + tab;
         }
-        for (Map.Entry<String, List<RowTypeInfo>> entry : generatedOut.entrySet()) {
+        for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedOut.entrySet()) {
             RowTypeInfo rowType = checkCompatibiity(entry.getValue());
-            String body = rowType.generateRowTypeBody("", tab);
-            CodeGenerator.generateImplOut(srcRoots, encoding, rowType.cls, body);
+            Class<?> cls = entry.getKey();
+            String body = rowType.generateRowTypeBody("", tab, cls);
+            CodeGenerator.generateImplOut(srcRoots, encoding, cls, body);
         }
         // 5. Generate interfaces & write back sources
         for (RunResult rr : runResults) {
@@ -239,21 +227,6 @@ public final class Main extends Options {
         try {
             doWorkFiles(in);
         } finally {
-            if (GTestImpl.INSTANCE.connection != null) {
-                try {
-                    GTestImpl.INSTANCE.connection.close();
-                } catch (SQLException ex) {
-                    // ignore
-                }
-                if (url.startsWith("jdbc:derby:")) {
-                    // Special case for Derby:
-                    try {
-                        DriverManager.getConnection("jdbc:derby:;shutdown=true");
-                    } catch (SQLException ex) {
-                        // ignore
-                    }
-                }
-            }
             if (cleanup && workTmpDir != null) {
                 deleteRecursively(workTmpDir);
             }

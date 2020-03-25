@@ -8,31 +8,28 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 final class MethodRunner {
 
-    private final GTestImpl test = GTestImpl.INSTANCE;
+    private final GTestImpl test;
     private final TypeMappers mappers;
     private final Class<?> cls;
     private final String displayClassName;
     private final List<MethodEntry> entries;
     private final boolean log;
 
-    private final Map<String, List<RowTypeInfo>> generatedIn;
-    private final Map<String, List<RowTypeInfo>> generatedOut;
-
-    MethodRunner(TypeMappers mappers, Class<?> cls, String displayClassName,
-                 List<MethodEntry> entries, boolean log,
-                 Map<String, List<RowTypeInfo>> generatedIn, Map<String, List<RowTypeInfo>> generatedOut) {
+    MethodRunner(GTestImpl test, TypeMappers mappers, Class<?> cls, String displayClassName,
+                 List<MethodEntry> entries, boolean log) {
+        this.test = test;
         this.mappers = mappers;
         this.cls = cls;
         this.displayClassName = displayClassName;
         this.entries = entries;
         this.log = log;
-        this.generatedIn = generatedIn;
-        this.generatedOut = generatedOut;
     }
 
     private Object[] getTestParams(Method method) throws ParseException {
@@ -47,14 +44,26 @@ final class MethodRunner {
         return ret;
     }
 
+    private static final class CallContext implements AutoCloseable {
+
+        private final Connection connection;
+
+        CallContext(Connection connection) {
+            this.connection = connection;
+        }
+
+        @Override
+        public void close() throws SQLException {
+            connection.rollback();
+        }
+    }
+
     List<RunMethod> checkEntries(Map<String, List<ParamCutPaste>> bindMap, List<String> allParameters) throws Throwable {
         Map<String, List<Method>> methodMap = Arrays.stream(cls.getDeclaredMethods()).collect(Collectors.groupingBy(Method::getName));
-        GTest.setTest(test);
         if (log) {
             System.out.println(cls.getCanonicalName());
         }
-        test.paramTypeMap.clear();
-        test.bindMap = bindMap;
+        test.startClass(bindMap);
         List<RunMethod> entryMethods = new ArrayList<>();
         for (MethodEntry entry : entries) {
             String displayEntryName = displayClassName + "." + entry.methodToCall;
@@ -80,43 +89,27 @@ final class MethodRunner {
             if (log) {
                 System.out.println(toCall.getName());
             }
-            test.startCall();
+            test.startCall(displayEntryName);
             Constructor<?> cons = cls.getConstructor(GContext.class);
-            try (GContext ctx = GTest.testContext(test.connection, test.checker.getSpecific(), mappers)) {
+            try (CallContext call = new CallContext(test.connection);
+                 GContext ctx = GTest.testContext(call.connection, test.checker.getSpecific(), mappers)) {
                 Object inst = cons.newInstance(ctx);
                 try {
                     toCall.invoke(inst, getTestParams(toCall));
                 } catch (InvocationTargetException itex) {
                     throw itex.getTargetException();
                 }
-            } finally {
-                test.connection.rollback(); // todo: overrides existing exception!!!
-            }
-            Class<?> rowTypeClass = test.returnClass;
-            if (rowTypeClass != null) {
-                saveRowTypeInfo(
-                    rowTypeClass.getDeclaringClass() == null ? generatedOut : generatedIn,
-                    displayEntryName, rowTypeClass, test.meta
-                );
             }
         }
-        checkParamTypes(allParameters);
+        Map<String, Class<?>> paramTypeMap = test.endClass();
+        checkParamTypes(allParameters, paramTypeMap);
 
         return entryMethods;
     }
 
-    private void saveRowTypeInfo(Map<String, List<RowTypeInfo>> generated, String displayEntryName, Class<?> rowType, boolean meta) throws ParseException {
-        List<ColumnInfo> columns = test.columns;
-        if (columns == null)
-            throw new ParseException("Method " + displayEntryName + " should perform SELECT for " + rowType.getSimpleName());
-        String key = rowType.getName();
-        RowTypeInfo newData = new RowTypeInfo(rowType, displayEntryName, columns, meta);
-        generated.computeIfAbsent(key, k -> new ArrayList<>()).add(newData);
-    }
-
-    private void checkParamTypes(List<String> allParameters) throws ParseException {
+    private static void checkParamTypes(List<String> allParameters, Map<String, Class<?>> paramTypeMap) throws ParseException {
         Set<String> missingParams = new HashSet<>(allParameters);
-        missingParams.removeAll(test.paramTypeMap.keySet());
+        missingParams.removeAll(paramTypeMap.keySet());
         if (missingParams.size() > 0) {
             StringBuilder buf = new StringBuilder();
             for (String param : allParameters) {

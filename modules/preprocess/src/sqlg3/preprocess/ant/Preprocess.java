@@ -15,6 +15,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * ANT task for SQLG preprocessor.
@@ -24,6 +26,7 @@ public class Preprocess extends Task {
     private final List<FileSet> filesets = new ArrayList<>();
 
     private final OptionsBuilder options = new OptionsBuilder();
+    private final List<JavacOption> javacOptions = new ArrayList<>();
 
     /**
      * Preprocessor temporary files folder
@@ -76,6 +79,25 @@ public class Preprocess extends Task {
      */
     public void setIfacepack(String sub) {
         options.ifacePack = sub;
+    }
+
+    public static final class JavacOption {
+
+        private String arg;
+
+        public String getArg() {
+            return arg;
+        }
+
+        public void setArg(String arg) {
+            this.arg = arg;
+        }
+    }
+
+    public JavacOption createJavacoption() {
+        JavacOption jo = new JavacOption();
+        javacOptions.add(jo);
+        return jo;
     }
 
     /**
@@ -172,8 +194,12 @@ public class Preprocess extends Task {
                 files.add(dir.resolve(srcFile));
             }
         }
+
         try {
-            new Main(options.build()).workFiles(files);
+            new Main(options.build()).workFiles(
+                files,
+                javacOptions.stream().map(JavacOption::getArg).filter(Objects::nonNull).collect(Collectors.toList())
+            );
         } catch (ParseException ex) {
             String at = ex.at;
             if (at == null) {

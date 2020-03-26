@@ -23,15 +23,15 @@ final class TestMain {
         o.driverClass = "org.postgresql.Driver";
         o.url = "jdbc:postgresql://localhost:5432/sqlg2";
 
-        o.srcRoot = Paths.get("sample/daold/src");
-        o.destRoot = Paths.get("sample/daold/src");
-        List<Path> files = Collections.singletonList(o.srcRoot.resolve("daold/Example1.java"));
+//        o.srcRoot = Paths.get("sample/daold/src");
+//        o.destRoot = Paths.get("sample/daold/src");
+//        List<Path> files = Collections.singletonList(o.srcRoot.resolve("daold/Example1.java"));
 
-//        o.srcRoot = Paths.get("sample/danew/src");
-//        o.destRoot = Paths.get("sample/dto/src");
-//        o.ifacePack = "dto";
-//        List<Path> files = Collections.singletonList(o.srcRoot.resolve("danew/Example2.java"));
+        o.srcRoot = Paths.get("sample/danew/src");
+        o.destRoot = Paths.get("sample/dto/src");
+        o.ifacePack = "dto";
+        List<Path> files = Collections.singletonList(o.srcRoot.resolve("danew/Example2.java"));
 
-        new Main(o.build()).workFiles(files);
+        new Main(o.build()).workFiles(files, Collections.emptyList());
     }
 }

@@ -84,7 +84,7 @@ public final class Main {
         });
     }
 
-    public void workFiles(List<Path> inputFiles) throws Throwable {
+    public void workFiles(List<Path> inputFiles, List<String> javacOptions) throws Throwable {
         List<Path> in;
         if (inputFiles.isEmpty()) {
             in = new ArrayList<>();
@@ -157,7 +157,7 @@ public final class Main {
                     continue;
                 ParseResult parsed = src.parsed;
                 Class<?> cls = new ClassCompiler(tmpDir).compileAndLoad(
-                    srcRoots, compFiles[i], input.fullClassName, o.encoding, o.classpath, o.javacOptions
+                    srcRoots, compFiles[i], input.fullClassName, o.encoding, o.classpath, javacOptions
                 );
                 if (GBase.class.isAssignableFrom(cls)) {
                     MethodRunner runner = new MethodRunner(

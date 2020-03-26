@@ -8,8 +8,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 public final class OptionsBuilder {
 
@@ -22,7 +20,6 @@ public final class OptionsBuilder {
 
     public Path destRoot;
     public String ifacePack = ".";
-    public final List<String> javacOptions = new ArrayList<>();
 
     public Charset encoding = StandardCharsets.UTF_8;
     public int tabSize = 4;
@@ -51,7 +48,7 @@ public final class OptionsBuilder {
             destRoot = this.destRoot;
         }
         return new Options(
-            tmpDir, cleanup, classpath, checkTime, srcRoot, destRoot, ifacePack, javacOptions,
+            tmpDir, cleanup, classpath, checkTime, srcRoot, destRoot, ifacePack,
             encoding, tabSize, driverClass, mapperClass, checkerClass, url, user, pass, warn, log, runtimeMapperClass
         );
     }

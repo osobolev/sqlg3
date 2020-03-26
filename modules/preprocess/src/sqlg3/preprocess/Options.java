@@ -5,7 +5,6 @@ import sqlg3.preprocess.ant.SQLGWarn;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.util.List;
 
 public final class Options {
 
@@ -18,7 +17,6 @@ public final class Options {
 
     public final Path destRoot;
     public final String ifacePack;
-    public final List<String> javacOptions;
 
     public final Charset encoding;
     public final int tabSize;
@@ -33,7 +31,7 @@ public final class Options {
     public final boolean log;
     public final String runtimeMapperClass;
 
-    Options(Path tmpDir, boolean cleanup, String classpath, boolean checkTime, Path srcRoot, Path destRoot, String ifacePack, List<String> javacOptions, Charset encoding, int tabSize, String driverClass, String mapperClass, String checkerClass, String url, String user, String pass, SQLGWarn warn, boolean log, String runtimeMapperClass) {
+    Options(Path tmpDir, boolean cleanup, String classpath, boolean checkTime, Path srcRoot, Path destRoot, String ifacePack, Charset encoding, int tabSize, String driverClass, String mapperClass, String checkerClass, String url, String user, String pass, SQLGWarn warn, boolean log, String runtimeMapperClass) {
         this.tmpDir = tmpDir;
         this.cleanup = cleanup;
         this.classpath = classpath;
@@ -41,7 +39,6 @@ public final class Options {
         this.srcRoot = srcRoot;
         this.destRoot = destRoot;
         this.ifacePack = ifacePack;
-        this.javacOptions = javacOptions;
         this.encoding = encoding;
         this.tabSize = tabSize;
         this.driverClass = driverClass;

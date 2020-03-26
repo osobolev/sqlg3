@@ -1,5 +1,7 @@
 package sqlg3.preprocess;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
@@ -76,6 +78,16 @@ final class ClassUtils {
             return null;
         } else {
             return String.join(".", deque);
+        }
+    }
+
+    static boolean isRecord(Class<?> cls) {
+        try {
+            Method isRecord = Class.class.getMethod("isRecord");
+            Boolean result = (Boolean) isRecord.invoke(cls);
+            return result.booleanValue();
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            return false;
         }
     }
 }

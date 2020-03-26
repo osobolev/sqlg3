@@ -99,19 +99,27 @@ final class CodeGenerator {
             throw new ParseException("Cannot find file for class " + rowType);
         String text = FileUtils.readFile(file, encoding);
         Java8Lexer lexer = new Java8Lexer(CharStreams.fromString(text));
+        int startBody;
+        int endBody;
+        if (ClassUtils.isRecord(rowType)) {
+            startBody = Java8Lexer.LPAREN;
+            endBody = Java8Lexer.RPAREN;
+        } else {
+            startBody = Java8Lexer.LBRACE;
+            endBody = Java8Lexer.RBRACE;
+        }
         Token start = null;
         Token end = null;
-        // todo: special case for records: replace inside parentheses
         while (true) {
             Token token = lexer.nextToken();
             int type = token.getType();
             if (type == Java8Lexer.EOF)
                 break;
-            if (type == Java8Lexer.LBRACE) {
+            if (type == startBody) {
                 if (start == null) {
                     start = token;
                 }
-            } else if (type == Java8Lexer.RBRACE) {
+            } else if (type == endBody) {
                 end = token;
             }
         }

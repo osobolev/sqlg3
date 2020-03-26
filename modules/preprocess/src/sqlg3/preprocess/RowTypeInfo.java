@@ -17,44 +17,57 @@ final class RowTypeInfo {
         this.meta = meta;
     }
 
-    // todo: special case for records
     String generateRowTypeBody(String start, String tab, Class<?> rowType) {
-        StringBuilder fields = new StringBuilder();
-
-        fields.append("\n\n");
-
-        StringBuilder constructor = new StringBuilder();
-        constructor.append('\n');
-        constructor.append(start).append(tab).append("public " + rowType.getSimpleName() + "(");
-
-        StringBuilder getters = new StringBuilder();
-        getters.append('\n');
-
-        for (int j = 0; j < columns.size(); j++) {
-            ColumnInfo column = columns.get(j);
-            String type = meta ? "sqlg3.core.MetaColumn" : ClassUtils.getClassName(column.type);
-
-            fields.append(start).append(tab).append("private final ");
-            fields.append(type).append(' ').append(column.name).append(";\n");
-
-            if (j > 0) {
-                constructor.append(", ");
+        if (ClassUtils.isRecord(rowType)) {
+            StringBuilder buf = new StringBuilder();
+            buf.append('\n');
+            for (int j = 0; j < columns.size(); j++) {
+                ColumnInfo column = columns.get(j);
+                String type = meta ? "sqlg3.core.MetaColumn" : ClassUtils.getClassName(column.type);
+                if (j > 0) {
+                    buf.append(",\n");
+                }
+                buf.append(start).append(tab).append(type).append(' ').append(column.name);
             }
-            constructor.append(type).append(' ').append(column.name);
+            return buf.toString();
+        } else {
+            StringBuilder fields = new StringBuilder();
 
-            getters.append(start).append(tab).append("public ");
-            getters.append(type).append(' ').append(column.name);
-            getters.append("() { return ").append(column.name).append("; }\n");
+            fields.append("\n\n");
+
+            StringBuilder constructor = new StringBuilder();
+            constructor.append('\n');
+            constructor.append(start).append(tab).append("public " + rowType.getSimpleName() + "(");
+
+            StringBuilder getters = new StringBuilder();
+            getters.append('\n');
+
+            for (int j = 0; j < columns.size(); j++) {
+                ColumnInfo column = columns.get(j);
+                String type = meta ? "sqlg3.core.MetaColumn" : ClassUtils.getClassName(column.type);
+
+                fields.append(start).append(tab).append("private final ");
+                fields.append(type).append(' ').append(column.name).append(";\n");
+
+                if (j > 0) {
+                    constructor.append(", ");
+                }
+                constructor.append(type).append(' ').append(column.name);
+
+                getters.append(start).append(tab).append("public ");
+                getters.append(type).append(' ').append(column.name);
+                getters.append("() { return ").append(column.name).append("; }\n");
+            }
+
+            constructor.append(") {\n");
+            for (ColumnInfo col : columns) {
+                String field = col.name;
+                constructor.append(start).append(tab).append(tab).append("this." + field + " = " + field + ";\n");
+            }
+            constructor.append(start).append(tab).append("}\n");
+
+            return fields.toString() + constructor + getters + start;
         }
-
-        constructor.append(") {\n");
-        for (ColumnInfo col : columns) {
-            String field = col.name;
-            constructor.append(start).append(tab).append(tab).append("this." + field + " = " + field + ";\n");
-        }
-        constructor.append(start).append(tab).append("}\n");
-
-        return fields.toString() + constructor + getters;
     }
 
     private static Class<?> unwrap(Class<?> cls) {

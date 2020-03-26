@@ -180,8 +180,7 @@ public final class Main {
             RowTypeCutPaste cp = rowTypeMap.get(key);
             if (cp == null)
                 throw new ParseException("Row type " + key + " definition not found");
-            String body = rowType.generateRowTypeBody(tab, tab, cls);
-            cp.replaceTo = body + tab;
+            cp.replaceTo = rowType.generateRowTypeBody(tab, tab, cls);
         }
         for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedOut.entrySet()) {
             Class<?> cls = entry.getKey();

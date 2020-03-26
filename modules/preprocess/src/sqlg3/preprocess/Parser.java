@@ -334,6 +334,31 @@ final class Parser extends ParserBase {
         }
     }
 
+    private void parseRecord(String recordName) {
+        int from = get().getStartIndex();
+        int count = 1;
+        int to = -1;
+        while (!eof()) {
+            Token t = get();
+            if (t.getType() == Java8Lexer.LPAREN) {
+                count++;
+            } else if (t.getType() == Java8Lexer.RPAREN) {
+                count--;
+                if (count <= 0) {
+                    to = t.getStartIndex();
+                    next();
+                    break;
+                }
+            }
+            next();
+        }
+        if (from >= 0 && to >= 0) {
+            RowTypeCutPaste rowType = new RowTypeCutPaste(from, to, recordName);
+            fragments.add(rowType);
+            rowTypeMap.put(fullClassName + "." + recordName, rowType);
+        }
+    }
+
     private boolean parseHeader() {
         boolean wasClass = false;
         boolean needsProcessing = false;
@@ -407,7 +432,7 @@ final class Parser extends ParserBase {
                             String recordName = name.getText();
                             Token lpar = skipTo(Java8Lexer.LPAREN);
                             if (lpar != null && !eof()) {
-                                // todo: parse record
+                                parseRecord(recordName);
                             }
                         }
                     }

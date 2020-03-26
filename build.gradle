@@ -6,9 +6,10 @@ subprojects {
     group = 'com.github.osobolev.sqlg3'
     version = '1.0'
 
+    compileJava.options.compilerArgs << '-Xlint:-options,deprecation,unchecked'
     compileJava.options.encoding = 'UTF-8'
-    sourceCompatibility = '1.8'
-    targetCompatibility = '1.8'
+    sourceCompatibility = '8'
+    targetCompatibility = '8'
     sourceSets.main.java.srcDirs = ['src']
     sourceSets.test.java.srcDirs = ['test']
 
@@ -25,11 +26,7 @@ subprojects {
         }
     }
 
-    jar {
-        manifest {
-            attributes('Implementation-Version': project.version)
-        }
-    }
+    jar.manifest.attributes('Implementation-Version': project.version)
 
     javadoc.enabled = false
 }

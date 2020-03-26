@@ -4,6 +4,7 @@ import sqlg3.runtime.GTest;
 import sqlg3.runtime.RuntimeMapper;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -44,15 +45,13 @@ final class RunGlobalContext implements AutoCloseable {
         this.tmpDir = o.tmpDir;
     }
 
-    GTestImpl getTest() throws SQLException, ClassNotFoundException, IllegalAccessException, InstantiationException {
+    GTestImpl getTest() throws SQLException, ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
         if (test == null) {
-            Mapper mapper = (Mapper) Class.forName(mapperClass).newInstance();
-            SqlChecker checker;
-            RuntimeMapper runtimeMapper;
+            Mapper mapper = (Mapper) Class.forName(mapperClass).getDeclaredConstructor().newInstance();
+            SqlChecker checker = (SqlChecker) Class.forName(checkerClass).getDeclaredConstructor().newInstance();
+            RuntimeMapper runtimeMapper = (RuntimeMapper) Class.forName(runtimeMapperClass).getDeclaredConstructor().newInstance();
             try {
                 Class.forName(driverClass);
-                checker = (SqlChecker) Class.forName(checkerClass).newInstance();
-                runtimeMapper = (RuntimeMapper) Class.forName(runtimeMapperClass).newInstance();
             } catch (ClassNotFoundException ex) {
                 throw new SQLException(ex);
             }

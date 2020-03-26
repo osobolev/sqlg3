@@ -1,9 +1,10 @@
 subprojects {
+
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+
     group = 'com.github.osobolev.sqlg3'
     version = '1.0'
-
-    apply plugin: 'java'
-    apply plugin: 'maven'
 
     compileJava.options.encoding = 'UTF-8'
     sourceCompatibility = '1.8'
@@ -16,9 +17,17 @@ subprojects {
         mavenCentral()
     }
 
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            }
+        }
+    }
+
     jar {
         manifest {
-            attributes('Implementation-Version': version)
+            attributes('Implementation-Version': project.version)
         }
     }
 
@@ -30,7 +39,7 @@ project(':sqlg3-core') {
 
 project(':sqlg3-runtime') {
     dependencies {
-        compile project(':sqlg3-core')
+        api project(':sqlg3-core')
     }
 }
 
@@ -39,11 +48,11 @@ project(':sqlg3-preprocess') {
     configurations { antlr }
 
     dependencies {
-        compile project(':sqlg3-runtime')
-        compile 'org.antlr:antlr4-runtime:4.7.2'
+        api project(':sqlg3-runtime')
+        implementation 'org.antlr:antlr4-runtime:4.7.2'
         compileOnly 'org.apache.ant:ant:1.9.5'
 
-        testCompile 'org.postgresql:postgresql:42.2.9'
+        testRuntimeOnly 'org.postgresql:postgresql:42.2.9'
 
         antlr 'org.antlr:antlr4:4.7.2'
     }
@@ -59,19 +68,19 @@ project(':sqlg3-preprocess') {
 
 project(':sqlg3-remote-common') {
     dependencies {
-        compile project(':sqlg3-core')
+        api project(':sqlg3-core')
     }
 }
 
 project(':sqlg3-remote-client') {
     dependencies {
-        compile project(':sqlg3-remote-common')
+        api project(':sqlg3-remote-common')
     }
 }
 
 project(':sqlg3-remote-server') {
     dependencies {
-        compile project(':sqlg3-remote-common')
-        compile project(':sqlg3-runtime')
+        api project(':sqlg3-remote-common')
+        api project(':sqlg3-runtime')
     }
 }

@@ -27,14 +27,26 @@ public interface ITransaction extends ISimpleTransaction {
      */
     void commit() throws SQLException;
 
-    interface Action<T> {
+    interface Action {
+
+        void run(ISimpleTransaction t) throws SQLException;
+    }
+
+    static void runAction(IDBInterface db, Action action) throws SQLException {
+        try (TransactionRunContext ctx = new TransactionRunContext(db.getTransaction())) {
+            action.run(ctx.trans);
+            ctx.setOk(true);
+        }
+    }
+
+    interface Call<T> {
 
         T run(ISimpleTransaction t) throws SQLException;
     }
 
-    static <T> T runAction(IDBInterface db, Action<T> action) throws SQLException {
+    static <T> T runCall(IDBInterface db, Call<T> call) throws SQLException {
         try (TransactionRunContext ctx = new TransactionRunContext(db.getTransaction())) {
-            T result = action.run(ctx.trans);
+            T result = call.run(ctx.trans);
             ctx.setOk(true);
             return result;
         }

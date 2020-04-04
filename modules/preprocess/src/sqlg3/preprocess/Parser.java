@@ -245,7 +245,7 @@ final class Parser extends ParserBase {
     private String parseAutoKeys() {
         skipSpaces();
         String auto = null;
-        if (!eof() && get().getType() == Java8Lexer.RPAREN) {
+        if (!eof() && get().getType() == Java8Lexer.LPAREN) {
             next();
             skipSpaces();
             if (!eof()) {

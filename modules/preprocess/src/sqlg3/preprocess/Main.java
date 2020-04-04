@@ -239,10 +239,11 @@ public final class Main {
                 g.addMethod(runMethod.method, entry.javadoc, entry.paramNames);
             }
             String ifaceText = g.finish();
-            FileUtils.writeFile(src.interfaceFile, ifaceText, o.encoding);
 
             String newText = parsed.doCutPaste();
             FileUtils.writeFile(input.path, newText, o.encoding);
+
+            FileUtils.writeFile(src.interfaceFile, ifaceText, o.encoding);
         }
     }
 }

@@ -23,14 +23,16 @@ final class QPParser {
     private final String location;
     private final boolean allowOutParams;
     private final String pred;
+    private final boolean onlySql;
     private final List<String> parameters;
     private final Map<String, List<ParamCutPaste>> bindMap;
 
-    QPParser(String location, boolean allowOutParams, String pred,
+    QPParser(String location, boolean allowOutParams, String pred, boolean onlySql,
              List<String> parameters, Map<String, List<ParamCutPaste>> bindMap) {
         this.location = location;
         this.allowOutParams = allowOutParams;
         this.pred = pred;
+        this.onlySql = onlySql;
         this.parameters = parameters;
         this.bindMap = bindMap;
     }
@@ -70,14 +72,22 @@ final class QPParser {
                 whatPos = total.length();
                 total.append(what);
             } else {
-                if (first) {
-                    total.append("new sqlg3.runtime.QueryBuilder(");
+                if (onlySql) {
+                    if (!first) {
+                        total.append(" + ");
+                    }
+                    whatPos = total.length();
+                    total.append(what);
                 } else {
-                    total.append(".appendLit(");
+                    if (first) {
+                        total.append("new sqlg3.runtime.QueryBuilder(");
+                    } else {
+                        total.append(".appendLit(");
+                    }
+                    whatPos = total.length();
+                    total.append(what);
+                    total.append(")");
                 }
-                whatPos = total.length();
-                total.append(what);
-                total.append(")");
             }
             first = false;
             return whatPos;
@@ -88,7 +98,7 @@ final class QPParser {
                 List<String> usedParameters = new ArrayList<>();
                 String parsed = QueryParser.getParameters(str, usedParameters);
                 String sql = QueryReplacer.escape(parsed);
-                if (usedParameters.size() > 0) {
+                if (usedParameters.size() > 0 && !onlySql) {
                     StringBuilder params = new StringBuilder();
                     boolean first = true;
                     List<ParamInfo> paramPositions = new ArrayList<>();
@@ -158,9 +168,11 @@ final class QPParser {
                     append1(pair.ident, false);
                 }
                 appendString(rest, false);
-                total.append(".toQuery()");
+                if (!onlySql) {
+                    total.append(".toQuery()");
+                }
             }
-            return new BindVarCutPaste(from, to, pred + total + ")", pieces);
+            return new BindVarCutPaste(from, to, pred + total + (onlySql ? "" : ")"), pieces);
         }
     }
 }

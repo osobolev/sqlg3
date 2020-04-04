@@ -11,6 +11,7 @@ import java.util.*;
 final class Parser extends ParserBase {
 
     private static final String SQL_ANNOTATION = annotationName(Sql.class);
+    private static final String SQL_ONLY_ANNOTATION = annotationName(SqlOnly.class);
     private static final String STATEMENT_ANNOTATION = annotationName(Prepare.class);
     private static final String KEY_STATEMENT_ANNOTATION = annotationName(PrepareKey.class);
     private static final String CALL_ANNOTATION = annotationName(Call.class);
@@ -197,15 +198,20 @@ final class Parser extends ParserBase {
     }
 
     private AssignDescriptor parseStatement(String entryName, String lastSqlQuery,
-                                            boolean allowOutParams, String whatToCall, String addParameter) throws ParseException {
+                                            boolean allowOutParams, String whatToCall, String addParameter, boolean onlySql) throws ParseException {
         if (lastSqlQuery == null)
             return null;
         AssignDescriptor desc = parseAssign();
         if (!(desc.from >= 0 && desc.to >= 0))
             return null;
-        String pred = desc.assign + " " + whatToCall + "(" + addParameter;
+        String pred;
+        if (onlySql) {
+            pred = desc.assign + " ";
+        } else {
+            pred = desc.assign + " " + whatToCall + "(" + addParameter;
+        }
         String location = fullClassName + (entryName == null ? "" : "." + entryName);
-        QPParser appender = new QPParser(location, allowOutParams, pred, parameters, bindMap);
+        QPParser appender = new QPParser(location, allowOutParams, pred, onlySql, parameters, bindMap);
         BindVarCutPaste cp = appender.getStatementCutPaste(desc.from, desc.to, lastSqlQuery);
         fragments.add(cp);
         return desc;
@@ -279,9 +285,11 @@ final class Parser extends ParserBase {
             } else if (id == Java8Lexer.AT) {
                 String annotation = getAnnotation();
                 if (SQL_ANNOTATION.equals(annotation)) {
-                    parseStatement(entryName, lastSqlQuery, false, "createQueryPiece", "");
+                    parseStatement(entryName, lastSqlQuery, false, "createQueryPiece", "", false);
+                } else if (SQL_ONLY_ANNOTATION.equals(annotation)) {
+                    parseStatement(entryName, lastSqlQuery, true, null, "", true);
                 } else if (STATEMENT_ANNOTATION.equals(annotation)) {
-                    parseStatement(entryName, lastSqlQuery, false, "prepareStatement", "");
+                    parseStatement(entryName, lastSqlQuery, false, "prepareStatement", "", false);
                 } else if (KEY_STATEMENT_ANNOTATION.equals(annotation)) {
                     String auto = parseAutoKeys();
                     String autoKeys;
@@ -299,9 +307,9 @@ final class Parser extends ParserBase {
                     } else {
                         autoKeys = "ALL_KEYS";
                     }
-                    parseStatement(entryName, lastSqlQuery, false, "prepareStatementKey", autoKeys + ", ");
+                    parseStatement(entryName, lastSqlQuery, false, "prepareStatementKey", autoKeys + ", ", false);
                 } else if (CALL_ANNOTATION.equals(annotation)) {
-                    parseStatement(entryName, lastSqlQuery, true, "executeCall", "");
+                    parseStatement(entryName, lastSqlQuery, true, "executeCall", "", false);
                 }
                 continue;
             }

@@ -8,8 +8,8 @@ import java.io.Writer;
  */
 public final class EolnWriter extends Writer {
 
-    private static final char EOLN = '\n';
-    private static final char[] eoln = System.getProperty("line.separator").toCharArray();
+    private static final char EOLN_IN = '\n';
+    private static final char[] EOLN_OUT = System.getProperty("line.separator").toCharArray();
 
     private final Writer out;
 
@@ -18,9 +18,8 @@ public final class EolnWriter extends Writer {
     }
 
     public void write(int c) throws IOException {
-        if (c == EOLN) {
-            for (char ch : eoln)
-                out.write(ch);
+        if (c == EOLN_IN) {
+            out.write(EOLN_OUT);
         } else {
             out.write(c);
         }
@@ -28,11 +27,11 @@ public final class EolnWriter extends Writer {
 
     public void write(char[] cbuf, int off, int len) throws IOException {
         for (int i = off, j = 0; j < len; i++, j++) {
-            if (cbuf[i] == EOLN) {
-                for (char ch : eoln)
-                    out.write(ch);
+            char c = cbuf[i];
+            if (c == EOLN_IN) {
+                out.write(EOLN_OUT);
             } else {
-                out.write(cbuf[i]);
+                out.write(c);
             }
         }
     }

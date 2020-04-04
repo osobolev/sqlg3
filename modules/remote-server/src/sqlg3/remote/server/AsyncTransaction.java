@@ -2,17 +2,17 @@ package sqlg3.remote.server;
 
 import sqlg3.core.IDBCommon;
 import sqlg3.core.ISimpleTransaction;
-import sqlg3.remote.common.SQLGLogger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.util.function.Consumer;
 
 final class AsyncTransaction implements ISimpleTransaction {
 
     private final DBInterface db;
-    private final SQLGLogger logger;
+    private final Consumer<Throwable> logger;
 
-    AsyncTransaction(DBInterface db, SQLGLogger logger) {
+    AsyncTransaction(DBInterface db, Consumer<Throwable> logger) {
         this.db = db;
         this.logger = logger;
     }
@@ -26,9 +26,9 @@ final class AsyncTransaction implements ISimpleTransaction {
                         method.invoke(target, args);
                     }
                 } catch (InvocationTargetException ex) {
-                    logger.error(ex.getTargetException());
+                    logger.accept(ex.getTargetException());
                 } catch (Exception ex) {
-                    logger.error(ex);
+                    logger.accept(ex);
                 }
             });
             thread.start();

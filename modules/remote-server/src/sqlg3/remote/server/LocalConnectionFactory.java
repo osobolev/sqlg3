@@ -2,7 +2,6 @@ package sqlg3.remote.server;
 
 import sqlg3.remote.common.IConnectionFactory;
 import sqlg3.remote.common.IRemoteDBInterface;
-import sqlg3.remote.common.SQLGLogger;
 import sqlg3.remote.common.SessionInfo;
 import sqlg3.runtime.ConnectionManager;
 import sqlg3.runtime.GlobalContext;

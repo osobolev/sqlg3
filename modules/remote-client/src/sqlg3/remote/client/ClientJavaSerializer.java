@@ -5,10 +5,11 @@ import sqlg3.remote.common.*;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.util.function.Consumer;
 
 public final class ClientJavaSerializer extends BaseJavaSerializer implements IClientSerializer {
 
-    public ClientJavaSerializer(SQLGLogger logger, boolean onlyMethods) {
+    public ClientJavaSerializer(Consumer<String> logger, boolean onlyMethods) {
         super(logger, onlyMethods);
     }
 
@@ -20,9 +21,9 @@ public final class ClientJavaSerializer extends BaseJavaSerializer implements IC
         boolean debug = onlyMethods ? method != null : true;
         if (logger != null && debug) {
             if (method != null) {
-                logger.info(iface + "." + method + ": " + retType);
+                logger.accept(iface + "." + method + ": " + retType);
             } else {
-                logger.info(command + ": " + retType);
+                logger.accept(command + ": " + retType);
             }
         }
         return processor.process(new ReqRespConsumer() {

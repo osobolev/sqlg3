@@ -2,16 +2,17 @@ package sqlg3.remote.common;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Consumer;
 
 public final class CountInputStream extends InputStream {
 
     private final InputStream is;
-    private final SQLGLogger logger;
+    private final Consumer<String> logger;
 
     private long count = 0;
     private boolean closed = false;
 
-    public CountInputStream(InputStream is, SQLGLogger logger) {
+    public CountInputStream(InputStream is, Consumer<String> logger) {
         this.is = is;
         this.logger = logger;
     }
@@ -46,7 +47,7 @@ public final class CountInputStream extends InputStream {
         if (!closed) {
             closed = true;
             if (logger != null) {
-                logger.info("READ: " + count);
+                logger.accept("READ: " + count);
             }
         }
         is.close();

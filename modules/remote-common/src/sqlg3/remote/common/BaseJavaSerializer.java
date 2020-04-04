@@ -1,15 +1,16 @@
 package sqlg3.remote.common;
 
 import java.io.*;
+import java.util.function.Consumer;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public abstract class BaseJavaSerializer {
 
-    protected final SQLGLogger logger;
+    protected final Consumer<String> logger;
     protected final boolean onlyMethods;
 
-    protected BaseJavaSerializer(SQLGLogger logger, boolean onlyMethods) {
+    protected BaseJavaSerializer(Consumer<String> logger, boolean onlyMethods) {
         this.logger = logger;
         this.onlyMethods = onlyMethods;
     }

@@ -3,7 +3,6 @@ package sqlg3.remote.server;
 import sqlg3.core.ISimpleTransaction;
 import sqlg3.core.ITransaction;
 import sqlg3.remote.common.IRemoteDBInterface;
-import sqlg3.remote.common.SQLGLogger;
 import sqlg3.remote.common.SessionInfo;
 import sqlg3.remote.common.WatcherThread;
 import sqlg3.runtime.ConnectionManager;
@@ -59,7 +58,7 @@ final class DBInterface implements IRemoteDBInterface {
     }
 
     public ISimpleTransaction getAsyncTransaction() {
-        return new AsyncTransaction(this, logger);
+        return new AsyncTransaction(this, logger::error);
     }
 
     public ITransaction getTransaction() {

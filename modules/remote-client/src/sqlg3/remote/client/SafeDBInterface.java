@@ -6,6 +6,7 @@ import sqlg3.remote.common.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.sql.SQLException;
+import java.util.function.Consumer;
 
 /**
  * Wrapper for {@link IDBInterface} on the client side.
@@ -21,7 +22,7 @@ public final class SafeDBInterface implements IRemoteDBInterface {
 
     private final WatcherThread watcher;
 
-    public SafeDBInterface(SQLGLogger logger, ConnectionProducer producer) throws Exception {
+    public SafeDBInterface(Consumer<Throwable> logger, ConnectionProducer producer) throws Exception {
         this(logger, producer.open(), producer);
     }
 
@@ -30,11 +31,11 @@ public final class SafeDBInterface implements IRemoteDBInterface {
      *
      * @param idb DB connection
      */
-    public SafeDBInterface(SQLGLogger logger, IRemoteDBInterface idb) {
+    public SafeDBInterface(Consumer<Throwable> logger, IRemoteDBInterface idb) {
         this(logger, idb, null);
     }
 
-    public SafeDBInterface(SQLGLogger logger, IRemoteDBInterface idb, ConnectionProducer producer) {
+    public SafeDBInterface(Consumer<Throwable> logger, IRemoteDBInterface idb, ConnectionProducer producer) {
         this.idb = idb;
         this.producer = producer;
         // pinging twice as frequent as server checks session activity
@@ -42,7 +43,7 @@ public final class SafeDBInterface implements IRemoteDBInterface {
             try {
                 ping();
             } catch (RemoteException ex) {
-                logger.error(ex);
+                logger.accept(ex);
             }
         });
         this.watcher.runThread();

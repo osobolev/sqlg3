@@ -1,13 +1,17 @@
 package sqlg3.remote.server;
 
 import sqlg3.core.IDBCommon;
-import sqlg3.remote.common.*;
+import sqlg3.remote.common.BaseJavaSerializer;
+import sqlg3.remote.common.HttpCommand;
+import sqlg3.remote.common.HttpId;
+import sqlg3.remote.common.UnrecoverableRemoteException;
 
 import java.io.*;
+import java.util.function.Consumer;
 
 public final class ServerJavaSerializer extends BaseJavaSerializer implements IServerSerializer {
 
-    public ServerJavaSerializer(SQLGLogger logger, boolean onlyMethods) {
+    public ServerJavaSerializer(Consumer<String> logger, boolean onlyMethods) {
         super(logger, onlyMethods);
     }
 

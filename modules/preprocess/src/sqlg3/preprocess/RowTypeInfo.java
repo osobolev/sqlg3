@@ -158,10 +158,10 @@ final class RowTypeInfo {
                field.apply(type0) + " in " + type0.displayEntryName;
     }
 
-    private static String warnTypeChange(Class<?> rowTypeClass, ColumnInfo column0,
+    private static String warnTypeChange(String rowTypeClass, ColumnInfo column0,
                                          Class<?> wasType, RowTypeInfo was,
                                          Class<?> becameType, RowTypeInfo became) {
-        return "Column " + column0.name + " of " + rowTypeClass.getSimpleName() +
+        return "Column " + column0.name + " of " + rowTypeClass +
                " had type " + wasType.getCanonicalName() + " in " + was.displayEntryName +
                ", but became type " + becameType.getCanonicalName() + " in " + became.displayEntryName;
     }
@@ -171,20 +171,20 @@ final class RowTypeInfo {
         void accept(String warning) throws ParseException;
     }
 
-    static RowTypeInfo checkCompatibility(Class<?> rowTypeClass, List<RowTypeInfo> types, WarningConsumer warnings) throws ParseException {
+    static RowTypeInfo checkCompatibility(String rowTypeClass, List<RowTypeInfo> types, WarningConsumer warnings) throws ParseException {
         RowTypeInfo type0 = types.get(0);
         int columnCount = type0.columns.size();
         for (int i = 1; i < types.size(); i++) {
             RowTypeInfo type = types.get(i);
             if (type.meta != type0.meta) {
                 throw new ParseException(
-                    "Column meta differs for " + rowTypeClass.getSimpleName() + ": " +
+                    "Column meta differs for " + rowTypeClass + ": " +
                     type.displayEntryName + " vs " + type0.displayEntryName
                 );
             }
             if (type.columns.size() != columnCount) {
                 throw new ParseException(
-                    "Column count differs for " + rowTypeClass.getSimpleName() + ": " +
+                    "Column count differs for " + rowTypeClass + ": " +
                     vs(type0, type, t -> t.columns.size())
                 );
             }
@@ -200,7 +200,7 @@ final class RowTypeInfo {
                 ColumnInfo column = type.columns.get(j);
                 if (!Objects.equals(column.name, column0.name)) {
                     throw new ParseException(
-                        "Different names for column " + (j + 1) + " of " + rowTypeClass.getSimpleName() + ": " +
+                        "Different names for column " + (j + 1) + " of " + rowTypeClass + ": " +
                         vs(type0, type, t -> t.columns.get(finalJ).name)
                     );
                 }
@@ -228,7 +228,7 @@ final class RowTypeInfo {
                     warnings.accept(warning);
                 } else {
                     throw new ParseException(
-                        "Different types for column " + column0.name + " of " + rowTypeClass.getSimpleName() + ": " +
+                        "Different types for column " + column0.name + " of " + rowTypeClass + ": " +
                         vs(type0, type, t -> t.columns.get(finalJ).type.getCanonicalName())
                     );
                 }

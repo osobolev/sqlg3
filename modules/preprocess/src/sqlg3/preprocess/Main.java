@@ -75,7 +75,7 @@ public final class Main {
     }
 
     private RowTypeInfo checkCompatibility(Class<?> rowType, List<RowTypeInfo> rowTypes) throws ParseException {
-        return RowTypeInfo.checkCompatibility(rowType, rowTypes, warning -> {
+        return RowTypeInfo.checkCompatibility(rowType.getSimpleName(), rowTypes, warning -> {
             if (o.warn == SQLGWarn.error) {
                 throw new ParseException(warning);
             } else if (o.warn == SQLGWarn.warn) {

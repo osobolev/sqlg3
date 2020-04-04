@@ -88,6 +88,24 @@ public final class Parameter {
         return mappers.getMapper(cls);
     }
 
+    private void set(PreparedStatement st, int index, TypeMapper<Object> mapper) throws SQLException {
+        if (input) {
+            mapper.set(st, index, inputValue);
+        }
+        if (isOut()) {
+            if (st instanceof CallableStatement) {
+                mapper.register((CallableStatement) st, index);
+            } else {
+                throw new SQLGException("You can pass OUT parameter only to CallableStatement");
+            }
+        }
+    }
+
+    void set(RuntimeMapper mappers, PreparedStatement st, int index) throws SQLException {
+        TypeMapper<Object> mapper = getMapper(mappers);
+        set(st, index, mapper);
+    }
+
     /**
      * Binds {@link PreparedStatement} parameters to values from array.
      * Can be used for {@link CallableStatement}, in this case it is possible
@@ -101,16 +119,7 @@ public final class Parameter {
         int index = 1;
         for (Parameter param : in) {
             TypeMapper<Object> mapper = param.getMapper(mappers);
-            if (param.input) {
-                mapper.set(st, index, param.inputValue);
-            }
-            if (param.isOut()) {
-                if (st instanceof CallableStatement) {
-                    mapper.register((CallableStatement) st, index);
-                } else {
-                    throw new SQLGException("You can pass OUT parameter only to CallableStatement");
-                }
-            }
+            param.set(st, index, mapper);
             index += mapper.getStatementParameters();
         }
     }

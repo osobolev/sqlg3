@@ -312,6 +312,18 @@ public class GBase implements ISimpleTransaction {
         Parameter.setParameters(ctx.global.mappers, st, in);
     }
 
+    /**
+     * Binds single prepared statement parameter to specific value.
+     *
+     * @param st SQL statement
+     * @param index index of the parameter (from 1)
+     * @param value parameter value
+     * @param cls parameter class
+     */
+    public final <T> void setParameter(PreparedStatement st, int index, T value, Class<T> cls) throws SQLException {
+        Parameter.in(value, cls).set(ctx.global.mappers, st, index);
+    }
+
     ///////////////////////////////// Sinlge and optional row statements /////////////////////////////////
 
     private static boolean checkNext(ResultSet rs, boolean optional) throws SQLException {

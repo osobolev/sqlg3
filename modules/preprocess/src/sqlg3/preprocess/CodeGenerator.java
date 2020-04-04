@@ -43,7 +43,7 @@ final class CodeGenerator {
             addIface.append(iface.getName());
         }
         buf.append(GENERATED_WARNING + "\n");
-        buf.append("@SuppressWarnings({\"UnnecessaryInterfaceModifier\", \"UnnecessaryFullyQualifiedName\", \"RedundantSuppression\"})\n");
+        buf.append("@SuppressWarnings(\"UnnecessaryFullyQualifiedName\")\n");
         buf.append("@sqlg3.core.Impl(\"" + cls.getName() + "\")\n");
         buf.append("public interface " + interfaceName + " extends sqlg3.core.IDBCommon" + addIface + " {\n");
     }

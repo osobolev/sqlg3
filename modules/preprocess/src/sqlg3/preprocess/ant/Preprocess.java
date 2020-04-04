@@ -61,6 +61,13 @@ public class Preprocess extends Task {
     }
 
     /**
+     * @param unpreprocess true to delete generated interface files
+     */
+    public void setUnpreprocess(boolean unpreprocess) {
+        options.unpreprocess = unpreprocess;
+    }
+
+    /**
      * Source files root. Package of class is determined relative to the source root.
      */
     public void setSrcroot(File srcroot) {

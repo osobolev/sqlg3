@@ -15,6 +15,7 @@ public final class OptionsBuilder {
     public boolean cleanup = true;
     public String classpath = null;
     public boolean checkTime = true;
+    public boolean unpreprocess = false;
 
     public Path srcRoot = Paths.get(".");
 
@@ -48,7 +49,7 @@ public final class OptionsBuilder {
             destRoot = this.destRoot;
         }
         return new Options(
-            tmpDir, cleanup, classpath, checkTime, srcRoot, destRoot, ifacePack,
+            tmpDir, cleanup, classpath, checkTime, unpreprocess, srcRoot, destRoot, ifacePack,
             encoding, tabSize, driverClass, mapperClass, checkerClass, url, user, pass, warn, log, runtimeMapperClass
         );
     }

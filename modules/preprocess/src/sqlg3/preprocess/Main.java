@@ -3,6 +3,7 @@ package sqlg3.preprocess;
 import sqlg3.preprocess.ant.SQLGWarn;
 import sqlg3.runtime.GBase;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -84,7 +85,7 @@ public final class Main {
         });
     }
 
-    public void workFiles(List<Path> inputFiles, List<String> javacOptions) throws Throwable {
+    private List<InputFile> getInputs(List<Path> inputFiles, Map<String, RowTypeCutPaste> rowTypeMap) throws IOException, ParseException {
         List<Path> in;
         if (inputFiles.isEmpty()) {
             in = new ArrayList<>();
@@ -93,10 +94,7 @@ public final class Main {
             in = inputFiles;
         }
 
-        // 1. Parse & check modification time
         List<InputFile> inputs = new ArrayList<>();
-        Map<String, RowTypeCutPaste> rowTypeMap = new HashMap<>();
-        boolean isAnyModified = !o.checkTime;
         for (Path file : in) {
             String simpleClassName = FileUtils.getJavaClassName(file);
             if (simpleClassName == null)
@@ -105,23 +103,58 @@ public final class Main {
             String fullClassName = pack == null ? simpleClassName : pack + "." + simpleClassName;
             String text = FileUtils.readFile(file, o.encoding);
             Parser parser = new Parser(text, simpleClassName, fullClassName, rowTypeMap);
-            ParseResult parsed = parser.parseAll();
-            Source src;
-            if (parsed == null) {
-                src = null;
+            ParseResult parsed;
+            boolean addSrc;
+            if (o.unpreprocess) {
+                parsed = null;
+                addSrc = parser.parseHeader();
             } else {
+                parsed = parser.parseAll();
+                addSrc = parsed != null;
+            }
+            Source src;
+            if (addSrc) {
                 String interfaceName = "I" + simpleClassName;
                 String interfacePackage = ClassUtils.resolvePackage(pack, o.ifacePack);
                 Path interfaceFile = ClassUtils.packageDir(o.destRoot, interfacePackage).resolve(interfaceName + FileUtils.JAVA_EXTENSION);
                 src = new Source(parsed, interfaceFile, interfaceName, interfacePackage);
-                if (o.checkTime) {
-                    isAnyModified |= FileUtils.isModified(file, interfaceFile);
-                }
+            } else {
+                src = null;
             }
             inputs.add(new InputFile(file, simpleClassName, fullClassName, pack, src));
         }
-        if (!isAnyModified || inputs.isEmpty())
+        return inputs;
+    }
+
+    public void workFiles(List<Path> inputFiles, List<String> javacOptions) throws Throwable {
+        // 1. Parse & check modification time
+        Map<String, RowTypeCutPaste> rowTypeMap = new HashMap<>();
+        List<InputFile> inputs = getInputs(inputFiles, rowTypeMap);
+        if (inputs.isEmpty())
             return;
+        if (o.unpreprocess) {
+            for (InputFile input : inputs) {
+                Source src = input.src;
+                if (src == null)
+                    continue;
+                Files.deleteIfExists(src.interfaceFile);
+            }
+            return;
+        }
+        if (o.checkTime) {
+            boolean isAnyModified = false;
+            for (InputFile input : inputs) {
+                Source src = input.src;
+                if (src == null)
+                    continue;
+                if (FileUtils.isModified(input.path, src.interfaceFile)) {
+                    isAnyModified = true;
+                    break;
+                }
+            }
+            if (!isAnyModified)
+                return;
+        }
 
         List<Path> srcRoots = new ArrayList<>();
         srcRoots.add(o.srcRoot);

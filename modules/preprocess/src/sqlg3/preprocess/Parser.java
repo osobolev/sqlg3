@@ -367,7 +367,7 @@ final class Parser extends ParserBase {
         }
     }
 
-    private boolean parseHeader() {
+    boolean parseHeader() {
         boolean wasClass = false;
         boolean needsProcessing = false;
         while (!eof()) {

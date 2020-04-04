@@ -17,14 +17,14 @@ import java.lang.annotation.Target;
  *  *&#47;
  * &#64;PrepareKey("id") PreparedStatement stmt = null;
  * executeUpdate(stmt);
- * int id = getGeneratedKeys()[0].intValue();
+ * int id = getGeneratedInt();
  * </pre>
  * Preprocessor generates code required to prepare statement with given auto-generated columns and set its parameters.
  * <p>
  * Note that parameters referenced
  * in query (as <code>:paramName</code>) should be accessible as variables in the current scope.
  * <p>
- * You can use string and query substitution in comments, see {@link Query}.
+ * You can use string and query substitution in comments, see {@link sqlg3.runtime.Query}.
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.LOCAL_VARIABLE)
@@ -36,7 +36,7 @@ public @interface PrepareKey {
      * <p>
      * Note that upper/lower case may be significant (depends on DB).
      * <p>
-     * Generated key values can be retrieved by {@link GBase#getGeneratedKeys(java.sql.PreparedStatement)} method,
+     * Generated key values can be retrieved by {@link sqlg3.runtime.GBase#getGeneratedKeys(java.sql.PreparedStatement)} method,
      * which returns array of generated key values - one value for each given column (order of columns is preserved
      * if the value was specified).
      */

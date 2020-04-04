@@ -10,14 +10,9 @@ import java.sql.Connection;
  * you can retrieve business interface <code>ITest</code> in the following way:
  * <pre>
  * Connection conn = ...;
- * ISimpleTransaction trans = new JdbcInterface(conn, new OracleDBSpecific());
+ * ISimpleTransaction trans = new JdbcInterface(global, conn, false);
  * ITest iface = trans.getInterface(ITest.class);
  * </pre>
- * Returned implementaion will call {@link #commitImmediate()} or {@link #rollbackImmediate()} methods
- * after business method invocation success or failure respectively. By default these methods do nothing,
- * and you can override them to control transactional behaviour of business methods. Other than that
- * no transaction control is performed, so you should commit/rollback or use
- * auto-commit on {@link Connection} yourself.
  */
 public class JdbcInterface implements ISimpleTransaction {
 

@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * Annotation for local variables marking QueryPiece to be generated.
  * SQL query is taken from preceding javadoc comments.
- * {@link sqlg3.db.QueryPiece} can be used to build larger SQL statement from pieces.
+ * {@link sqlg3.runtime.Query} can be used to build larger SQL statement from pieces.
  * <p>
  * Example:
  * <pre>
@@ -18,13 +18,13 @@ import java.lang.annotation.Target;
  *  *&#47;
  * &#64;Query QueryPiece sql1 = null;
  * </pre>
- * Preprocessor generates code to encapsulate SQL text and parameters in the {@link sqlg3.db.QueryPiece} object.
+ * Preprocessor generates code to encapsulate SQL text and parameters in the {@link sqlg3.runtime.Query} object.
  * <p>
  * Note that parameters referenced
  * in query (as <code>:paramName</code>) should be accessible as variables in the current scope.
  * <p>
- * You can use query pieces to build larger queries manually using {@link sqlg3.db.QueryBuilder} or methods
- * like {@link sqlg3.db.QueryPiece#add(sqlg3.db.QueryPiece...)}, but also you can reference query pieces in
+ * You can use query pieces to build larger queries manually using {@link sqlg3.runtime.QueryBuilder} or methods
+ * like {@link sqlg3.runtime.Query#add(sqlg3.runtime.Query...)}, but also you can reference query pieces in
  * javadoc comments used for queries as <code>&amp;piece</code>, example:
  * <pre>
  * /**

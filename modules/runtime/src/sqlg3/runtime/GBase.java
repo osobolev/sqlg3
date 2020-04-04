@@ -612,6 +612,14 @@ public class GBase implements ISimpleTransaction {
         }
     }
 
+    public static int getGeneratedInt(PreparedStatement ps) throws SQLException {
+        return getGeneratedKeys(ps)[0].intValue();
+    }
+
+    public static long getGeneratedLong(PreparedStatement ps) throws SQLException {
+        return getGeneratedKeys(ps)[0].longValue();
+    }
+
     ///////////////////////////////// Executing calls /////////////////////////////////
 
     private static String getProcCallSql(String name, Parameter[] in) {

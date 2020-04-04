@@ -112,7 +112,7 @@ public class GBase implements ISimpleTransaction {
         return stmt;
     }
 
-    private PreparedStatement doPrepareStatement(String unparsedSql, String[] autoKeys, Parameter[] params) throws SQLException {
+    private PreparedStatement doPrepareStatement(String[] autoKeys, String unparsedSql, Parameter[] params) throws SQLException {
         setSql(unparsedSql, params);
         String parsedSql = QueryParser.parseQuery(unparsedSql);
         if (autoKeys == null) {
@@ -158,7 +158,7 @@ public class GBase implements ISimpleTransaction {
      * @param params query parameters, see {@link #in}
      */
     public final PreparedStatement prepareStatement(String sql, Parameter... params) throws SQLException {
-        return doPrepareStatement(sql, null, params);
+        return doPrepareStatement(null, sql, params);
     }
 
     /**
@@ -179,7 +179,7 @@ public class GBase implements ISimpleTransaction {
      * @param params   query parameters, see {@link #in}
      */
     public final PreparedStatement prepareStatementKey(String[] autoKeys, String sql, Parameter... params) throws SQLException {
-        return doPrepareStatement(sql, autoKeys, params);
+        return doPrepareStatement(autoKeys, sql, params);
     }
 
     /**
@@ -196,7 +196,7 @@ public class GBase implements ISimpleTransaction {
      * @param query query piece containing SQL query and its parameters
      */
     public final PreparedStatement prepareStatement(Query query) throws SQLException {
-        return doPrepareStatement(query.sql, null, query.data);
+        return doPrepareStatement(null, query.sql, query.data);
     }
 
     /**
@@ -216,7 +216,7 @@ public class GBase implements ISimpleTransaction {
      * @param query    query piece containing SQL query and its parameters
      */
     public final PreparedStatement prepareStatementKey(String[] autoKeys, Query query) throws SQLException {
-        return doPrepareStatement(query.sql, autoKeys, query.data);
+        return doPrepareStatement(autoKeys, query.sql, query.data);
     }
 
     /**

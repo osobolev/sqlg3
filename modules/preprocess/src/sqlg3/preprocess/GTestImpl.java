@@ -79,8 +79,11 @@ final class GTestImpl extends GTest {
     @Override
     public void checkOneColumn(ResultSet rs, Class<?> cls) throws SQLException {
         ColumnInfo col1 = getOneColumn(rs);
-        if (!cls.equals(col1.type))
-            throw new SQLException("Column is of type " + col1.type.getCanonicalName() + ", but " + cls.getCanonicalName() + " required");
+        if (!cls.equals(col1.type)) {
+            if (RowTypeInfo.getWiderOf(cls, col1.type) == null) {
+                throw new SQLException("Column is of type " + col1.type.getCanonicalName() + ", but " + cls.getCanonicalName() + " required");
+            }
+        }
     }
 
     @Override

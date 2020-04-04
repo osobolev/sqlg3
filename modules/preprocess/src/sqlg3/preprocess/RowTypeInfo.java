@@ -116,7 +116,7 @@ final class RowTypeInfo {
         }
     }
 
-    private static Class<?> getWiderOf(Class<?> cls1, Class<?> cls2) {
+    static Class<?> getWiderOf(Class<?> cls1, Class<?> cls2) {
         Class<?> primitive1;
         if (cls1.isPrimitive()) {
             primitive1 = cls1;

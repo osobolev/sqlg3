@@ -121,6 +121,39 @@ public class RuntimeMapperImpl implements RuntimeMapper {
         }
     }
 
+    public static final class EnumMapper<T extends Enum<T>> extends TypeMapper<T> {
+
+        public EnumMapper(Class<T> cls) {
+            super(cls);
+        }
+
+        private T convert(String name) {
+            return name == null ? null : Enum.valueOf(cls, name);
+        }
+
+        @Override
+        public T fetch(ResultSet rs, int index) throws SQLException {
+            String name = rs.getString(index);
+            return convert(name);
+        }
+
+        @Override
+        public void set(PreparedStatement stmt, int index, T value) throws SQLException {
+            stmt.setString(index, value == null ? null : value.name());
+        }
+
+        @Override
+        public void register(CallableStatement cs, int index) throws SQLException {
+            cs.registerOutParameter(index, Types.VARCHAR);
+        }
+
+        @Override
+        public T get(CallableStatement cs, int index) throws SQLException {
+            String name = cs.getString(index);
+            return convert(name);
+        }
+    }
+
     public RuntimeMapperImpl() {
         registerDefault();
     }

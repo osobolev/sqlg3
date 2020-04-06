@@ -69,9 +69,9 @@ public class GBase implements ISimpleTransaction {
     ///////////////////////////////// Query piece creation /////////////////////////////////
 
     /**
-     * Used for preprocessor-generated query pieces (see {@link sqlg3.annotations.Sql})
+     * Used for preprocessor-generated query pieces (see {@link sqlg3.annotations.Query})
      */
-    public static Query createQueryPiece(Query query) {
+    public static QueryPiece createQueryPiece(QueryPiece query) {
         return query;
     }
 
@@ -81,17 +81,17 @@ public class GBase implements ISimpleTransaction {
      * <pre>
      * QueryPiece piece = createQueryPiece(" AND type_id = ?", in(typeId, Long.class));
      * </pre>
-     * It is more convenient to use {@link sqlg3.annotations.Sql} annotation to generate such pieces than
+     * It is more convenient to use {@link sqlg3.annotations.Query} annotation to generate such pieces than
      * to use this method manually.
      * <p>
      * After piece is created, it can be used to build large query (see {@link QueryBuilder}) or execute query
-     * (see {@link #prepareStatement(Query)})
+     * (see {@link #prepareStatement(QueryPiece)})
      *
      * @param sql    query text, possibly containing references to parameters in the form of {@code ?}
      * @param params query parameters, see {@link #in}
      */
-    public static Query createQueryPiece(CharSequence sql, Parameter... params) {
-        return new Query(sql, params);
+    public static QueryPiece createQueryPiece(CharSequence sql, Parameter... params) {
+        return new QueryPiece(sql, params);
     }
 
     ///////////////////////////////// Statement preparation /////////////////////////////////
@@ -195,7 +195,7 @@ public class GBase implements ISimpleTransaction {
      *
      * @param query query piece containing SQL query and its parameters
      */
-    public final PreparedStatement prepareStatement(Query query) throws SQLException {
+    public final PreparedStatement prepareStatement(QueryPiece query) throws SQLException {
         return doPrepareStatement(null, query.sql, query.data);
     }
 
@@ -215,7 +215,7 @@ public class GBase implements ISimpleTransaction {
      *                 Pass {@link #ALL_KEYS} to retrieve all generated columns (does not work on some DBs).
      * @param query    query piece containing SQL query and its parameters
      */
-    public final PreparedStatement prepareStatementKey(String[] autoKeys, Query query) throws SQLException {
+    public final PreparedStatement prepareStatementKey(String[] autoKeys, QueryPiece query) throws SQLException {
         return doPrepareStatement(autoKeys, query.sql, query.data);
     }
 
@@ -234,7 +234,7 @@ public class GBase implements ISimpleTransaction {
         return doPrepareAnyStatement(sql, params, Connection::prepareCall);
     }
 
-    public final CallableStatement prepareCall(Query query) throws SQLException {
+    public final CallableStatement prepareCall(QueryPiece query) throws SQLException {
         return prepareCall(query.sql, query.data);
     }
 

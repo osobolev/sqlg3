@@ -6,45 +6,27 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation for local variables marking QueryPiece to be generated.
- * SQL query is taken from preceding javadoc comments.
- * {@link sqlg3.runtime.Query} can be used to build larger SQL statement from pieces.
+ * Annotation for local variables marking that variable's value should be taken
+ * from comments (as a string). When extracting string from comments following
+ * replacements are made:
+ * <code>"a &amp;b c"</code>
+ * to
+ * <code>"a " + b + " c"</code>
+ * (i.e. variable substitution is performed).
  * <p>
  * Example:
- * <pre>
- * int idParam = ...;
- * /**
- *  *  WHERE id = :idParam
- *  *&#47;
- * &#64;Query QueryPiece sql1 = null;
- * </pre>
- * Preprocessor generates code to encapsulate SQL text and parameters in the {@link sqlg3.runtime.Query} object.
- * <p>
- * Note that parameters referenced
- * in query (as <code>:paramName</code>) should be accessible as variables in the current scope.
- * <p>
- * You can use query pieces to build larger queries manually using {@link sqlg3.runtime.QueryBuilder} or methods
- * like {@link sqlg3.runtime.Query#add(sqlg3.runtime.Query...)}, but also you can reference query pieces in
- * javadoc comments used for queries as <code>&amp;piece</code>, example:
- * <pre>
- * /**
- *  * SELECT name, value
- *  *   FROM table
- *  *  &amp;sql1
- *  *&#47;
- * &#64;Prepare PreparedStatement stmt = null;
- * </pre>
- * In this way you can combine multiple pieces into one query. &amp;-substitution works not only for QueryPieces, but
- * also for Strings:
  * <pre>
  * String table = "table";
  * /**
  *  * SELECT name, value
  *  *   FROM &amp;table
- *  *  &amp;sql1
+ *  *  WHERE id = ?
  *  *&#47;
- * &#64;Query QueryPiece largeQuery = null;
+ * &#64;Sql String sql = null;
  * </pre>
+ * <p>
+ * Since Sql annotation works only with text (no parameters allowed), usually it's more convenient to use
+ * {@link sqlg3.runtime.QueryPiece} annotation to encapsulate both SQL text and its parameters into one entity.
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.LOCAL_VARIABLE)

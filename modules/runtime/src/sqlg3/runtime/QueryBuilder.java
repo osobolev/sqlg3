@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Query builder (used to concatenate multiple {@link Query}s effectively, just as StringBuilder for Strings).
+ * Query builder (used to concatenate multiple {@link QueryPiece}s effectively, just as StringBuilder for Strings).
  */
 public final class QueryBuilder {
 
@@ -27,12 +27,12 @@ public final class QueryBuilder {
     /**
      * @param piece initial query piece (not null)
      */
-    public QueryBuilder(Query piece) {
+    public QueryBuilder(QueryPiece piece) {
         this.sql = new StringBuilder(piece.sql);
         this.data = new ArrayList<>(Arrays.asList(piece.data));
     }
 
-    private QueryBuilder append(Query that, boolean breakLine) {
+    private QueryBuilder append(QueryPiece that, boolean breakLine) {
         if (that == null)
             return this;
         append(this.sql, that.sql, breakLine);
@@ -50,9 +50,9 @@ public final class QueryBuilder {
 
     /**
      * Appends query piece. Parameter <code>that</code> can be null (then it is ignored).
-     * Line break is inserted between pieces, so it is safer to use than {@link #appendLit(Query)} for user.
+     * Line break is inserted between pieces, so it is safer to use than {@link #appendLit(QueryPiece)} for user.
      */
-    public QueryBuilder append(Query that) {
+    public QueryBuilder append(QueryPiece that) {
         return append(that, true);
     }
 
@@ -60,7 +60,7 @@ public final class QueryBuilder {
      * Appends query piece. Parameter <code>that</code> can be null (then it is ignored).
      * Nothing is inserted between pieces. Usually used by preprocessor-generated code.
      */
-    public QueryBuilder appendLit(Query that) {
+    public QueryBuilder appendLit(QueryPiece that) {
         return append(that, false);
     }
 
@@ -142,8 +142,8 @@ public final class QueryBuilder {
     /**
      * Returns built query
      */
-    public Query toQuery() {
-        return new Query(sql, data.toArray(new Parameter[0]));
+    public QueryPiece toQuery() {
+        return new QueryPiece(sql, data.toArray(new Parameter[0]));
     }
 
     public String toString() {

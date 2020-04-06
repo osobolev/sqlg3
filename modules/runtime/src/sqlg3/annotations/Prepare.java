@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  * Note that parameters referenced
  * in query (as <code>:paramName</code>) should be accessible as variables in the current scope.
  * <p>
- * You can use string and query substitution in comments, see {@link sqlg3.runtime.Query}.
+ * You can use string and query substitution in comments, see {@link sqlg3.runtime.QueryPiece}.
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.LOCAL_VARIABLE)

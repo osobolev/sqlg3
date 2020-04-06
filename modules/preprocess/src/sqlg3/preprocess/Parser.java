@@ -11,7 +11,7 @@ import java.util.*;
 final class Parser extends ParserBase {
 
     private static final String SQL_ANNOTATION = annotationName(Sql.class);
-    private static final String SQL_ONLY_ANNOTATION = annotationName(SqlOnly.class);
+    private static final String QUERY_ANNOTATION = annotationName(Query.class);
     private static final String STATEMENT_ANNOTATION = annotationName(Prepare.class);
     private static final String KEY_STATEMENT_ANNOTATION = annotationName(PrepareKey.class);
     private static final String CALL_ANNOTATION = annotationName(Call.class);
@@ -284,9 +284,9 @@ final class Parser extends ParserBase {
                 lastSqlQueryCount = count;
             } else if (id == Java8Lexer.AT) {
                 String annotation = getAnnotation();
-                if (SQL_ANNOTATION.equals(annotation)) {
+                if (QUERY_ANNOTATION.equals(annotation)) {
                     parseStatement(entryName, lastSqlQuery, false, "createQueryPiece", "", false);
-                } else if (SQL_ONLY_ANNOTATION.equals(annotation)) {
+                } else if (SQL_ANNOTATION.equals(annotation)) {
                     parseStatement(entryName, lastSqlQuery, true, null, "", true);
                 } else if (STATEMENT_ANNOTATION.equals(annotation)) {
                     parseStatement(entryName, lastSqlQuery, false, "prepareStatement", "", false);

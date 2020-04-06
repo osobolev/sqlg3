@@ -17,34 +17,39 @@ public final class Main {
         this.o = o;
     }
 
-    private static final class Source {
-
-        final ParseResult parsed;
-        final Path interfaceFile;
-        final String interfaceName;
-        final String interfacePackage;
-
-        Source(ParseResult parsed, Path interfaceFile, String interfaceName, String interfacePackage) {
-            this.parsed = parsed;
-            this.interfaceFile = interfaceFile;
-            this.interfaceName = interfaceName;
-            this.interfacePackage = interfacePackage;
-        }
-    }
-
-    private static final class InputFile {
+    private static final class JavaClassFile {
 
         final Path path;
         final String simpleClassName;
         final String fullClassName;
         final String pack;
-        final Source src;
 
-        InputFile(Path path, String simpleClassName, String fullClassName, String pack, Source src) {
+        JavaClassFile(Path path, String simpleClassName, String pack) {
             this.path = path;
             this.simpleClassName = simpleClassName;
-            this.fullClassName = fullClassName;
+            this.fullClassName = pack == null ? simpleClassName : pack + "." + simpleClassName;
             this.pack = pack;
+        }
+    }
+
+    private static final class Source {
+
+        final ParseResult parsed;
+        final JavaClassFile iface;
+
+        Source(ParseResult parsed, JavaClassFile iface) {
+            this.parsed = parsed;
+            this.iface = iface;
+        }
+    }
+
+    private static final class InputFile {
+
+        final JavaClassFile file;
+        final Source src;
+
+        InputFile(JavaClassFile file, Source src) {
+            this.file = file;
             this.src = src;
         }
     }
@@ -85,6 +90,21 @@ public final class Main {
         });
     }
 
+    private JavaClassFile getJavaClass(Path file) {
+        String simpleClassName = FileUtils.getJavaClassName(file);
+        if (simpleClassName == null)
+            throw new IllegalArgumentException("File " + file + " should have " + FileUtils.JAVA_EXTENSION + " extension");
+        String pack = getPackage(o.srcRoot, file);
+        return new JavaClassFile(file, simpleClassName, pack);
+    }
+
+    private JavaClassFile getInterface(JavaClassFile src) {
+        String interfaceName = "I" + src.simpleClassName;
+        String interfacePackage = ClassUtils.resolvePackage(src.pack, o.ifacePack);
+        Path interfaceFile = ClassUtils.packageDir(o.destRoot, interfacePackage).resolve(interfaceName + FileUtils.JAVA_EXTENSION);
+        return new JavaClassFile(interfaceFile, interfaceName, interfacePackage);
+    }
+
     private List<InputFile> getInputs(List<Path> inputFiles, Map<String, RowTypeCutPaste> rowTypeMap) throws IOException, ParseException {
         List<Path> in;
         if (inputFiles.isEmpty()) {
@@ -94,15 +114,30 @@ public final class Main {
             in = inputFiles;
         }
 
+        if (!o.unpreprocess && o.checkTime) {
+            Set<Path> candidateInterfaces = new HashSet<>();
+            Map<Path, Path> classToIface = new LinkedHashMap<>();
+            for (Path path : in) {
+                JavaClassFile file = getJavaClass(path);
+                JavaClassFile iface = getInterface(file);
+                candidateInterfaces.add(iface.path);
+                classToIface.put(file.path, iface.path);
+            }
+            classToIface.keySet().removeAll(candidateInterfaces);
+            boolean isAnyModified = FileUtils.isAnyModified(
+                classToIface.entrySet().stream(),
+                Map.Entry::getKey,
+                Map.Entry::getValue
+            );
+            if (!isAnyModified)
+                return Collections.emptyList();
+        }
+
         List<InputFile> inputs = new ArrayList<>();
-        for (Path file : in) {
-            String simpleClassName = FileUtils.getJavaClassName(file);
-            if (simpleClassName == null)
-                throw new IllegalArgumentException("File " + file + " should have " + FileUtils.JAVA_EXTENSION + " extension");
-            String pack = getPackage(o.srcRoot, file);
-            String fullClassName = pack == null ? simpleClassName : pack + "." + simpleClassName;
-            String text = FileUtils.readFile(file, o.encoding);
-            Parser parser = new Parser(text, simpleClassName, fullClassName, rowTypeMap);
+        for (Path path : in) {
+            JavaClassFile file = getJavaClass(path);
+            String text = FileUtils.readFile(file.path, o.encoding);
+            Parser parser = new Parser(text, file.simpleClassName, file.fullClassName, rowTypeMap);
             ParseResult parsed;
             boolean addSrc;
             if (o.unpreprocess) {
@@ -114,14 +149,12 @@ public final class Main {
             }
             Source src;
             if (addSrc) {
-                String interfaceName = "I" + simpleClassName;
-                String interfacePackage = ClassUtils.resolvePackage(pack, o.ifacePack);
-                Path interfaceFile = ClassUtils.packageDir(o.destRoot, interfacePackage).resolve(interfaceName + FileUtils.JAVA_EXTENSION);
-                src = new Source(parsed, interfaceFile, interfaceName, interfacePackage);
+                JavaClassFile iface = getInterface(file);
+                src = new Source(parsed, iface);
             } else {
                 src = null;
             }
-            inputs.add(new InputFile(file, simpleClassName, fullClassName, pack, src));
+            inputs.add(new InputFile(file, src));
         }
         return inputs;
     }
@@ -137,21 +170,16 @@ public final class Main {
                 Source src = input.src;
                 if (src == null)
                     continue;
-                Files.deleteIfExists(src.interfaceFile);
+                Files.deleteIfExists(src.iface.path);
             }
             return;
         }
         if (o.checkTime) {
-            boolean isAnyModified = false;
-            for (InputFile input : inputs) {
-                Source src = input.src;
-                if (src == null)
-                    continue;
-                if (FileUtils.isModified(input.path, src.interfaceFile)) {
-                    isAnyModified = true;
-                    break;
-                }
-            }
+            boolean isAnyModified = FileUtils.isAnyModified(
+                inputs.stream().filter(input -> input.src != null),
+                input -> input.file.path,
+                input -> input.src.iface.path
+            );
             if (!isAnyModified)
                 return;
         }
@@ -170,15 +198,15 @@ public final class Main {
             Path[] compFiles = new Path[inputs.size()];
             for (int i = 0; i < inputs.size(); i++) {
                 InputFile input = inputs.get(i);
-                Path dir = ClassUtils.packageDir(tmpDir, input.pack);
+                Path dir = ClassUtils.packageDir(tmpDir, input.file.pack);
                 Files.createDirectories(dir);
-                compFiles[i] = dir.resolve(input.path.getFileName());
+                compFiles[i] = dir.resolve(input.file.path.getFileName());
                 if (input.src != null) {
                     ParseResult parsed = input.src.parsed;
                     String newText = parsed.doCutPaste();
                     FileUtils.writeFile(compFiles[i], newText, o.encoding);
                 } else {
-                    Files.copy(input.path, compFiles[i], StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(input.file.path, compFiles[i], StandardCopyOption.REPLACE_EXISTING);
                 }
             }
 
@@ -190,11 +218,11 @@ public final class Main {
                     continue;
                 ParseResult parsed = src.parsed;
                 Class<?> cls = new ClassCompiler(tmpDir).compileAndLoad(
-                    srcRoots, compFiles[i], input.fullClassName, o.encoding, o.classpath, javacOptions
+                    srcRoots, compFiles[i], input.file.fullClassName, o.encoding, o.classpath, javacOptions
                 );
                 if (GBase.class.isAssignableFrom(cls)) {
                     MethodRunner runner = new MethodRunner(
-                        runGlobal.getTest(), cls, input.simpleClassName, parsed.entries, o.getLog()
+                        runGlobal.getTest(), cls, input.file.simpleClassName, parsed.entries, log
                     );
                     List<RunMethod> runMethods = runner.checkEntries(parsed.bindMap, parsed.parameters);
                     runResults.add(new RunResult(input, cls, runMethods));
@@ -229,8 +257,8 @@ public final class Main {
             if (src == null)
                 continue;
             ParseResult parsed = src.parsed;
-            Files.createDirectories(src.interfaceFile.getParent());
-            CodeGenerator g = new CodeGenerator(tab, src.interfaceName, src.interfacePackage);
+            Files.createDirectories(src.iface.path.getParent());
+            CodeGenerator g = new CodeGenerator(tab, src.iface.simpleClassName, src.iface.pack);
             g.start(rr.cls);
             for (RunMethod runMethod : rr.methods) {
                 MethodEntry entry = runMethod.entry;
@@ -241,9 +269,9 @@ public final class Main {
             String ifaceText = g.finish();
 
             String newText = parsed.doCutPaste();
-            FileUtils.writeFile(input.path, newText, o.encoding);
+            FileUtils.writeFile(input.file.path, newText, o.encoding);
 
-            FileUtils.writeFile(src.interfaceFile, ifaceText, o.encoding);
+            FileUtils.writeFile(src.iface.path, ifaceText, o.encoding);
         }
     }
 }

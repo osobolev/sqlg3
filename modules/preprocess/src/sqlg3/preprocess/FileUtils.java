@@ -2,6 +2,7 @@ package sqlg3.preprocess;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
@@ -9,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 final class FileUtils {
 
@@ -42,6 +45,18 @@ final class FileUtils {
         } else {
             return true;
         }
+    }
+
+    static <T> boolean isAnyModified(Stream<T> inputs, Function<T, Path> getSource, Function<T, Path> getTarget) {
+        return inputs.anyMatch(input -> {
+            Path src = getSource.apply(input);
+            Path target = getTarget.apply(input);
+            try {
+                return isModified(src, target);
+            } catch (IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        });
     }
 
     static void deleteRecursively(Path path) {

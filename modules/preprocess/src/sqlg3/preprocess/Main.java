@@ -192,7 +192,8 @@ public final class Main {
         List<RunResult> runResults = new ArrayList<>();
         Map<Class<?>, List<RowTypeInfo>> generatedIn;
         Map<Class<?>, List<RowTypeInfo>> generatedOut;
-        try (RunGlobalContext runGlobal = new RunGlobalContext(o)) {
+        try (RunGlobalContext runGlobal = new RunGlobalContext(o);
+             RunLog log = o.getLog()) {
             // 2. Copy to temp
             Path tmpDir = runGlobal.getTmpDir();
             Path[] compFiles = new Path[inputs.size()];

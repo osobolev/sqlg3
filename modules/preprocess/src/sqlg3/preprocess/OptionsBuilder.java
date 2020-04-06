@@ -32,7 +32,7 @@ public final class OptionsBuilder {
     public String user;
     public String pass;
     public SQLGWarn warn = SQLGWarn.warn;
-    public boolean log = false;
+    public String log = null;
     public String runtimeMapperClass = RuntimeMapperImpl.class.getName();
 
     public Options build() throws ParseException {

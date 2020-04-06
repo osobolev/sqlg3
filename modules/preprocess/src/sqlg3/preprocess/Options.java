@@ -2,9 +2,13 @@ package sqlg3.preprocess;
 
 import sqlg3.preprocess.ant.SQLGWarn;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 public final class Options {
 
@@ -29,10 +33,10 @@ public final class Options {
     public final String user;
     public final String pass;
     public final SQLGWarn warn;
-    public final boolean log;
+    public final String log;
     public final String runtimeMapperClass;
 
-    Options(Path tmpDir, boolean cleanup, String classpath, boolean checkTime, boolean unpreprocess, Path srcRoot, Path destRoot, String ifacePack, Charset encoding, int tabSize, String driverClass, String mapperClass, String checkerClass, String url, String user, String pass, SQLGWarn warn, boolean log, String runtimeMapperClass) {
+    Options(Path tmpDir, boolean cleanup, String classpath, boolean checkTime, boolean unpreprocess, Path srcRoot, Path destRoot, String ifacePack, Charset encoding, int tabSize, String driverClass, String mapperClass, String checkerClass, String url, String user, String pass, SQLGWarn warn, String log, String runtimeMapperClass) {
         this.tmpDir = tmpDir;
         this.cleanup = cleanup;
         this.classpath = classpath;
@@ -63,8 +67,19 @@ public final class Options {
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    PrintStream getLog() {
-        return log ? System.out : null;
+    RunLog getLog() throws IOException {
+        if (log == null || "false".equalsIgnoreCase(log)) {
+            return null;
+        } else if ("true".equalsIgnoreCase(log) || "err".equalsIgnoreCase(log)) {
+            return new RunLog(false, () -> System.err);
+        } else if ("out".equalsIgnoreCase(log)) {
+            return new RunLog(false, () -> System.out);
+        } else {
+            return new RunLog(
+                true,
+                () -> new PrintStream(Files.newOutputStream(Paths.get(log), StandardOpenOption.APPEND), true, "UTF-8")
+            );
+        }
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")

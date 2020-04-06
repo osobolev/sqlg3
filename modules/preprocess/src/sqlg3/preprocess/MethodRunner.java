@@ -3,7 +3,6 @@ package sqlg3.preprocess;
 import sqlg3.runtime.GContext;
 import sqlg3.runtime.GTest;
 
-import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -19,10 +18,10 @@ final class MethodRunner {
     private final Class<?> cls;
     private final String displayClassName;
     private final List<MethodEntry> entries;
-    private final PrintStream log;
+    private final RunLog log;
 
     MethodRunner(GTestImpl test, Class<?> cls, String displayClassName,
-                 List<MethodEntry> entries, PrintStream log) {
+                 List<MethodEntry> entries, RunLog log) {
         this.test = test;
         this.cls = cls;
         this.displayClassName = displayClassName;
@@ -59,7 +58,7 @@ final class MethodRunner {
     List<RunMethod> checkEntries(Map<String, List<ParamCutPaste>> bindMap, List<String> allParameters) throws Throwable {
         Map<String, List<Method>> methodMap = Arrays.stream(cls.getDeclaredMethods()).collect(Collectors.groupingBy(Method::getName));
         if (log != null) {
-            log.println(cls.getCanonicalName());
+            log.getLog().println(cls.getCanonicalName());
         }
         test.startClass(bindMap);
         List<RunMethod> entryMethods = new ArrayList<>();
@@ -85,7 +84,7 @@ final class MethodRunner {
             }
             entryMethods.add(new RunMethod(entry, toCall));
             if (log != null) {
-                log.println(toCall.getName());
+                log.getLog().println(toCall.getName());
             }
             test.startCall(displayEntryName);
             Constructor<?> constructor = cls.getConstructor(GContext.class);

@@ -173,7 +173,7 @@ public class Preprocess extends Task {
     /**
      * Log method running
      */
-    public void setLog(boolean log) {
+    public void setLog(String log) {
         options.log = log;
     }
 

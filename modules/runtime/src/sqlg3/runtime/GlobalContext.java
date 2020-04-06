@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -19,6 +20,7 @@ public final class GlobalContext {
     final SqlTrace trace;
 
     public volatile boolean checkRowTypes = false;
+    public final Map<String, Object> userData = new ConcurrentHashMap<>();
 
     private final ConcurrentMap<Class<?>, RowTypeFactory<?>> rowTypeFactoryCache = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<?>, ImplCache> implCache = new ConcurrentHashMap<>();

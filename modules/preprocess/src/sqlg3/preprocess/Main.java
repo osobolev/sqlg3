@@ -105,7 +105,7 @@ public final class Main {
         return new JavaClassFile(interfaceFile, interfaceName, interfacePackage);
     }
 
-    private List<InputFile> getInputs(List<Path> inputFiles, Map<String, RowTypeCutPaste> rowTypeMap) throws IOException, ParseException {
+    private List<InputFile> getInputs(List<Path> inputFiles, Map<ClassName, RowTypeCutPaste> rowTypeMap) throws IOException, ParseException {
         List<Path> in;
         if (inputFiles.isEmpty()) {
             in = new ArrayList<>();
@@ -161,7 +161,7 @@ public final class Main {
 
     public void workFiles(List<Path> inputFiles, List<String> javacOptions) throws Throwable {
         // 1. Parse & check modification time
-        Map<String, RowTypeCutPaste> rowTypeMap = new HashMap<>();
+        Map<ClassName, RowTypeCutPaste> rowTypeMap = new HashMap<>();
         List<InputFile> inputs = getInputs(inputFiles, rowTypeMap);
         if (inputs.isEmpty())
             return;
@@ -238,7 +238,7 @@ public final class Main {
         for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedIn.entrySet()) {
             Class<?> cls = entry.getKey();
             RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
-            String key = cls.getDeclaringClass().getName() + "." + cls.getSimpleName();
+            ClassName key = ClassName.nested(cls.getDeclaringClass().getName(), cls.getSimpleName());
             RowTypeCutPaste cp = rowTypeMap.get(key);
             if (cp == null)
                 throw new ParseException("Row type " + key + " definition not found");

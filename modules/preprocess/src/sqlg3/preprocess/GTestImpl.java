@@ -15,8 +15,8 @@ import java.util.Map;
 
 final class GTestImpl extends GTest {
 
-    private final Map<String, Class<?>> paramTypeMap = new HashMap<>();
-    private Map<String, List<ParamCutPaste>> bindMap;
+    private final Map<ParamName, Class<?>> paramTypeMap = new HashMap<>();
+    private Map<ParamName, List<ParamCutPaste>> bindMap;
 
     private String displayEntryName;
     private final Map<Statement, String> stmtMap = new HashMap<>();
@@ -108,8 +108,9 @@ final class GTestImpl extends GTest {
 
     @Override
     public Class<?> setParamType(String paramId, Class<?> paramClass) {
+        ParamName paramName = ParamName.fromId(paramId);
         Class<?> cls = mapper.getParameterClass(paramClass);
-        List<ParamCutPaste> params = bindMap.get(paramId);
+        List<ParamCutPaste> params = bindMap.get(paramName);
         if (params != null) {
             String className = ClassUtils.getClassName(cls);
             for (ParamCutPaste param : params) {
@@ -120,13 +121,13 @@ final class GTestImpl extends GTest {
                 }
             }
         }
-        Class<?> existingClass = paramTypeMap.get(paramId);
+        Class<?> existingClass = paramTypeMap.get(paramName);
         if (existingClass != null) {
             if (!cls.equals(existingClass)) {
-                throw new SQLGException("Parameter " + paramId + " has conflicting type definitions: was " + existingClass + ", became " + cls);
+                throw new SQLGException("Parameter " + paramName + " has conflicting type definitions: was " + existingClass + ", became " + cls);
             }
         }
-        paramTypeMap.put(paramId, cls);
+        paramTypeMap.put(paramName, cls);
         return cls;
     }
 
@@ -246,12 +247,12 @@ final class GTestImpl extends GTest {
         checker.checkSequenceExists(connection, sequence);
     }
 
-    void startClass(Map<String, List<ParamCutPaste>> bindMap) {
+    void startClass(Map<ParamName, List<ParamCutPaste>> bindMap) {
         this.bindMap = bindMap;
         this.paramTypeMap.clear();
     }
 
-    Map<String, Class<?>> endClass() {
+    Map<ParamName, Class<?>> endClass() {
         return paramTypeMap;
     }
 

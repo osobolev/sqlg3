@@ -6,6 +6,7 @@ import sqlg3.runtime.queries.QueryParser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 final class QPParser {
 
@@ -20,21 +21,22 @@ final class QPParser {
         }
     }
 
-    private final String location;
     private final boolean allowOutParams;
     private final String pred;
     private final boolean onlySql;
-    private final List<String> parameters;
-    private final Map<String, List<ParamCutPaste>> bindMap;
+    private final List<ParamName> parameters;
+    private final Map<ParamName, List<ParamCutPaste>> bindMap;
+    private final Function<String, ParamName> paramByName;
 
-    QPParser(String location, boolean allowOutParams, String pred, boolean onlySql,
-             List<String> parameters, Map<String, List<ParamCutPaste>> bindMap) {
-        this.location = location;
+    QPParser(boolean allowOutParams, String pred, boolean onlySql,
+             List<ParamName> parameters, Map<ParamName, List<ParamCutPaste>> bindMap,
+             Function<String, ParamName> paramByName) {
         this.allowOutParams = allowOutParams;
         this.pred = pred;
         this.onlySql = onlySql;
         this.parameters = parameters;
         this.bindMap = bindMap;
+        this.paramByName = paramByName;
     }
 
     BindVarCutPaste getStatementCutPaste(int from, int to, String sql) throws ParseException {
@@ -46,12 +48,12 @@ final class QPParser {
     private static final class ParamInfo {
 
         final int position;
-        final String id;
+        final ParamName id;
         final String expression;
         final String programString;
         final boolean out;
 
-        private ParamInfo(int position, String id, String expression, String programString, boolean out) {
+        private ParamInfo(int position, ParamName id, String expression, String programString, boolean out) {
             this.position = position;
             this.id = id;
             this.expression = expression;
@@ -108,7 +110,7 @@ final class QPParser {
                         } else {
                             params.append(", ");
                         }
-                        String id = location + "." + parameter;
+                        ParamName id = paramByName.apply(parameter);
                         parameters.add(id);
                         String expr;
                         boolean out;
@@ -117,7 +119,7 @@ final class QPParser {
                                 expr = parameter.substring(1);
                                 out = true;
                             } else {
-                                throw new ParseException("OUT parameters are not allowed for PreparedStatements", location);
+                                throw new ParseException("OUT parameters are not allowed for PreparedStatements", id.toString());
                             }
                         } else {
                             expr = parameter;
@@ -139,7 +141,7 @@ final class QPParser {
                     }
                     int ppos = append1(predParams + params + postParams, single);
                     for (ParamInfo pos : paramPositions) {
-                        String id = pos.id;
+                        ParamName id = pos.id;
                         String pv = pos.programString;
                         int from = pred.length() + ppos + predParams.length() + pos.position;
                         int to = from + pv.length();

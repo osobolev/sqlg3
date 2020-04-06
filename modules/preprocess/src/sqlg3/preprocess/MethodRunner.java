@@ -55,7 +55,7 @@ final class MethodRunner {
         }
     }
 
-    List<RunMethod> checkEntries(Map<String, List<ParamCutPaste>> bindMap, List<String> allParameters) throws Throwable {
+    List<RunMethod> checkEntries(Map<ParamName, List<ParamCutPaste>> bindMap, List<ParamName> allParameters) throws Throwable {
         Map<String, List<Method>> methodMap = Arrays.stream(cls.getDeclaredMethods()).collect(Collectors.groupingBy(Method::getName));
         if (log != null) {
             log.getLog().println(cls.getCanonicalName());
@@ -98,17 +98,18 @@ final class MethodRunner {
                 }
             }
         }
-        Map<String, Class<?>> paramTypeMap = test.endClass();
+        Map<ParamName, Class<?>> paramTypeMap = test.endClass();
         checkParamTypes(allParameters, paramTypeMap);
 
         return entryMethods;
     }
 
-    private static void checkParamTypes(List<String> allParameters, Map<String, Class<?>> paramTypeMap) throws ParseException {
-        Set<String> missingParams = new LinkedHashSet<>(allParameters);
+    private static void checkParamTypes(List<ParamName> allParameters, Map<ParamName, Class<?>> paramTypeMap) throws ParseException {
+        Set<ParamName> missingParams = new LinkedHashSet<>(allParameters);
         missingParams.removeAll(paramTypeMap.keySet());
         if (!missingParams.isEmpty()) {
-            throw new ParseException("Type is not known for parameters: " + String.join(", ", missingParams));
+            String missing = missingParams.stream().map(ParamName::toString).collect(Collectors.joining(", "));
+            throw new ParseException("Type is not known for parameters: " + missing);
         }
     }
 }

@@ -21,14 +21,14 @@ final class Parser extends ParserBase {
 
     private final String displayClassName;
     private final String fullClassName;
-    private final Map<String, RowTypeCutPaste> rowTypeMap;
+    private final Map<ClassName, RowTypeCutPaste> rowTypeMap;
 
     private final List<MethodEntry> entries = new ArrayList<>();
-    private final Map<String, List<ParamCutPaste>> bindMap = new HashMap<>();
-    private final List<String> parameters = new ArrayList<>();
+    private final Map<ParamName, List<ParamCutPaste>> bindMap = new HashMap<>();
+    private final List<ParamName> parameters = new ArrayList<>();
     private final List<CutPaste> fragments = new ArrayList<>();
 
-    Parser(String text, String displayClassName, String fullClassName, Map<String, RowTypeCutPaste> rowTypeMap) throws IOException {
+    Parser(String text, String displayClassName, String fullClassName, Map<ClassName, RowTypeCutPaste> rowTypeMap) throws IOException {
         super(text);
         this.displayClassName = displayClassName;
         this.fullClassName = fullClassName;
@@ -210,8 +210,10 @@ final class Parser extends ParserBase {
         } else {
             pred = desc.assign + " " + whatToCall + "(" + addParameter;
         }
-        String location = fullClassName + (entryName == null ? "" : "." + entryName);
-        QPParser appender = new QPParser(location, allowOutParams, pred, onlySql, parameters, bindMap);
+        QPParser appender = new QPParser(
+            allowOutParams, pred, onlySql, parameters, bindMap,
+            paramName -> ParamName.fromLocation(fullClassName, entryName, paramName)
+        );
         BindVarCutPaste cp = appender.getStatementCutPaste(desc.from, desc.to, lastSqlQuery);
         fragments.add(cp);
         return desc;
@@ -338,7 +340,7 @@ final class Parser extends ParserBase {
         if (from >= 0 && to >= 0) {
             RowTypeCutPaste rowType = new RowTypeCutPaste(from, to, nestedClassName);
             fragments.add(rowType);
-            rowTypeMap.put(fullClassName + "." + nestedClassName, rowType);
+            rowTypeMap.put(ClassName.nested(fullClassName, nestedClassName), rowType);
         }
     }
 
@@ -363,7 +365,7 @@ final class Parser extends ParserBase {
         if (from >= 0 && to >= 0) {
             RowTypeCutPaste rowType = new RowTypeCutPaste(from, to, recordName);
             fragments.add(rowType);
-            rowTypeMap.put(fullClassName + "." + recordName, rowType);
+            rowTypeMap.put(ClassName.nested(fullClassName, recordName), rowType);
         }
     }
 

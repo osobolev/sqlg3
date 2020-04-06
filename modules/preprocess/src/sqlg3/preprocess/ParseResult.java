@@ -7,11 +7,11 @@ final class ParseResult {
 
     final String text;
     final List<MethodEntry> entries;
-    final Map<String, List<ParamCutPaste>> bindMap;
-    final List<String> parameters;
+    final Map<ParamName, List<ParamCutPaste>> bindMap;
+    final List<ParamName> parameters;
     private final List<CutPaste> fragments;
 
-    ParseResult(String text, List<MethodEntry> entries, Map<String, List<ParamCutPaste>> bindMap, List<String> parameters, List<CutPaste> fragments) {
+    ParseResult(String text, List<MethodEntry> entries, Map<ParamName, List<ParamCutPaste>> bindMap, List<ParamName> parameters, List<CutPaste> fragments) {
         this.text = text;
         this.entries = entries;
         this.bindMap = bindMap;

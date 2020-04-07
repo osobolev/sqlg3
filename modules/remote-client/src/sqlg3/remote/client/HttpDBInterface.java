@@ -37,7 +37,7 @@ final class HttpDBInterface implements IRemoteDBInterface {
 
     public void ping() {
         try {
-            rootObject.httpInvoke(Void.TYPE, HttpCommand.PING, info.id);
+            rootObject.httpInvoke(void.class, HttpCommand.PING, info.id);
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Throwable ex) {
@@ -47,7 +47,7 @@ final class HttpDBInterface implements IRemoteDBInterface {
 
     public void close() {
         try {
-            rootObject.httpInvoke(Void.TYPE, HttpCommand.CLOSE, info.id);
+            rootObject.httpInvoke(void.class, HttpCommand.CLOSE, info.id);
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Throwable ex) {
@@ -79,7 +79,7 @@ final class HttpDBInterface implements IRemoteDBInterface {
 
     public void killSession(String sessionLongId) {
         try {
-            rootObject.httpInvoke(Void.TYPE, HttpCommand.KILL_SESSION, info.id, sessionLongId);
+            rootObject.httpInvoke(void.class, HttpCommand.KILL_SESSION, info.id, sessionLongId);
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Throwable ex) {

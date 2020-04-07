@@ -160,28 +160,28 @@ public class RuntimeMapperImpl implements RuntimeMapper {
 
     public void registerDefault() {
         register(new BasicMapper<>(
-            Boolean.TYPE, Types.BOOLEAN, PreparedStatement::setBoolean, ResultSet::getBoolean, CallableStatement::getBoolean
+            boolean.class, Types.BOOLEAN, PreparedStatement::setBoolean, ResultSet::getBoolean, CallableStatement::getBoolean
         ));
         register(new WrapperMapper<>(
             Boolean.class, Types.BOOLEAN, PreparedStatement::setBoolean, ResultSet::getBoolean, CallableStatement::getBoolean
         ));
 
         register(new BasicMapper<>(
-            Integer.TYPE, Types.INTEGER, PreparedStatement::setInt, ResultSet::getInt, CallableStatement::getInt
+            int.class, Types.INTEGER, PreparedStatement::setInt, ResultSet::getInt, CallableStatement::getInt
         ));
         register(new WrapperMapper<>(
             Integer.class, Types.INTEGER, PreparedStatement::setInt, ResultSet::getInt, CallableStatement::getInt
         ));
 
         register(new BasicMapper<>(
-            Long.TYPE, Types.BIGINT, PreparedStatement::setLong, ResultSet::getLong, CallableStatement::getLong
+            long.class, Types.BIGINT, PreparedStatement::setLong, ResultSet::getLong, CallableStatement::getLong
         ));
         register(new WrapperMapper<>(
             Long.class, Types.BIGINT, PreparedStatement::setLong, ResultSet::getLong, CallableStatement::getLong
         ));
 
         register(new BasicMapper<>(
-            Double.TYPE, Types.DOUBLE, PreparedStatement::setDouble, ResultSet::getDouble, CallableStatement::getDouble
+            double.class, Types.DOUBLE, PreparedStatement::setDouble, ResultSet::getDouble, CallableStatement::getDouble
         ));
         register(new WrapperMapper<>(
             Double.class, Types.DOUBLE, PreparedStatement::setDouble, ResultSet::getDouble, CallableStatement::getDouble

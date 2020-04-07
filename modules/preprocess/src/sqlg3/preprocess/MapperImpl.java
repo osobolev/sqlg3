@@ -24,21 +24,21 @@ import java.util.Objects;
 public class MapperImpl implements Mapper {
 
     public Object getTestObject(Class<?> paramType) {
-        if (paramType.equals(Integer.TYPE) || paramType.equals(Integer.class)) {
+        if (paramType.equals(int.class) || paramType.equals(Integer.class)) {
             return 1;
-        } else if (paramType.equals(Short.TYPE) || paramType.equals(Short.class)) {
+        } else if (paramType.equals(short.class) || paramType.equals(Short.class)) {
             return (short) 1;
-        } else if (paramType.equals(Long.TYPE) || paramType.equals(Long.class)) {
+        } else if (paramType.equals(long.class) || paramType.equals(Long.class)) {
             return 1L;
-        } else if (paramType.equals(Byte.TYPE) || paramType.equals(Byte.class)) {
+        } else if (paramType.equals(byte.class) || paramType.equals(Byte.class)) {
             return (byte) 1;
-        } else if (paramType.equals(Float.TYPE) || paramType.equals(Float.class)) {
+        } else if (paramType.equals(float.class) || paramType.equals(Float.class)) {
             return 1.0f;
-        } else if (paramType.equals(Double.TYPE) || paramType.equals(Double.class)) {
+        } else if (paramType.equals(double.class) || paramType.equals(Double.class)) {
             return 1.0;
-        } else if (paramType.equals(Character.TYPE) || paramType.equals(Character.class)) {
+        } else if (paramType.equals(char.class) || paramType.equals(Character.class)) {
             return '1';
-        } else if (paramType.equals(Boolean.TYPE) || paramType.equals(Boolean.class)) {
+        } else if (paramType.equals(boolean.class) || paramType.equals(Boolean.class)) {
             return true;
         } else if (BigInteger.class.isAssignableFrom(paramType)) {
             return BigInteger.ONE;
@@ -49,7 +49,7 @@ public class MapperImpl implements Mapper {
         } else if (Date.class.isAssignableFrom(paramType)) {
             long ts = System.currentTimeMillis();
             try {
-                Constructor<?> constructor = paramType.getConstructor(Long.TYPE);
+                Constructor<?> constructor = paramType.getConstructor(long.class);
                 return constructor.newInstance(ts);
             } catch (Exception ex) {
                 // ignore
@@ -119,11 +119,11 @@ public class MapperImpl implements Mapper {
         DecimalType integer = getDecimalType(scale, precision);
         switch (integer) {
         case INT:
-            return notNull ? Integer.TYPE : Integer.class;
+            return notNull ? int.class : Integer.class;
         case LONG:
-            return notNull ? Long.TYPE : Long.class;
+            return notNull ? long.class : Long.class;
         default:
-            return notNull ? Double.TYPE : Double.class;
+            return notNull ? double.class : Double.class;
         }
     }
 
@@ -138,25 +138,25 @@ public class MapperImpl implements Mapper {
         switch (jdbcType) {
         case Types.BIGINT:
             if (notNull)
-                return Long.TYPE;
+                return long.class;
             return Long.class;
         case Types.INTEGER:
             if (notNull)
-                return Integer.TYPE;
+                return int.class;
             return Integer.class;
         case Types.SMALLINT:
         case Types.TINYINT:
             if (notNull)
-                return Short.TYPE;
+                return short.class;
             return Short.class;
         case Types.DOUBLE:
             if (notNull)
-                return Double.TYPE;
+                return double.class;
             return Double.class;
         case Types.FLOAT:
         case Types.REAL:
             if (notNull)
-                return Float.TYPE;
+                return float.class;
             return Float.class;
         case Types.DATE:
             return getDateClass();
@@ -183,7 +183,7 @@ public class MapperImpl implements Mapper {
         case Types.BIT:
         case Types.BOOLEAN:
             if (notNull)
-                return Boolean.TYPE;
+                return boolean.class;
             return Boolean.class;
         }
         return null;

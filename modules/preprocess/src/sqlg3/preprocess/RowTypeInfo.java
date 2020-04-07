@@ -72,34 +72,34 @@ final class RowTypeInfo {
 
     private static Class<?> unwrap(Class<?> cls) {
         if (Integer.class.equals(cls)) {
-            return Integer.TYPE;
+            return int.class;
         } else if (Long.class.equals(cls)) {
-            return Long.TYPE;
+            return long.class;
         } else if (Short.class.equals(cls)) {
-            return Short.TYPE;
+            return short.class;
         } else if (Byte.class.equals(cls)) {
-            return Byte.TYPE;
+            return byte.class;
         } else if (Float.class.equals(cls)) {
-            return Float.TYPE;
+            return float.class;
         } else if (Double.class.equals(cls)) {
-            return Double.TYPE;
+            return double.class;
         } else if (Character.class.equals(cls)) {
-            return Character.TYPE;
+            return char.class;
         } else if (Boolean.class.equals(cls)) {
-            return Boolean.TYPE;
+            return boolean.class;
         } else {
             return null;
         }
     }
 
     private static int getIntegerSize(Class<?> primitive) {
-        if (Integer.TYPE.equals(primitive)) {
+        if (int.class.equals(primitive)) {
             return 4;
-        } else if (Long.TYPE.equals(primitive)) {
+        } else if (long.class.equals(primitive)) {
             return 8;
-        } else if (Short.TYPE.equals(primitive)) {
+        } else if (short.class.equals(primitive)) {
             return 2;
-        } else if (Byte.TYPE.equals(primitive)) {
+        } else if (byte.class.equals(primitive)) {
             return 1;
         } else {
             return 0;
@@ -107,9 +107,9 @@ final class RowTypeInfo {
     }
 
     private static int getFloatingSize(Class<?> primitive) {
-        if (Double.TYPE.equals(primitive)) {
+        if (double.class.equals(primitive)) {
             return 8;
-        } else if (Float.TYPE.equals(primitive)) {
+        } else if (float.class.equals(primitive)) {
             return 4;
         } else {
             return 0;

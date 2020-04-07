@@ -15,7 +15,7 @@ final class HttpTransaction extends HttpSimpleTransaction implements ITransactio
 
     public void rollback() throws SQLException {
         try {
-            rootObject.httpInvoke(Void.TYPE, HttpCommand.ROLLBACK, id);
+            rootObject.httpInvoke(void.class, HttpCommand.ROLLBACK, id);
         } catch (SQLException | RuntimeException ex) {
             throw ex;
         } catch (Throwable ex) {
@@ -25,7 +25,7 @@ final class HttpTransaction extends HttpSimpleTransaction implements ITransactio
 
     public void commit() throws SQLException {
         try {
-            rootObject.httpInvoke(Void.TYPE, HttpCommand.COMMIT, id);
+            rootObject.httpInvoke(void.class, HttpCommand.COMMIT, id);
         } catch (SQLException | RuntimeException ex) {
             throw ex;
         } catch (Throwable ex) {

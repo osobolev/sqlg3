@@ -32,12 +32,12 @@ public final class Main {
         }
     }
 
-    private static final class Source {
+    private static final class ToProcess {
 
         final ParseResult parsed;
         final JavaClassFile iface;
 
-        Source(ParseResult parsed, JavaClassFile iface) {
+        ToProcess(ParseResult parsed, JavaClassFile iface) {
             this.parsed = parsed;
             this.iface = iface;
         }
@@ -46,9 +46,9 @@ public final class Main {
     private static final class InputFile {
 
         final JavaClassFile file;
-        final Source src;
+        final ToProcess src;
 
-        InputFile(JavaClassFile file, Source src) {
+        InputFile(JavaClassFile file, ToProcess src) {
             this.file = file;
             this.src = src;
         }
@@ -114,11 +114,15 @@ public final class Main {
             in = inputFiles;
         }
 
+        List<JavaClassFile> javaFiles = new ArrayList<>(in.size());
+        for (Path path : in) {
+            javaFiles.add(getJavaClass(path));
+        }
+
         if (!o.unpreprocess && o.checkTime) {
-            Set<Path> candidateInterfaces = new HashSet<>();
-            Map<Path, Path> classToIface = new LinkedHashMap<>();
-            for (Path path : in) {
-                JavaClassFile file = getJavaClass(path);
+            Set<Path> candidateInterfaces = new HashSet<>(javaFiles.size());
+            Map<Path, Path> classToIface = new LinkedHashMap<>(javaFiles.size());
+            for (JavaClassFile file : javaFiles) {
                 JavaClassFile iface = getInterface(file);
                 candidateInterfaces.add(iface.path);
                 classToIface.put(file.path, iface.path);
@@ -133,9 +137,8 @@ public final class Main {
                 return Collections.emptyList();
         }
 
-        List<InputFile> inputs = new ArrayList<>();
-        for (Path path : in) {
-            JavaClassFile file = getJavaClass(path);
+        List<InputFile> inputs = new ArrayList<>(javaFiles.size());
+        for (JavaClassFile file : javaFiles) {
             String text = FileUtils.readFile(file.path, o.encoding);
             Parser parser = new Parser(text, file.simpleClassName, file.fullClassName, rowTypeMap);
             ParseResult parsed;
@@ -147,10 +150,10 @@ public final class Main {
                 parsed = parser.parseAll();
                 addSrc = parsed != null;
             }
-            Source src;
+            ToProcess src;
             if (addSrc) {
                 JavaClassFile iface = getInterface(file);
-                src = new Source(parsed, iface);
+                src = new ToProcess(parsed, iface);
             } else {
                 src = null;
             }
@@ -167,7 +170,7 @@ public final class Main {
             return;
         if (o.unpreprocess) {
             for (InputFile input : inputs) {
-                Source src = input.src;
+                ToProcess src = input.src;
                 if (src == null)
                     continue;
                 Files.deleteIfExists(src.iface.path);
@@ -214,7 +217,7 @@ public final class Main {
             // 3. Run methods
             for (int i = 0; i < inputs.size(); i++) {
                 InputFile input = inputs.get(i);
-                Source src = input.src;
+                ToProcess src = input.src;
                 if (src == null)
                     continue;
                 ParseResult parsed = src.parsed;
@@ -254,24 +257,24 @@ public final class Main {
         // 5. Generate interfaces & write back sources
         for (RunResult rr : runResults) {
             InputFile input = rr.input;
-            Source src = input.src;
-            if (src == null)
-                continue;
-            ParseResult parsed = src.parsed;
-            Files.createDirectories(src.iface.path.getParent());
-            CodeGenerator g = new CodeGenerator(tab, src.iface.simpleClassName, src.iface.pack);
-            g.start(rr.cls);
-            for (RunMethod runMethod : rr.methods) {
-                MethodEntry entry = runMethod.entry;
-                if (!entry.publish)
-                    continue;
-                g.addMethod(runMethod.method, entry.javadoc, entry.paramNames);
+            ToProcess src = input.src;
+            String ifaceText;
+            {
+                CodeGenerator g = new CodeGenerator(tab, src.iface.simpleClassName, src.iface.pack);
+                g.start(rr.cls);
+                for (RunMethod runMethod : rr.methods) {
+                    MethodEntry entry = runMethod.entry;
+                    if (!entry.publish)
+                        continue;
+                    g.addMethod(runMethod.method, entry.javadoc, entry.paramNames);
+                }
+                ifaceText = g.finish();
             }
-            String ifaceText = g.finish();
 
-            String newText = parsed.doCutPaste();
+            String newText = src.parsed.doCutPaste();
             FileUtils.writeFile(input.file.path, newText, o.encoding);
 
+            Files.createDirectories(src.iface.path.getParent());
             FileUtils.writeFile(src.iface.path, ifaceText, o.encoding);
         }
     }

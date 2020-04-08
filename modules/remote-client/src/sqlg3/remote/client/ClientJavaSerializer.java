@@ -6,11 +6,12 @@ import sqlg3.remote.common.*;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.util.function.Consumer;
+import java.util.function.LongConsumer;
 
 public final class ClientJavaSerializer extends BaseJavaSerializer implements IClientSerializer {
 
-    public ClientJavaSerializer(Consumer<String> logger, boolean onlyMethods) {
-        super(logger, onlyMethods);
+    public ClientJavaSerializer(boolean onlyMethods, Consumer<String> logger, LongConsumer onRead, LongConsumer onWrite) {
+        super(onlyMethods, logger, onRead, onWrite);
     }
 
     public ClientJavaSerializer() {
@@ -18,19 +19,14 @@ public final class ClientJavaSerializer extends BaseJavaSerializer implements IC
 
     public HttpResult clientToServer(ReqRespProcessor processor, HttpId id, HttpCommand command,
                                      Class<? extends IDBCommon> iface, Type retType, String method, Class<?>[] paramTypes, Object[] params) throws IOException {
-        boolean debug = onlyMethods ? method != null : true;
-        if (logger != null && debug) {
-            if (method != null) {
-                logger.accept(iface + "." + method + ": " + retType);
-            } else {
-                logger.accept(command + ": " + retType);
-            }
+        boolean debug = isDebug(method);
+        if (debug) {
+            logClientCall(command, iface, method, retType);
         }
         return processor.process(new ReqRespConsumer() {
 
             public void writeToServer(OutputStream stream) throws IOException {
-                OutputStream os = count(stream, debug);
-                try (ObjectOutputStream oos = writeData(os)) {
+                try (ObjectOutputStream oos = writeData(count(stream, debug))) {
                     oos.writeObject(id);
                     oos.writeObject(command);
                     oos.writeObject(iface);
@@ -41,13 +37,10 @@ public final class ClientJavaSerializer extends BaseJavaSerializer implements IC
             }
 
             public HttpResult readFromServer(InputStream stream) throws IOException {
-                InputStream is = count(stream, debug);
-                try {
-                    try (ObjectInputStream ois = readData(is)) {
-                        Object result = ois.readObject();
-                        Throwable error = (Throwable) ois.readObject();
-                        return new HttpResult(result, error);
-                    }
+                try (ObjectInputStream ois = readData(count(stream, debug))) {
+                    Object result = ois.readObject();
+                    Throwable error = (Throwable) ois.readObject();
+                    return new HttpResult(result, error);
                 } catch (ClassNotFoundException | InvalidClassException ex) {
                     throw new UnrecoverableRemoteException(ex);
                 }

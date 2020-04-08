@@ -2,19 +2,19 @@ package sqlg3.remote.common;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Consumer;
+import java.util.function.LongConsumer;
 
 public final class CountInputStream extends InputStream {
 
     private final InputStream is;
-    private final Consumer<String> logger;
+    private final LongConsumer countConsumer;
 
     private long count = 0;
     private boolean closed = false;
 
-    public CountInputStream(InputStream is, Consumer<String> logger) {
+    public CountInputStream(InputStream is, LongConsumer countConsumer) {
         this.is = is;
-        this.logger = logger;
+        this.countConsumer = countConsumer;
     }
 
     public int read() throws IOException {
@@ -46,8 +46,8 @@ public final class CountInputStream extends InputStream {
     public void close() throws IOException {
         if (!closed) {
             closed = true;
-            if (logger != null) {
-                logger.accept("READ: " + count);
+            if (countConsumer != null) {
+                countConsumer.accept(count);
             }
         }
         is.close();

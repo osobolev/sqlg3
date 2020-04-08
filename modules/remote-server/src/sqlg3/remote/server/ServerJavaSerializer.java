@@ -8,11 +8,12 @@ import sqlg3.remote.common.UnrecoverableRemoteException;
 
 import java.io.*;
 import java.util.function.Consumer;
+import java.util.function.LongConsumer;
 
 public final class ServerJavaSerializer extends BaseJavaSerializer implements IServerSerializer {
 
-    public ServerJavaSerializer(Consumer<String> logger, boolean onlyMethods) {
-        super(logger, onlyMethods);
+    public ServerJavaSerializer(boolean onlyMethods, Consumer<String> logger, LongConsumer onRead, LongConsumer onWrite) {
+        super(onlyMethods, logger, onRead, onWrite);
     }
 
     public ServerJavaSerializer() {
@@ -43,11 +44,11 @@ public final class ServerJavaSerializer extends BaseJavaSerializer implements IS
         } catch (Throwable ex) {
             error = ex;
         }
-        writeResponse(os, result, error, method != null);
+        writeResponse(os, result, error, method);
     }
 
-    private void writeResponse(OutputStream os, Object result, Throwable error, boolean isMethod) throws IOException {
-        boolean debug = onlyMethods ? isMethod : true;
+    private void writeResponse(OutputStream os, Object result, Throwable error, String method) throws IOException {
+        boolean debug = isDebug(method);
         try (ObjectOutputStream oos = writeData(count(os, debug))) {
             oos.writeObject(result);
             oos.writeObject(error);
@@ -56,7 +57,7 @@ public final class ServerJavaSerializer extends BaseJavaSerializer implements IS
 
     public void sendError(OutputStream os, Throwable error) throws IOException {
         try {
-            writeResponse(os, null, error, false);
+            writeResponse(os, null, error, null);
         } finally {
             os.close();
         }

@@ -5,17 +5,8 @@ import sqlg3.remote.common.*;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.util.function.Consumer;
-import java.util.function.LongConsumer;
 
 public final class ClientJavaSerializer extends BaseJavaSerializer implements IClientSerializer {
-
-    public ClientJavaSerializer(boolean onlyMethods, Consumer<String> logger, LongConsumer onRead, LongConsumer onWrite) {
-        super(onlyMethods, logger, onRead, onWrite);
-    }
-
-    public ClientJavaSerializer() {
-    }
 
     public HttpResult clientToServer(ReqRespProcessor processor, HttpId id, HttpCommand command,
                                      Class<? extends IDBCommon> iface, Type retType, String method, Class<?>[] paramTypes, Object[] params) throws IOException {

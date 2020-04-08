@@ -8,35 +8,28 @@ import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 public abstract class BaseSerializer<I, O> {
 
-    protected final boolean onlyMethods;
-    protected final Consumer<String> logger;
-    protected final LongConsumer onRead;
-    protected final LongConsumer onWrite;
-
-    protected BaseSerializer(boolean onlyMethods, Consumer<String> logger, LongConsumer onRead, LongConsumer onWrite) {
-        this.onlyMethods = onlyMethods;
-        this.logger = logger;
-        this.onRead = onRead;
-        this.onWrite = onWrite;
-    }
-
-    protected BaseSerializer() {
-        this(false, null, null, null);
-    }
+    /**
+     * If true, logger and onRead/onWrite are called only for remote method calls (and not for other queries like ping)
+     */
+    public boolean onlyMethods;
+    public Consumer<String> logger;
+    public LongConsumer onRead;
+    public LongConsumer onWrite;
+    public boolean zip = true;
 
     protected O writeData(OutputStream os) throws IOException {
-        return write(new GZIPOutputStream(os));
+        return write(zip ? new DeflaterOutputStream(os) : os);
     }
 
     protected abstract O write(OutputStream os) throws IOException;
 
     protected I readData(InputStream is) throws IOException {
-        return read(new GZIPInputStream(is));
+        return read(zip ? new InflaterInputStream(is) : is);
     }
 
     protected abstract I read(InputStream is) throws IOException;

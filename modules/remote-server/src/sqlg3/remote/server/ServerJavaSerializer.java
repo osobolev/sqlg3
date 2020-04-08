@@ -7,17 +7,8 @@ import sqlg3.remote.common.HttpId;
 import sqlg3.remote.common.UnrecoverableRemoteException;
 
 import java.io.*;
-import java.util.function.Consumer;
-import java.util.function.LongConsumer;
 
 public final class ServerJavaSerializer extends BaseJavaSerializer implements IServerSerializer {
-
-    public ServerJavaSerializer(boolean onlyMethods, Consumer<String> logger, LongConsumer onRead, LongConsumer onWrite) {
-        super(onlyMethods, logger, onRead, onWrite);
-    }
-
-    public ServerJavaSerializer() {
-    }
 
     @SuppressWarnings("unchecked")
     public void serverToClient(InputStream is, ServerCall call, OutputStream os) throws IOException {

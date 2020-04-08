@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.function.Consumer;
-import java.util.function.LongConsumer;
 
 public abstract class BaseKryoSerializer extends BaseSerializer<Input, Output> {
 
@@ -23,13 +22,6 @@ public abstract class BaseKryoSerializer extends BaseSerializer<Input, Output> {
         kryoCustomizer.accept(kryo);
         return kryo;
     });
-
-    protected BaseKryoSerializer(boolean onlyMethods, Consumer<String> logger, LongConsumer onRead, LongConsumer onWrite) {
-        super(onlyMethods, logger, onRead, onWrite);
-    }
-
-    protected BaseKryoSerializer() {
-    }
 
     public static void setupKryo(Kryo kryo) {
         kryo.setRegistrationRequired(false);

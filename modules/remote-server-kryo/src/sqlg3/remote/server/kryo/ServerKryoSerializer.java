@@ -14,19 +14,10 @@ import sqlg3.remote.server.IServerSerializer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.function.Consumer;
-import java.util.function.LongConsumer;
 
 public class ServerKryoSerializer extends BaseKryoSerializer implements IServerSerializer {
 
     private static final HttpCommand[] COMMANDS = HttpCommand.values();
-
-    public ServerKryoSerializer(boolean onlyMethods, Consumer<String> logger, LongConsumer onRead, LongConsumer onWrite) {
-        super(onlyMethods, logger, onRead, onWrite);
-    }
-
-    public ServerKryoSerializer() {
-    }
 
     @SuppressWarnings("unchecked")
     @Override

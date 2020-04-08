@@ -16,17 +16,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
-import java.util.function.Consumer;
-import java.util.function.LongConsumer;
 
 public class ClientKryoSerializer extends BaseKryoSerializer implements IClientSerializer {
-
-    public ClientKryoSerializer(boolean onlyMethods, Consumer<String> logger, LongConsumer onRead, LongConsumer onWrite) {
-        super(onlyMethods, logger, onRead, onWrite);
-    }
-
-    public ClientKryoSerializer() {
-    }
 
     @Override
     public HttpResult clientToServer(ReqRespProcessor processor, HttpId id, HttpCommand command,

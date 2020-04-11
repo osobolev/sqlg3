@@ -143,7 +143,7 @@ final class Parser extends ParserBase {
         return new MethodEntry(javadoc, entryName, params, publish);
     }
 
-    private static boolean isWhitespace(int id) {
+    static boolean isWhitespace(int id) {
         return id == Java8Lexer.WS || id == Java8Lexer.LINE_COMMENT || id == Java8Lexer.COMMENT;
     }
 

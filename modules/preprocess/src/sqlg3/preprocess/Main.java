@@ -266,7 +266,7 @@ public final class Main {
                     MethodEntry entry = runMethod.entry;
                     if (!entry.publish)
                         continue;
-                    g.addMethod(runMethod.method, entry.javadoc, entry.paramNames);
+                    g.addMethod(runMethod.method, entry.javadoc);
                 }
                 ifaceText = g.finish();
             }

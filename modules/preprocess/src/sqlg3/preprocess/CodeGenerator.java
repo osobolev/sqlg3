@@ -6,6 +6,7 @@ import sqlg3.preprocess.lexer.Java8Lexer;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -48,17 +49,16 @@ final class CodeGenerator {
         buf.append("public interface " + interfaceName + " extends sqlg3.core.IDBCommon" + addIface + " {\n");
     }
 
-    void addMethod(Method method, String javadoc, List<String> paramNames) throws ParseException {
+    void addMethod(Method method, String javadoc) throws ParseException {
         if (javadoc != null) {
             buf.append("\n" + tab + javadoc);
         }
         buf.append("\n" + tab);
         buf.append(ClassUtils.getClassName(method.getGenericReturnType()) + " " + method.getName() + "(");
         Type[] parameterTypes = method.getGenericParameterTypes();
-        if (parameterTypes.length != paramNames.size())
-            throw new ParseException("Parameter list length mismatch: " + parameterTypes.length + " vs " + paramNames.size());
-        for (int i = 0; i < paramNames.size(); i++) {
-            String paramName = paramNames.get(i);
+        Parameter[] parameters = method.getParameters();
+        for (int i = 0; i < parameters.length; i++) {
+            String paramName = parameters[i].getName();
             if (i > 0) {
                 buf.append(", ");
             }

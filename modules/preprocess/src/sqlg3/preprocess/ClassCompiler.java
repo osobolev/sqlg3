@@ -25,22 +25,24 @@ final class ClassCompiler {
     }
 
     private void compile(List<Path> srcRoots, Charset encoding, String classpath, List<String> javacOptions, Path file) throws ParseException {
-        List<String> params = new ArrayList<>(Arrays.asList(
-            "-sourcepath", srcRoots.stream().map(p -> p.toAbsolutePath().toString()).collect(Collectors.joining(File.pathSeparator))
+        List<String> params = new ArrayList<>(javacOptions);
+        if (encoding != null) {
+            params.addAll(Arrays.asList("-encoding", encoding.name()));
+        }
+        params.addAll(Arrays.asList(
+            "-sourcepath",
+            srcRoots.stream().map(p -> p.toAbsolutePath().toString()).collect(Collectors.joining(File.pathSeparator))
         ));
-        params.addAll(javacOptions);
         if (classpath != null) {
             params.addAll(Arrays.asList(
                 "-classpath", classpath
             ));
         }
         params.addAll(Arrays.asList(
+            "-parameters",
             "-d", tmpDir.toAbsolutePath().toString(),
             file.toAbsolutePath().toString()
         ));
-        if (encoding != null) {
-            params.addAll(0, Arrays.asList("-encoding", encoding.name()));
-        }
 
         String[] arguments = params.toArray(new String[0]);
         try {

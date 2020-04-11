@@ -77,13 +77,8 @@ final class Parser extends ParserBase {
     }
 
     private MethodEntry parseMethodHeader(String javadoc, String annotation) throws ParseException {
-        List<String> params = new ArrayList<>();
-        String lastIdent = null;
         String entryName = null;
         boolean wasParen = false;
-        boolean parenClosed = false;
-        int parenCount = 0;
-        int genCount = 0;
         while (!eof()) {
             Token t = get();
             int id = t.getType();
@@ -91,45 +86,10 @@ final class Parser extends ParserBase {
                 next();
                 break;
             } else if (id == Java8Lexer.LPAREN) {
-                if (wasParen) {
-                    parenCount++;
-                } else {
-                    wasParen = true;
-                    lastIdent = null;
-                }
-            } else if (id == Java8Lexer.LT) {
-                if (wasParen) {
-                    genCount++;
-                }
-            } else if (id == Java8Lexer.COMMA) {
-                if (wasParen && !parenClosed) {
-                    if (parenCount <= 0 && genCount <= 0) {
-                        if (lastIdent != null) {
-                            params.add(lastIdent);
-                        }
-                    }
-                }
-            } else if (id == Java8Lexer.RPAREN) {
-                if (wasParen && !parenClosed) {
-                    if (parenCount <= 0) {
-                        if (lastIdent != null) {
-                            params.add(lastIdent);
-                        }
-                        parenClosed = true;
-                    } else {
-                        parenCount--;
-                    }
-                }
-            } else if (id == Java8Lexer.GT) {
-                if (wasParen && !parenClosed) {
-                    if (genCount > 0) {
-                        genCount--;
-                    }
-                }
+                wasParen = true;
             } else if (id == Java8Lexer.Identifier) {
-                lastIdent = t.getText();
                 if (!wasParen) {
-                    entryName = lastIdent;
+                    entryName = t.getText();
                 }
             } else if (id == Java8Lexer.SEMI) {
                 throw new ParseException("Unexpected semicolon", displayClassName + (entryName == null ? "" : "." + entryName));
@@ -140,7 +100,7 @@ final class Parser extends ParserBase {
             return null;
 
         boolean publish = !CHECK_PARAMS_ANNOTATION.equals(annotation);
-        return new MethodEntry(javadoc, entryName, params, publish);
+        return new MethodEntry(javadoc, entryName, publish);
     }
 
     static boolean isWhitespace(int id) {

@@ -4,16 +4,23 @@ import sqlg3.core.Impl;
 import sqlg3.core.MetaColumn;
 import sqlg3.core.SQLGException;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.io.Serializable;
+import java.lang.reflect.*;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public final class GlobalContext {
+
+    public static final String ORDER_FIELD = "ORDER";
 
     final DBSpecific db;
     final RuntimeMapper mappers;
@@ -31,56 +38,130 @@ public final class GlobalContext {
         this.trace = trace;
     }
 
-    private static <T> int fetchParameter(RuntimeMapper mappers, Class<T> parameterType, ResultSet rs, int index,
-                                          Object[] params, int i) throws SQLException {
-        TypeMapper<T> mapper = mappers.getMapper(parameterType);
-        params[i] = mapper.fetch(rs, index);
+    private static <T> int fetchField(RuntimeMapper mappers, Class<T> fieldType, ResultSet rs, int index,
+                                      Consumer<T> value) throws SQLException {
+        TypeMapper<T> mapper = mappers.getMapper(fieldType);
+        value.accept(mapper.fetch(rs, index));
         return mapper.getResultSetColumns();
     }
 
-    private static void checkRowType(ResultSetMetaData rsmd, Constructor<?> constructor) throws SQLException {
+    private static void checkRowType(ResultSetMetaData rsmd, int fieldCount) throws SQLException {
         int columnCount = rsmd.getColumnCount();
-        int parameterCount = constructor.getParameterCount();
-        if (columnCount != parameterCount) {
+        if (columnCount != fieldCount) {
             throw new SQLGException(
-                "Different number of columns in query (" + columnCount + ") and constructor (" + parameterCount + ")"
+                "Different number of columns in query (" + columnCount + ") and constructor (" + fieldCount + ")"
             );
         }
     }
 
+    private static int fetchMeta(Class<?> rowType, Class<?> fieldType,
+                                 ResultSetMetaData rsmd, int index,
+                                 Consumer<MetaColumn> value) throws SQLException {
+        if (!MetaColumn.class.equals(fieldType))
+            throw new SQLGException("Meta row type should contain only MetaColumns in " + rowType.getCanonicalName());
+        value.accept(new MetaColumn(
+            rsmd.isNullable(index) == ResultSetMetaData.columnNoNulls,
+            rsmd.getColumnDisplaySize(index), rsmd.getPrecision(index), rsmd.getScale(index)
+        ));
+        return 1;
+    }
+
     private static RowTypeFactory<?> createRowTypeFactory(Class<?> rowType, boolean meta, boolean check) {
-        Constructor<?>[] constructors = rowType.getConstructors();
-        if (constructors.length != 1)
+        if (rowType.isInterface()) {
+            String[] order;
+            try {
+                Field orderField = rowType.getDeclaredField(ORDER_FIELD);
+                order = (String[]) orderField.get(null);
+            } catch (IllegalAccessException | NoSuchFieldException | RuntimeException ex) {
+                throw new SQLGException("Cannot get fields order for " + rowType.getCanonicalName(), ex);
+            }
+            Method[] methods = rowType.getDeclaredMethods();
+            Map<String, Class<?>> fieldTypeMap = new HashMap<>(methods.length);
+            for (Method method : methods) {
+                String field = method.getName();
+                fieldTypeMap.put(field, method.getReturnType());
+            }
+            Class<?>[] fieldTypes = new Class[order.length];
+            for (int i = 0; i < order.length; i++) {
+                String field = order[i];
+                fieldTypes[i] = fieldTypeMap.get(field);
+            }
+            return (mappers, rs) -> {
+                int fieldCount = order.length;
+                Map<String, Object> rowData = new HashMap<>(fieldCount);
+                if (meta) {
+                    ResultSetMetaData rsmd = rs.getMetaData();
+                    if (check) {
+                        checkRowType(rsmd, fieldCount);
+                    }
+                    int index = 1;
+                    for (int i = 0; i < fieldCount; i++) {
+                        String field = order[i];
+                        index += fetchMeta(
+                            rowType, fieldTypes[i], rsmd, index,
+                            value -> rowData.put(field, value)
+                        );
+                    }
+                } else {
+                    if (check) {
+                        checkRowType(rs.getMetaData(), fieldCount);
+                    }
+                    int index = 1;
+                    for (int i = 0; i < fieldCount; i++) {
+                        String field = order[i];
+                        index += fetchField(
+                            mappers, fieldTypes[i], rs, index,
+                            value -> rowData.put(field, value)
+                        );
+                    }
+                }
+                return Proxy.newProxyInstance(
+                    rowType.getClassLoader(), new Class[] {rowType, Serializable.class},
+                    (proxy, method, args) -> {
+                        String field = method.getName();
+                        return rowData.get(field);
+                    }
+                );
+            };
+        }
+        List<Constructor<?>> constructors = Arrays.stream(rowType.getConstructors())
+            .filter(c -> !c.isSynthetic())
+            .collect(Collectors.toList());
+        if (constructors.size() != 1)
             throw new SQLGException("Should be only one constructor for " + rowType.getCanonicalName());
-        Constructor<?> constructor = constructors[0];
-        Class<?>[] parameterTypes = constructor.getParameterTypes();
+        Constructor<?> constructor = constructors.get(0);
+        Class<?>[] fieldTypes = constructor.getParameterTypes();
         return (mappers, rs) -> {
-            Object[] params = new Object[parameterTypes.length];
+            int fieldCount = fieldTypes.length;
+            Object[] fields = new Object[fieldCount];
             if (meta) {
                 ResultSetMetaData rsmd = rs.getMetaData();
                 if (check) {
-                    checkRowType(rsmd, constructor);
+                    checkRowType(rsmd, fieldCount);
                 }
-                for (int i = 0; i < parameterTypes.length; i++) {
-                    if (!MetaColumn.class.equals(parameterTypes[i]))
-                        throw new SQLGException("Meta row type should contain only MetaColumns in " + rowType.getCanonicalName());
-                    int index = i + 1;
-                    params[i] = new MetaColumn(
-                        rsmd.isNullable(index) == ResultSetMetaData.columnNoNulls,
-                        rsmd.getColumnDisplaySize(index), rsmd.getPrecision(index), rsmd.getScale(index)
+                int index = 1;
+                for (int i = 0; i < fieldCount; i++) {
+                    int j = i;
+                    index += fetchMeta(
+                        rowType, fieldTypes[i], rsmd, index,
+                        value -> fields[j] = value
                     );
                 }
             } else {
                 if (check) {
-                    checkRowType(rs.getMetaData(), constructor);
+                    checkRowType(rs.getMetaData(), fieldCount);
                 }
                 int index = 1;
-                for (int i = 0; i < parameterTypes.length; i++) {
-                    index += fetchParameter(mappers, parameterTypes[i], rs, index, params, i);
+                for (int i = 0; i < fieldCount; i++) {
+                    int j = i;
+                    index += fetchField(
+                        mappers, fieldTypes[i], rs, index,
+                        value -> fields[j] = value
+                    );
                 }
             }
             try {
-                return constructor.newInstance(params);
+                return constructor.newInstance(fields);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
                 throw new SQLGException("Cannot invoke row constructor for " + rowType.getCanonicalName(), ex);
             }

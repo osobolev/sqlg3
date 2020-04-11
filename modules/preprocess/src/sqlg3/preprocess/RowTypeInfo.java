@@ -1,5 +1,8 @@
 package sqlg3.preprocess;
 
+import sqlg3.core.MetaColumn;
+import sqlg3.runtime.GlobalContext;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -17,19 +20,44 @@ final class RowTypeInfo {
         this.meta = meta;
     }
 
+    private String getColumnType(ColumnInfo column) {
+        return ClassUtils.getClassName(meta ? MetaColumn.class: column.type);
+    }
+
     String generateRowTypeBody(String start, String tab, Class<?> rowType) {
         if (ClassUtils.isRecord(rowType)) {
             StringBuilder buf = new StringBuilder();
             buf.append('\n');
             for (int j = 0; j < columns.size(); j++) {
                 ColumnInfo column = columns.get(j);
-                String type = meta ? "sqlg3.core.MetaColumn" : ClassUtils.getClassName(column.type);
+                String type = getColumnType(column);
                 if (j > 0) {
                     buf.append(",\n");
                 }
                 buf.append(start).append(tab).append(type).append(' ').append(column.name);
             }
             return buf.toString();
+        } else if (rowType.isInterface()) {
+            StringBuilder getters = new StringBuilder();
+            getters.append("\n\n");
+
+            StringBuilder order = new StringBuilder();
+            order.append(start).append(tab).append("String[] ").append(GlobalContext.ORDER_FIELD).append(" = {");
+
+            for (int j = 0; j < columns.size(); j++) {
+                ColumnInfo column = columns.get(j);
+                String type = getColumnType(column);
+                getters.append(start).append(tab).append(type).append(' ').append(column.name).append("();\n");
+
+                if (j > 0) {
+                    order.append(", ");
+                }
+                order.append('"').append(column.name).append('"');
+            }
+
+            order.append("};\n");
+
+            return getters + "\n" + order + start;
         } else {
             StringBuilder fields = new StringBuilder();
 
@@ -44,7 +72,7 @@ final class RowTypeInfo {
 
             for (int j = 0; j < columns.size(); j++) {
                 ColumnInfo column = columns.get(j);
-                String type = meta ? "sqlg3.core.MetaColumn" : ClassUtils.getClassName(column.type);
+                String type = getColumnType(column);
 
                 fields.append(start).append(tab).append("private final ");
                 fields.append(type).append(' ').append(column.name).append(";\n");

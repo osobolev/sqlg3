@@ -147,6 +147,18 @@ final class Parser extends ParserBase {
         return id == Java8Lexer.WS || id == Java8Lexer.LINE_COMMENT || id == Java8Lexer.COMMENT;
     }
 
+    static boolean isClassToken(Token t, Token prevNonWhitespace) {
+        int id = t.getType();
+        if (id == Java8Lexer.Identifier) {
+            String ident = t.getText();
+            return "record".equals(ident) && prevNonWhitespace != null && prevNonWhitespace.getType() == Java8Lexer.PUBLIC;
+        } else if (id == Java8Lexer.CLASS) {
+            return prevNonWhitespace == null || prevNonWhitespace.getType() != Java8Lexer.DOT;
+        } else {
+            return id == Java8Lexer.INTERFACE;
+        }
+    }
+
     private static final class AssignDescriptor {
 
         final int from;
@@ -372,6 +384,7 @@ final class Parser extends ParserBase {
     boolean parseHeader() {
         boolean wasClass = false;
         boolean needsProcessing = false;
+        Token prevNonWhitespace = null;
         while (!eof()) {
             Token t = get();
             int id = t.getType();
@@ -387,7 +400,12 @@ final class Parser extends ParserBase {
                 }
                 continue;
             } else if (id == Java8Lexer.CLASS) {
-                wasClass = true;
+                if (isClassToken(t, prevNonWhitespace)) {
+                    wasClass = true;
+                }
+            }
+            if (!isWhitespace(id)) {
+                prevNonWhitespace = t;
             }
             next();
         }
@@ -432,8 +450,7 @@ final class Parser extends ParserBase {
             } else if (id == Java8Lexer.LPAREN) {
                 identBeforeParen = lastIdent;
             } else if (id == Java8Lexer.Identifier) {
-                String ident = t.getText();
-                if ("record".equals(ident) && prevNonWhitespace != null && prevNonWhitespace.getType() == Java8Lexer.PUBLIC) {
+                if (isClassToken(t, prevNonWhitespace)) {
                     next();
                     skipSpaces();
                     if (!eof()) {
@@ -448,13 +465,12 @@ final class Parser extends ParserBase {
                     }
                     prevNonWhitespace = null;
                     continue;
-                } else {
-                    lastIdent = ident;
                 }
+                lastIdent = t.getText();
             } else if (id == Java8Lexer.COMMENT) {
                 lastComment = t.getText();
-            } else if (id == Java8Lexer.CLASS) {
-                if (prevNonWhitespace == null || prevNonWhitespace.getType() != Java8Lexer.DOT) {
+            } else if (id == Java8Lexer.CLASS || id == Java8Lexer.INTERFACE) {
+                if (isClassToken(t, prevNonWhitespace)) {
                     next();
                     skipSpaces();
                     if (!eof()) {

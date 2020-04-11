@@ -123,12 +123,10 @@ final class CodeGenerator {
                 }
             } else if (id == endBody) {
                 end = t;
-            } else if (id == Java8Lexer.CLASS) {
-                if (prevNonWhitespace == null || prevNonWhitespace.getType() != Java8Lexer.DOT) {
+            } else {
+                if (Parser.isClassToken(t, prevNonWhitespace)) {
                     wasClass = true;
                 }
-            } else if (id == Java8Lexer.INTERFACE || (id == Java8Lexer.Identifier && "record".equals(t.getText()))) {
-                wasClass = true;
             }
             if (!Parser.isWhitespace(id)) {
                 prevNonWhitespace = t;

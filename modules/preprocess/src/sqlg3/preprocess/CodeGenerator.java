@@ -110,17 +110,28 @@ final class CodeGenerator {
         }
         Token start = null;
         Token end = null;
+        Token prevNonWhitespace = null;
+        boolean wasClass = false;
         while (true) {
-            Token token = lexer.nextToken();
-            int type = token.getType();
-            if (type == Java8Lexer.EOF)
+            Token t = lexer.nextToken();
+            int id = t.getType();
+            if (id == Java8Lexer.EOF)
                 break;
-            if (type == startBody) {
-                if (start == null) {
-                    start = token;
+            if (id == startBody) {
+                if (start == null && wasClass) {
+                    start = t;
                 }
-            } else if (type == endBody) {
-                end = token;
+            } else if (id == endBody) {
+                end = t;
+            } else if (id == Java8Lexer.CLASS) {
+                if (prevNonWhitespace == null || prevNonWhitespace.getType() != Java8Lexer.DOT) {
+                    wasClass = true;
+                }
+            } else if (id == Java8Lexer.INTERFACE || (id == Java8Lexer.Identifier && "record".equals(t.getText()))) {
+                wasClass = true;
+            }
+            if (!Parser.isWhitespace(id)) {
+                prevNonWhitespace = t;
             }
         }
         if (start == null || end == null)

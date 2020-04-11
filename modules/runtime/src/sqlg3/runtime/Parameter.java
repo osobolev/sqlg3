@@ -88,7 +88,7 @@ public final class Parameter {
         return mappers.getMapper(cls);
     }
 
-    private void set(PreparedStatement st, int index, TypeMapper<Object> mapper) throws SQLException {
+    private int set(PreparedStatement st, int index, TypeMapper<Object> mapper) throws SQLException {
         if (input) {
             mapper.set(st, index, inputValue);
         }
@@ -99,11 +99,17 @@ public final class Parameter {
                 throw new SQLGException("You can pass OUT parameter only to CallableStatement");
             }
         }
+        return mapper.getStatementParameters();
     }
 
-    void set(RuntimeMapper mappers, PreparedStatement st, int index) throws SQLException {
-        TypeMapper<Object> mapper = getMapper(mappers);
-        set(st, index, mapper);
+    int set(RuntimeMapper mappers, PreparedStatement st, int index) throws SQLException {
+        if (Parameter.class.equals(cls)) {
+            Parameter nested = (Parameter) inputValue;
+            return nested.set(mappers, st, index);
+        } else {
+            TypeMapper<Object> mapper = getMapper(mappers);
+            return set(st, index, mapper);
+        }
     }
 
     /**
@@ -118,9 +124,7 @@ public final class Parameter {
             return;
         int index = 1;
         for (Parameter param : in) {
-            TypeMapper<Object> mapper = param.getMapper(mappers);
-            param.set(st, index, mapper);
-            index += mapper.getStatementParameters();
+            index += param.set(mappers, st, index);
         }
     }
 

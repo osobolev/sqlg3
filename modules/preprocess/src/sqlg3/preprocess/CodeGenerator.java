@@ -49,7 +49,7 @@ final class CodeGenerator {
         buf.append("public interface " + interfaceName + " extends sqlg3.core.IDBCommon" + addIface + " {\n");
     }
 
-    void addMethod(Method method, String javadoc) throws ParseException {
+    void addMethod(Method method, String javadoc) {
         if (javadoc != null) {
             buf.append("\n" + tab + javadoc);
         }

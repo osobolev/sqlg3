@@ -30,6 +30,8 @@ final class TestMain {
         o.srcRoot = Paths.get("sample/danew/src");
         o.destRoot = Paths.get("sample/dto/src");
         o.ifacePack = "dto";
+//        o.unpreprocess = true;
+//        o.addInterface = true;
         List<Path> files = Collections.singletonList(o.srcRoot.resolve("danew/Example2.java"));
 
         new Main(o.build()).workFiles(files, Collections.emptyList());

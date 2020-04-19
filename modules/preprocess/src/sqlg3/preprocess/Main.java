@@ -34,10 +34,12 @@ public final class Main {
 
     private static final class ToProcess {
 
+        final IfaceCutPaste ifaceCP;
         final ParseResult parsed;
         final JavaClassFile iface;
 
-        ToProcess(ParseResult parsed, JavaClassFile iface) {
+        ToProcess(IfaceCutPaste ifaceCP, ParseResult parsed, JavaClassFile iface) {
+            this.ifaceCP = ifaceCP;
             this.parsed = parsed;
             this.iface = iface;
         }
@@ -141,19 +143,28 @@ public final class Main {
         for (JavaClassFile file : javaFiles) {
             String text = FileUtils.readFile(file.path, o.encoding);
             Parser parser = new Parser(text, file.simpleClassName, file.fullClassName, rowTypeMap);
+            HeaderResult header;
             ParseResult parsed;
-            boolean addSrc;
             if (o.unpreprocess) {
                 parsed = null;
-                addSrc = parser.parseHeader();
+                header = parser.parseHeader();
             } else {
                 parsed = parser.parseAll();
-                addSrc = parsed != null;
+                header = parsed == null ? null : parsed.header;
             }
             ToProcess src;
-            if (addSrc) {
+            if (header != null) {
                 JavaClassFile iface = getInterface(file);
-                src = new ToProcess(parsed, iface);
+                IfaceCutPaste ifaceCP;
+                if (o.addInterface) {
+                    ifaceCP = IfaceCutPaste.create(text, header, iface.fullClassName);
+                    if (parsed != null) {
+                        parsed.insertIfaceFragment(ifaceCP);
+                    }
+                } else {
+                    ifaceCP = null;
+                }
+                src = new ToProcess(ifaceCP, parsed, iface);
             } else {
                 src = null;
             }
@@ -174,6 +185,9 @@ public final class Main {
                 if (src == null)
                     continue;
                 Files.deleteIfExists(src.iface.path);
+                if (src.ifaceCP != null) {
+                    FileUtils.writeFile(input.file.path, src.ifaceCP.removeIface(), o.encoding);
+                }
             }
             return;
         }
@@ -202,11 +216,12 @@ public final class Main {
             Path[] compFiles = new Path[inputs.size()];
             for (int i = 0; i < inputs.size(); i++) {
                 InputFile input = inputs.get(i);
+                ToProcess src = input.src;
                 Path dir = ClassUtils.packageDir(tmpDir, input.file.pack);
                 Files.createDirectories(dir);
                 compFiles[i] = dir.resolve(input.file.path.getFileName());
-                if (input.src != null) {
-                    ParseResult parsed = input.src.parsed;
+                if (src != null) {
+                    ParseResult parsed = src.parsed;
                     String newText = parsed.doCutPaste();
                     FileUtils.writeFile(compFiles[i], newText, o.encoding);
                 } else {
@@ -271,6 +286,14 @@ public final class Main {
                 ifaceText = g.finish();
             }
 
+            if (o.addInterface) {
+                Class<?>[] ifaces = rr.cls.getInterfaces();
+                boolean alreadyHasInterface = Arrays.stream(ifaces)
+                    .anyMatch(c -> c.getName().equals(src.iface.fullClassName));
+                if (!alreadyHasInterface) {
+                    src.ifaceCP.replaceTo = IfaceCutPaste.getImplements(src.iface.fullClassName, ifaces.length > 0) + " ";
+                }
+            }
             String newText = src.parsed.doCutPaste();
             FileUtils.writeFile(input.file.path, newText, o.encoding);
 

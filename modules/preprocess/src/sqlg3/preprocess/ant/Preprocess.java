@@ -68,6 +68,13 @@ public class Preprocess extends Task {
     }
 
     /**
+     * @param addInterface if add interface to "implements" clause
+     */
+    public void setAddinterface(boolean addInterface) {
+        options.addInterface = addInterface;
+    }
+
+    /**
      * Source files root. Package of class is determined relative to the source root.
      */
     public void setSrcroot(File srcroot) {

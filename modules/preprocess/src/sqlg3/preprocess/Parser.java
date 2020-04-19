@@ -341,15 +341,17 @@ final class Parser extends ParserBase {
         }
     }
 
-    boolean parseHeader() {
+    HeaderResult parseHeader() {
         boolean wasClass = false;
         boolean needsProcessing = false;
         Token prevNonWhitespace = null;
+        Token brace = null;
         while (!eof()) {
             Token t = get();
             int id = t.getType();
             if (id == Java8Lexer.LBRACE) {
                 if (wasClass) {
+                    brace = t;
                     next();
                     break;
                 }
@@ -369,11 +371,17 @@ final class Parser extends ParserBase {
             }
             next();
         }
-        return needsProcessing;
+        if (needsProcessing && brace != null) {
+            int spaceStart = prevNonWhitespace == null ? 0 : prevNonWhitespace.getStopIndex() + 1;
+            return new HeaderResult(spaceStart, brace.getStartIndex());
+        } else {
+            return null;
+        }
     }
 
     ParseResult parseAll() throws ParseException {
-        if (!parseHeader())
+        HeaderResult header = parseHeader();
+        if (header == null)
             return null;
         String lastComment = null;
         String lastIdent = null;
@@ -452,6 +460,6 @@ final class Parser extends ParserBase {
             }
             next();
         }
-        return new ParseResult(text, entries, bindMap, parameters, fragments);
+        return new ParseResult(text, header, entries, bindMap, parameters, fragments);
     }
 }

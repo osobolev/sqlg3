@@ -6,13 +6,15 @@ import java.util.Map;
 final class ParseResult {
 
     final String text;
+    final HeaderResult header;
     final List<MethodEntry> entries;
     final Map<ParamName, List<ParamCutPaste>> bindMap;
     final List<ParamName> parameters;
     private final List<CutPaste> fragments;
 
-    ParseResult(String text, List<MethodEntry> entries, Map<ParamName, List<ParamCutPaste>> bindMap, List<ParamName> parameters, List<CutPaste> fragments) {
+    ParseResult(String text, HeaderResult header, List<MethodEntry> entries, Map<ParamName, List<ParamCutPaste>> bindMap, List<ParamName> parameters, List<CutPaste> fragments) {
         this.text = text;
+        this.header = header;
         this.entries = entries;
         this.bindMap = bindMap;
         this.parameters = parameters;
@@ -26,5 +28,9 @@ final class ParseResult {
             cp.cutPaste(buf);
         }
         return buf.toString();
+    }
+
+    void insertIfaceFragment(IfaceCutPaste cp) {
+        fragments.add(0, cp);
     }
 }

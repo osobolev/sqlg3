@@ -130,20 +130,11 @@ final class QPParser {
                         params.append(pv);
                     }
                     String qsql = "\"" + sql + "\", ";
-                    String predParams;
-                    String postParams;
-                    if (single) {
-                        predParams = qsql;
-                        postParams = "";
-                    } else {
-                        predParams = "createQueryPiece(" + qsql;
-                        postParams = ")";
-                    }
-                    int ppos = append1(predParams + params + postParams, single);
+                    int ppos = append1(qsql + params, single);
                     for (ParamInfo pos : paramPositions) {
                         ParamName id = pos.id;
                         String pv = pos.programString;
-                        int from = pred.length() + ppos + predParams.length() + pos.position;
+                        int from = pred.length() + ppos + qsql.length() + pos.position;
                         int to = from + pv.length();
                         ParamCutPaste cp = new ParamCutPaste(from, to, pos.expression, pos.out);
                         cp.replaceTo = pv;

@@ -32,20 +32,9 @@ public final class QueryBuilder {
         this.data = new ArrayList<>(Arrays.asList(piece.data));
     }
 
-    private QueryBuilder append(QueryPiece that, boolean breakLine) {
-        if (that == null)
-            return this;
-        append(this.sql, that.sql, breakLine);
-        data.addAll(Arrays.asList(that.data));
-        return this;
-    }
-
-    private QueryBuilder append(QueryBuilder that, boolean breakLine) {
-        if (that == null)
-            return this;
-        append(this.sql, that.sql.toString(), breakLine);
-        data.addAll(that.data);
-        return this;
+    private void append(CharSequence sql, List<Parameter> data, boolean breakLine) {
+        append(this.sql, sql, breakLine);
+        this.data.addAll(data);
     }
 
     /**
@@ -53,7 +42,10 @@ public final class QueryBuilder {
      * Line break is inserted between pieces, so it is safer to use than {@link #appendLit(QueryPiece)} for user.
      */
     public QueryBuilder append(QueryPiece that) {
-        return append(that, true);
+        if (that != null) {
+            append(that.sql, Arrays.asList(that.data), true);
+        }
+        return this;
     }
 
     /**
@@ -61,7 +53,26 @@ public final class QueryBuilder {
      * Nothing is inserted between pieces. Usually used by preprocessor-generated code.
      */
     public QueryBuilder appendLit(QueryPiece that) {
-        return append(that, false);
+        if (that != null) {
+            append(that.sql, Arrays.asList(that.data), false);
+        }
+        return this;
+    }
+
+    /**
+     * Same as {@link #append(QueryPiece)}
+     */
+    public QueryBuilder append(CharSequence sql, Parameter... params) {
+        append(sql, Arrays.asList(params), true);
+        return this;
+    }
+
+    /**
+     * Same as {@link #appendLit(QueryPiece)}
+     */
+    public QueryBuilder appendLit(CharSequence sql, Parameter... params) {
+        append(sql, Arrays.asList(params), false);
+        return this;
     }
 
     /**
@@ -69,7 +80,10 @@ public final class QueryBuilder {
      * Line break is inserted between pieces.
      */
     public QueryBuilder append(QueryBuilder that) {
-        return append(that, true);
+        if (that != null) {
+            append(that.sql, that.data, true);
+        }
+        return this;
     }
 
     /**
@@ -77,7 +91,10 @@ public final class QueryBuilder {
      * Nothing is inserted between pieces. Usually used by preprocessor-generated code.
      */
     public QueryBuilder appendLit(QueryBuilder that) {
-        return append(that, false);
+        if (that != null) {
+            append(that.sql, that.data, false);
+        }
+        return this;
     }
 
     static String add(String sql1, CharSequence sql2, boolean breakLine) {
@@ -111,24 +128,6 @@ public final class QueryBuilder {
         } else {
             buf.append(sql);
         }
-    }
-
-    /**
-     * Appends string query piece.
-     * Line break is inserted between pieces, so it is safer to use than {@link #appendLit(CharSequence)} for user.
-     */
-    public QueryBuilder append(CharSequence sql) {
-        append(this.sql, sql, true);
-        return this;
-    }
-
-    /**
-     * Appends string query piece.
-     * Nothing is inserted between pieces. Usually used by preprocessor-generated code.
-     */
-    public QueryBuilder appendLit(CharSequence sql) {
-        append(this.sql, sql, false);
-        return this;
     }
 
     /**

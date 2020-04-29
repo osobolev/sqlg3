@@ -206,11 +206,7 @@ public final class Main {
         if (!Objects.equals(o.srcRoot, o.destRoot)) {
             srcRoots.add(o.destRoot);
         }
-        List<RunResult> runResults = new ArrayList<>();
-        Map<Class<?>, List<RowTypeInfo>> generatedIn;
-        Map<Class<?>, List<RowTypeInfo>> generatedOut;
-        try (RunGlobalContext runGlobal = new RunGlobalContext(o);
-             RunLog log = o.getLog()) {
+        try (RunGlobalContext runGlobal = new RunGlobalContext(o); RunLog log = o.getLog()) {
             // 2. Copy to temp
             Path tmpDir = runGlobal.getTmpDir();
             Path[] compFiles = new Path[inputs.size()];
@@ -230,6 +226,7 @@ public final class Main {
             }
 
             // 3. Run methods
+            List<RunResult> runResults = new ArrayList<>();
             for (int i = 0; i < inputs.size(); i++) {
                 InputFile input = inputs.get(i);
                 ToProcess src = input.src;
@@ -247,58 +244,58 @@ public final class Main {
                     runResults.add(new RunResult(input, cls, runMethods));
                 }
             }
-            generatedIn = runGlobal.generatedIn;
-            generatedOut = runGlobal.generatedOut;
-        }
+            Map<Class<?>, List<RowTypeInfo>> generatedIn = runGlobal.generatedIn;
+            Map<Class<?>, List<RowTypeInfo>> generatedOut = runGlobal.generatedOut;
 
-        // 4. Generate row types
-        String tab = o.getTab();
-        for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedIn.entrySet()) {
-            Class<?> cls = entry.getKey();
-            RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
-            ClassName key = ClassName.nested(cls.getDeclaringClass().getName(), cls.getSimpleName());
-            RowTypeCutPaste cp = rowTypeMap.get(key);
-            if (cp == null)
-                throw new ParseException("Row type " + key + " definition not found");
-            cp.replaceTo = rowType.generateRowTypeBody(tab, tab, cls);
-        }
-        for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedOut.entrySet()) {
-            Class<?> cls = entry.getKey();
-            RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
-            String body = rowType.generateRowTypeBody("", tab, cls);
-            CodeGenerator.generateImplOut(srcRoots, o.encoding, cls, body);
-        }
-
-        // 5. Generate interfaces & write back sources
-        for (RunResult rr : runResults) {
-            InputFile input = rr.input;
-            ToProcess src = input.src;
-            String ifaceText;
-            {
-                CodeGenerator g = new CodeGenerator(tab, src.iface.simpleClassName, src.iface.pack);
-                g.start(rr.cls);
-                for (RunMethod runMethod : rr.methods) {
-                    MethodEntry entry = runMethod.entry;
-                    if (!entry.publish)
-                        continue;
-                    g.addMethod(runMethod.method, entry.javadoc);
-                }
-                ifaceText = g.finish();
+            // 4. Generate row types
+            String tab = o.getTab();
+            for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedIn.entrySet()) {
+                Class<?> cls = entry.getKey();
+                RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
+                ClassName key = ClassName.nested(cls.getDeclaringClass().getName(), cls.getSimpleName());
+                RowTypeCutPaste cp = rowTypeMap.get(key);
+                if (cp == null)
+                    throw new ParseException("Row type " + key + " definition not found");
+                cp.replaceTo = rowType.generateRowTypeBody(tab, tab, cls);
+            }
+            for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedOut.entrySet()) {
+                Class<?> cls = entry.getKey();
+                RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
+                String body = rowType.generateRowTypeBody("", tab, cls);
+                CodeGenerator.generateImplOut(srcRoots, o.encoding, cls, body);
             }
 
-            if (o.addInterface) {
-                Class<?>[] ifaces = rr.cls.getInterfaces();
-                boolean alreadyHasInterface = Arrays.stream(ifaces)
-                    .anyMatch(c -> c.getName().equals(src.iface.fullClassName));
-                if (!alreadyHasInterface) {
-                    src.ifaceCP.replaceTo = IfaceCutPaste.getImplements(src.iface.fullClassName, ifaces.length > 0) + " ";
+            // 5. Generate interfaces & write back sources
+            for (RunResult rr : runResults) {
+                InputFile input = rr.input;
+                ToProcess src = input.src;
+                String ifaceText;
+                {
+                    CodeGenerator g = new CodeGenerator(tab, src.iface.simpleClassName, src.iface.pack);
+                    g.start(rr.cls);
+                    for (RunMethod runMethod : rr.methods) {
+                        MethodEntry entry = runMethod.entry;
+                        if (!entry.publish)
+                            continue;
+                        g.addMethod(runMethod.method, entry.javadoc);
+                    }
+                    ifaceText = g.finish();
                 }
-            }
-            String newText = src.parsed.doCutPaste();
-            FileUtils.writeFile(input.file.path, newText, o.encoding);
 
-            Files.createDirectories(src.iface.path.getParent());
-            FileUtils.writeFile(src.iface.path, ifaceText, o.encoding);
+                if (o.addInterface) {
+                    Class<?>[] ifaces = rr.cls.getInterfaces();
+                    boolean alreadyHasInterface = Arrays.stream(ifaces)
+                        .anyMatch(c -> c.getName().equals(src.iface.fullClassName));
+                    if (!alreadyHasInterface) {
+                        src.ifaceCP.replaceTo = IfaceCutPaste.getImplements(src.iface.fullClassName, ifaces.length > 0) + " ";
+                    }
+                }
+                String newText = src.parsed.doCutPaste();
+                FileUtils.writeFile(input.file.path, newText, o.encoding);
+
+                Files.createDirectories(src.iface.path.getParent());
+                FileUtils.writeFile(src.iface.path, ifaceText, o.encoding);
+            }
         }
     }
 }

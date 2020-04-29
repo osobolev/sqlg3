@@ -2,7 +2,6 @@ package sqlg3.preprocess;
 
 import sqlg3.preprocess.ant.SQLGWarn;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -69,7 +68,7 @@ public final class Options {
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    RunLog getLog() throws IOException {
+    RunLog getLog() {
         if (log == null || "false".equalsIgnoreCase(log)) {
             return null;
         } else if ("true".equalsIgnoreCase(log) || "err".equalsIgnoreCase(log)) {

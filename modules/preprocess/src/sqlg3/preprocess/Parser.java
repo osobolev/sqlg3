@@ -4,7 +4,6 @@ import org.antlr.v4.runtime.Token;
 import sqlg3.annotations.*;
 import sqlg3.preprocess.lexer.Java8Lexer;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.nio.file.Path;
 import java.util.*;
@@ -30,7 +29,7 @@ final class Parser extends ParserBase {
     private final List<ParamName> parameters = new ArrayList<>();
     private final List<CutPaste> fragments = new ArrayList<>();
 
-    Parser(Path file, String text, String displayClassName, String fullClassName, Map<ClassName, RowTypeCutPaste> rowTypeMap) throws IOException {
+    Parser(Path file, String text, String displayClassName, String fullClassName, Map<ClassName, RowTypeCutPaste> rowTypeMap) {
         super(text);
         this.file = file;
         this.displayClassName = displayClassName;

@@ -721,7 +721,7 @@ public class GBase implements ISimpleTransaction {
      *
      * @param rowType row type class
      */
-    public final <T> RowFetcher<T> getRowFetcher(Class<T> rowType, ResultSet rs) throws SQLException {
+    public final <T> RowFetcher<T> getRowFetcher(Class<T> rowType, ResultSet rs) {
         boolean meta = false;
         if (test != null) {
             return () -> {

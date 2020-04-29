@@ -283,7 +283,7 @@ final class Parser extends ParserBase {
                     }
                     parseStatement(entryName, lastSqlQuery, false, "prepareStatementKey", autoKeys + ", ", false);
                 } else if (CALL_ANNOTATION.equals(annotation)) {
-                    parseStatement(entryName, lastSqlQuery, true, "executeCall", "", false);
+                    parseStatement(entryName, lastSqlQuery, true, "prepareCall", "", false);
                 }
                 continue;
             }

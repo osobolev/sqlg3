@@ -552,15 +552,22 @@ public class GBase implements ISimpleTransaction {
     /**
      * Returns query ResultSet metadata as RowType object.
      */
+    public final <T> T metaRowQuery(ResultSet rs, Class<T> rowType) throws SQLException {
+        boolean meta = true;
+        if (test != null) {
+            test.getRowTypeFields(rowType, rs, meta);
+            return null;
+        } else {
+            return fetchFromResultSet(rowType, rs, meta);
+        }
+    }
+
+    /**
+     * Returns query ResultSet metadata as RowType object.
+     */
     public final <T> T metaRowQuery(PreparedStatement stmt, Class<T> rowType) throws SQLException {
         try (ResultSet rs = stmt.executeQuery()) {
-            boolean meta = true;
-            if (test != null) {
-                test.getRowTypeFields(rowType, rs, meta);
-                return null;
-            } else {
-                return fetchFromResultSet(rowType, rs, meta);
-            }
+            return metaRowQuery(rs, rowType);
         }
     }
 

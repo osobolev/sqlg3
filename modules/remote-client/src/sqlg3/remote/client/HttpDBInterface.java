@@ -20,10 +20,6 @@ final class HttpDBInterface implements IRemoteDBInterface {
         return new HttpSimpleTransaction(rootObject, info.id, HttpCommand.INVOKE);
     }
 
-    public ISimpleTransaction getAsyncTransaction() {
-        return new HttpSimpleTransaction(rootObject, info.id, HttpCommand.INVOKE_ASYNC);
-    }
-
     public ITransaction getTransaction() throws SQLException {
         try {
             HttpId transactionId = rootObject.httpInvoke(HttpId.class, HttpCommand.GET_TRANSACTION, info.id);

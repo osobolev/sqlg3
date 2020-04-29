@@ -10,6 +10,5 @@ public enum HttpCommand {
     GET_CURRENT_SESSION,
     ROLLBACK,
     COMMIT,
-    INVOKE,
-    INVOKE_ASYNC
+    INVOKE
 }

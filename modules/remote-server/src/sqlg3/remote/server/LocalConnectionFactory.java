@@ -55,12 +55,11 @@ public final class LocalConnectionFactory implements IConnectionFactory {
         this.server = server;
     }
 
-    private DBInterface newDBInterface(ConnectionManager cman, String user, String password,
-                                       Object userObject,
+    private DBInterface newDBInterface(ConnectionManager cman, String user, Object userObject,
                                        String host, boolean background) {
         long sessionOrderId = connectionCount.getAndIncrement();
         String sessionLongId = UUID.randomUUID().toString();
-        DBInterface lw = new DBInterface(user, password, host, cman, this, userObject, sessionOrderId, sessionLongId, server);
+        DBInterface lw = new DBInterface(user, host, cman, this, userObject, sessionOrderId, sessionLongId, server);
         synchronized (this) {
             connectionMap.put(sessionLongId, new SessionRecord(lw, background));
         }
@@ -73,7 +72,7 @@ public final class LocalConnectionFactory implements IConnectionFactory {
 
     private DBInterface openConnection(String user, String password, String host, boolean background) throws SQLException {
         SessionFactory.SessionData loginData = sessionFactory.login(logger, user, password);
-        return newDBInterface(loginData.cman, user, password, loginData.userObject, host, background);
+        return newDBInterface(loginData.cman, user, loginData.userObject, host, background);
     }
 
     public IRemoteDBInterface openConnection(String user, String password) throws SQLException {

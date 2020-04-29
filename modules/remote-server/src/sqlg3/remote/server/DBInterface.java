@@ -17,7 +17,6 @@ final class DBInterface implements IRemoteDBInterface {
 
     private final ConnectionManager cman;
     private final String userLogin;
-    private final String password;
     private final String userHost;
     private final LocalConnectionFactory fact;
     private final GlobalContext global;
@@ -29,12 +28,10 @@ final class DBInterface implements IRemoteDBInterface {
 
     private final AtomicLong lastActive = new AtomicLong(getCurrentTime());
 
-    DBInterface(String userLogin, String password, String userHost,
+    DBInterface(String userLogin, String userHost,
                 ConnectionManager cman, LocalConnectionFactory fact,
-                Object userObject,
-                long sessionOrderId, String sessionLongId, boolean server) {
+                Object userObject, long sessionOrderId, String sessionLongId, boolean server) {
         this.userLogin = userLogin;
-        this.password = password;
         this.userHost = userHost;
         this.cman = cman;
         this.fact = fact;
@@ -55,10 +52,6 @@ final class DBInterface implements IRemoteDBInterface {
 
     public ISimpleTransaction getSimpleTransaction() {
         return new SimpleTransaction(global, cman);
-    }
-
-    public ISimpleTransaction getAsyncTransaction() {
-        return new AsyncTransaction(this, logger::error);
     }
 
     public ITransaction getTransaction() {
@@ -129,9 +122,5 @@ final class DBInterface implements IRemoteDBInterface {
 
     public SessionInfo getCurrentSession() {
         return fact.getSessionInfo(this);
-    }
-
-    DBInterface createBackground() throws SQLException {
-        return fact.createConnection(userLogin, password, userHost, true);
     }
 }

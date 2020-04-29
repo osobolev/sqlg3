@@ -78,10 +78,6 @@ public final class SafeDBInterface implements IRemoteDBInterface {
         }
     }
 
-    public ISimpleTransaction getAsyncTransaction() throws SQLException {
-        return getDb().getAsyncTransaction();
-    }
-
     public ITransaction getTransaction() throws SQLException {
         return getDb().getTransaction();
     }

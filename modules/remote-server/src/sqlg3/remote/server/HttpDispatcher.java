@@ -177,18 +177,16 @@ public final class HttpDispatcher {
             if (id.sessionId != null) {
                 db = checkSession(id);
             }
-            if (command == HttpCommand.INVOKE || command == HttpCommand.INVOKE_ASYNC) {
+            if (command == HttpCommand.INVOKE) {
                 Object impl;
                 if (id.transactionId != null) {
-                    if (command == HttpCommand.INVOKE_ASYNC)
-                        throw new RemoteException("Async calls are not supported inside transaction");
                     ITransaction transaction = transactions.get(id.transactionId);
                     if (transaction == null)
                         throw new RemoteException("Transaction inactive: " + id.transactionId);
                     impl = transaction.getInterface(iface);
                 } else {
                     assert db != null;
-                    ISimpleTransaction t = command == HttpCommand.INVOKE_ASYNC ? db.getAsyncTransaction() : db.getSimpleTransaction();
+                    ISimpleTransaction t = db.getSimpleTransaction();
                     impl = t.getInterface(iface);
                 }
                 Method toInvoke = impl.getClass().getMethod(method, paramTypes);

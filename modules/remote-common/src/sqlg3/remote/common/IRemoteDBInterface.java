@@ -1,9 +1,6 @@
 package sqlg3.remote.common;
 
 import sqlg3.core.IDBInterface;
-import sqlg3.core.ISimpleTransaction;
-
-import java.sql.SQLException;
 
 /**
  * Main DB interface class - DB connection abstraction.
@@ -11,8 +8,6 @@ import java.sql.SQLException;
  * while really it can be a whole pool of connections.
  */
 public interface IRemoteDBInterface extends IDBInterface {
-
-    ISimpleTransaction getAsyncTransaction() throws SQLException;
 
     /**
      * Checks server for availability and signal that client is alive.

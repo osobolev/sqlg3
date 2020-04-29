@@ -35,7 +35,9 @@ final class MethodRunner {
         for (int i = 0; i < types.length; i++) {
             ret[i] = test.getTestObject(types[i]);
             if (ret[i] == null) {
-                throw new ParseException("Non-standard type in entry params: " + types[i]);
+                throw new ParseException(
+                    "Non-standard type in method '" + method.getDeclaringClass().getSimpleName() + "." + method.getName() + "' params: " + types[i]
+                );
             }
         }
         return ret;

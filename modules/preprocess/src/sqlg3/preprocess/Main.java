@@ -299,7 +299,7 @@ public final class Main {
                 String ifaceText;
                 {
                     CodeGenerator g = new CodeGenerator(tab, src.iface.simpleClassName, src.iface.pack);
-                    g.start(rr.cls);
+                    g.start(rr.cls, src.parsed.header.javadoc);
                     for (RunMethod runMethod : rr.methods) {
                         MethodEntry entry = runMethod.entry;
                         if (!entry.publish)

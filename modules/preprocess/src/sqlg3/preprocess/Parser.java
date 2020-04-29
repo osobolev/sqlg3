@@ -348,6 +348,7 @@ final class Parser extends ParserBase {
         boolean hasSQLG = false;
         Token prevNonWhitespace = null;
         Token brace = null;
+        String lastComment = null;
         while (!eof()) {
             Token t = get();
             int id = t.getType();
@@ -367,6 +368,10 @@ final class Parser extends ParserBase {
                 if (isClassToken(t, prevNonWhitespace)) {
                     wasClass = true;
                 }
+            } else if (id == Java8Lexer.COMMENT) {
+                if (!wasClass) {
+                    lastComment = t.getText();
+                }
             }
             if (!isWhitespace(id)) {
                 prevNonWhitespace = t;
@@ -377,7 +382,7 @@ final class Parser extends ParserBase {
             return null;
         if (hasSQLG || !requireSQLG) {
             int spaceStart = prevNonWhitespace == null ? 0 : prevNonWhitespace.getStopIndex() + 1;
-            return new HeaderResult(spaceStart, brace.getStartIndex());
+            return new HeaderResult(lastComment, spaceStart, brace.getStartIndex());
         } else {
             return null;
         }

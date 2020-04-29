@@ -32,7 +32,7 @@ final class CodeGenerator {
         this.interfacePackage = interfacePackage;
     }
 
-    void start(Class<?> cls) {
+    void start(Class<?> cls, String javadoc) {
         if (interfacePackage != null) {
             buf.append("package " + interfacePackage + ";\n");
             buf.append("\n");
@@ -44,6 +44,9 @@ final class CodeGenerator {
             addIface.append(iface.getName());
         }
         buf.append(GENERATED_WARNING + "\n");
+        if (javadoc != null) {
+            buf.append(javadoc).append("\n");
+        }
         buf.append("@SuppressWarnings(\"UnnecessaryFullyQualifiedName\")\n");
         buf.append("@sqlg3.core.Impl(\"" + cls.getName() + "\")\n");
         buf.append("public interface " + interfaceName + " extends sqlg3.core.IDBCommon" + addIface + " {\n");

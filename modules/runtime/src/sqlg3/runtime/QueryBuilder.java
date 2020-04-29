@@ -19,9 +19,9 @@ public final class QueryBuilder {
     /**
      * @param sql initial query text (not null)
      */
-    public QueryBuilder(CharSequence sql) {
+    public QueryBuilder(CharSequence sql, Parameter... data) {
         this.sql = new StringBuilder(sql);
-        this.data = new ArrayList<>();
+        this.data = new ArrayList<>(Arrays.asList(data));
     }
 
     /**

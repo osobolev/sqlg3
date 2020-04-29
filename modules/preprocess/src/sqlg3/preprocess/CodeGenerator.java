@@ -78,25 +78,26 @@ final class CodeGenerator {
         return buf.toString();
     }
 
-    static void generateImplOut(List<Path> srcRoots, Charset encoding, Class<?> rowType, String body) throws ParseException, IOException {
-        String fullName = rowType.getName();
+    static Path getSourceFile(Class<?> cls, List<Path> srcRoots) throws ParseException {
+        String fullName = cls.getName();
         String packName;
-        if (fullName.equals(rowType.getSimpleName())) {
+        if (fullName.equals(cls.getSimpleName())) {
             packName = null;
         } else {
-            packName = fullName.substring(0, fullName.length() - rowType.getSimpleName().length() - 1);
+            packName = fullName.substring(0, fullName.length() - cls.getSimpleName().length() - 1);
         }
-        Path file = null;
         for (Path srcRoot : srcRoots) {
             Path dir = ClassUtils.packageDir(srcRoot, packName);
-            Path testFile = dir.resolve(rowType.getSimpleName() + ".java");
+            Path testFile = dir.resolve(cls.getSimpleName() + ".java");
             if (Files.exists(testFile)) {
-                file = testFile;
-                break;
+                return testFile;
             }
         }
-        if (file == null)
-            throw new ParseException("Cannot find file for class " + rowType);
+        throw new ParseException("Cannot find source file for class " + cls);
+    }
+
+    static void generateImplOut(List<Path> srcRoots, Charset encoding, Class<?> rowType, String body) throws ParseException, IOException {
+        Path file = getSourceFile(rowType, srcRoots);
         String text = FileUtils.readFile(file, encoding);
         Java8Lexer lexer = new Java8Lexer(CharStreams.fromString(text));
         int startBody;

@@ -6,6 +6,7 @@ import sqlg3.preprocess.lexer.Java8Lexer;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.nio.file.Path;
 import java.util.*;
 
 final class Parser extends ParserBase {
@@ -19,6 +20,7 @@ final class Parser extends ParserBase {
     private static final String CHECK_PARAMS_ANNOTATION = annotationName(CheckParams.class);
     private static final String SQLG_ANNOTATION = annotationName(SQLG.class);
 
+    private final Path file;
     private final String displayClassName;
     private final String fullClassName;
     private final Map<ClassName, RowTypeCutPaste> rowTypeMap;
@@ -28,8 +30,9 @@ final class Parser extends ParserBase {
     private final List<ParamName> parameters = new ArrayList<>();
     private final List<CutPaste> fragments = new ArrayList<>();
 
-    Parser(String text, String displayClassName, String fullClassName, Map<ClassName, RowTypeCutPaste> rowTypeMap) throws IOException {
+    Parser(Path file, String text, String displayClassName, String fullClassName, Map<ClassName, RowTypeCutPaste> rowTypeMap) throws IOException {
         super(text);
+        this.file = file;
         this.displayClassName = displayClassName;
         this.fullClassName = fullClassName;
         this.rowTypeMap = rowTypeMap;
@@ -341,9 +344,9 @@ final class Parser extends ParserBase {
         }
     }
 
-    HeaderResult parseHeader() {
+    HeaderResult parseHeader(boolean requireSQLG) {
         boolean wasClass = false;
-        boolean needsProcessing = false;
+        boolean hasSQLG = false;
         Token prevNonWhitespace = null;
         Token brace = null;
         while (!eof()) {
@@ -358,7 +361,7 @@ final class Parser extends ParserBase {
             } else if (id == Java8Lexer.AT) {
                 String annotation = getAnnotation();
                 if (SQLG_ANNOTATION.equals(annotation)) {
-                    needsProcessing = true;
+                    hasSQLG = true;
                 }
                 continue;
             } else if (id == Java8Lexer.CLASS) {
@@ -371,7 +374,9 @@ final class Parser extends ParserBase {
             }
             next();
         }
-        if (needsProcessing && brace != null) {
+        if (brace == null)
+            return null;
+        if (hasSQLG || !requireSQLG) {
             int spaceStart = prevNonWhitespace == null ? 0 : prevNonWhitespace.getStopIndex() + 1;
             return new HeaderResult(spaceStart, brace.getStartIndex());
         } else {
@@ -379,8 +384,8 @@ final class Parser extends ParserBase {
         }
     }
 
-    ParseResult parseAll() throws ParseException {
-        HeaderResult header = parseHeader();
+    ParseResult parseAll(boolean requireSQLG) throws ParseException {
+        HeaderResult header = parseHeader(requireSQLG);
         if (header == null)
             return null;
         String lastComment = null;
@@ -460,6 +465,6 @@ final class Parser extends ParserBase {
             }
             next();
         }
-        return new ParseResult(text, header, entries, bindMap, parameters, fragments);
+        return new ParseResult(file, text, header, entries, bindMap, parameters, fragments);
     }
 }

@@ -4,6 +4,7 @@ import sqlg3.preprocess.ant.SQLGWarn;
 import sqlg3.runtime.GBase;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -107,7 +108,24 @@ public final class Main {
         return new JavaClassFile(interfaceFile, interfaceName, interfacePackage);
     }
 
-    private List<InputFile> getInputs(List<Path> inputFiles, Map<ClassName, RowTypeCutPaste> rowTypeMap) throws IOException, ParseException {
+    private static final class ParseContext {
+
+        final Map<ClassName, RowTypeCutPaste> rowTypeMap = new HashMap<>();
+        final Set<String> parentClasses = new HashSet<>();
+        final Charset encoding;
+
+        ParseContext(Charset encoding) {
+            this.encoding = encoding;
+        }
+
+        Parser newParser(Path file, String simpleClassName, String fullClassName) throws IOException {
+            parentClasses.add(fullClassName);
+            String text = FileUtils.readFile(file, encoding);
+            return new Parser(file, text, simpleClassName, fullClassName, rowTypeMap);
+        }
+    }
+
+    private List<InputFile> getInputs(List<Path> inputFiles, ParseContext pctx) throws IOException, ParseException {
         List<Path> in;
         if (inputFiles.isEmpty()) {
             in = new ArrayList<>();
@@ -141,15 +159,14 @@ public final class Main {
 
         List<InputFile> inputs = new ArrayList<>(javaFiles.size());
         for (JavaClassFile file : javaFiles) {
-            String text = FileUtils.readFile(file.path, o.encoding);
-            Parser parser = new Parser(text, file.simpleClassName, file.fullClassName, rowTypeMap);
+            Parser parser = pctx.newParser(file.path, file.simpleClassName, file.fullClassName);
             HeaderResult header;
             ParseResult parsed;
             if (o.unpreprocess) {
                 parsed = null;
-                header = parser.parseHeader();
+                header = parser.parseHeader(true);
             } else {
-                parsed = parser.parseAll();
+                parsed = parser.parseAll(true);
                 header = parsed == null ? null : parsed.header;
             }
             ToProcess src;
@@ -157,7 +174,7 @@ public final class Main {
                 JavaClassFile iface = getInterface(file);
                 IfaceCutPaste ifaceCP;
                 if (o.addInterface) {
-                    ifaceCP = IfaceCutPaste.create(text, header, iface.fullClassName);
+                    ifaceCP = IfaceCutPaste.create(parser.text, header, iface.fullClassName);
                     if (parsed != null) {
                         parsed.insertIfaceFragment(ifaceCP);
                     }
@@ -175,8 +192,8 @@ public final class Main {
 
     public void workFiles(List<Path> inputFiles, List<String> javacOptions) throws Throwable {
         // 1. Parse & check modification time
-        Map<ClassName, RowTypeCutPaste> rowTypeMap = new HashMap<>();
-        List<InputFile> inputs = getInputs(inputFiles, rowTypeMap);
+        ParseContext pctx = new ParseContext(o.encoding);
+        List<InputFile> inputs = getInputs(inputFiles, pctx);
         if (inputs.isEmpty())
             return;
         if (o.unpreprocess) {
@@ -244,21 +261,31 @@ public final class Main {
                     runResults.add(new RunResult(input, cls, runMethods));
                 }
             }
-            Map<Class<?>, List<RowTypeInfo>> generatedIn = runGlobal.generatedIn;
-            Map<Class<?>, List<RowTypeInfo>> generatedOut = runGlobal.generatedOut;
 
             // 4. Generate row types
             String tab = o.getTab();
-            for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedIn.entrySet()) {
+            List<ParseResult> otherParents = new ArrayList<>();
+            for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : runGlobal.generatedIn.entrySet()) {
+                Class<?> cls = entry.getKey();
+                Class<?> parentClass = cls.getDeclaringClass();
+                String fullParentName = parentClass.getName();
+                if (pctx.parentClasses.contains(fullParentName))
+                    continue;
+                Path source = CodeGenerator.getSourceFile(parentClass, srcRoots);
+                Parser parser = pctx.newParser(source, parentClass.getSimpleName(), fullParentName);
+                otherParents.add(parser.parseAll(false));
+            }
+            for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : runGlobal.generatedIn.entrySet()) {
                 Class<?> cls = entry.getKey();
                 RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
-                ClassName key = ClassName.nested(cls.getDeclaringClass().getName(), cls.getSimpleName());
-                RowTypeCutPaste cp = rowTypeMap.get(key);
+                Class<?> parentClass = cls.getDeclaringClass();
+                ClassName key = ClassName.nested(parentClass.getName(), cls.getSimpleName());
+                RowTypeCutPaste cp = pctx.rowTypeMap.get(key);
                 if (cp == null)
                     throw new ParseException("Row type " + key + " definition not found");
                 cp.replaceTo = rowType.generateRowTypeBody(tab, tab, cls);
             }
-            for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : generatedOut.entrySet()) {
+            for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : runGlobal.generatedOut.entrySet()) {
                 Class<?> cls = entry.getKey();
                 RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
                 String body = rowType.generateRowTypeBody("", tab, cls);
@@ -295,6 +322,10 @@ public final class Main {
 
                 Files.createDirectories(src.iface.path.getParent());
                 FileUtils.writeFile(src.iface.path, ifaceText, o.encoding);
+            }
+            for (ParseResult parsed : otherParents) {
+                String newText = parsed.doCutPaste();
+                FileUtils.writeFile(parsed.file, newText, o.encoding);
             }
         }
     }

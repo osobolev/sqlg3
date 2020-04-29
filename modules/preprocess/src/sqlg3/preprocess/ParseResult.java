@@ -1,10 +1,12 @@
 package sqlg3.preprocess;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
 final class ParseResult {
 
+    final Path file;
     final String text;
     final HeaderResult header;
     final List<MethodEntry> entries;
@@ -12,7 +14,8 @@ final class ParseResult {
     final List<ParamName> parameters;
     private final List<CutPaste> fragments;
 
-    ParseResult(String text, HeaderResult header, List<MethodEntry> entries, Map<ParamName, List<ParamCutPaste>> bindMap, List<ParamName> parameters, List<CutPaste> fragments) {
+    ParseResult(Path file, String text, HeaderResult header, List<MethodEntry> entries, Map<ParamName, List<ParamCutPaste>> bindMap, List<ParamName> parameters, List<CutPaste> fragments) {
+        this.file = file;
         this.text = text;
         this.header = header;
         this.entries = entries;

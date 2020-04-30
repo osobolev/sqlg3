@@ -1,5 +1,6 @@
 package sqlg3.preprocess;
 
+import sqlg3.preprocess.ant.ModifiedCheck;
 import sqlg3.preprocess.ant.SQLGWarn;
 import sqlg3.preprocess.checker.Generic;
 import sqlg3.runtime.RuntimeMapperImpl;
@@ -14,7 +15,7 @@ public final class OptionsBuilder {
     public Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"));
     public boolean cleanup = true;
     public String classpath = null;
-    public boolean checkTime = true;
+    public ModifiedCheck checkTime = ModifiedCheck.all_if_any_changed;
     public boolean unpreprocess = false;
     public boolean addInterface = false;
 

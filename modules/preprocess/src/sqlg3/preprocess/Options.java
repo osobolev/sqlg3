@@ -1,5 +1,6 @@
 package sqlg3.preprocess;
 
+import sqlg3.preprocess.ant.ModifiedCheck;
 import sqlg3.preprocess.ant.SQLGWarn;
 
 import java.io.PrintStream;
@@ -14,7 +15,7 @@ public final class Options {
     public final Path tmpDir;
     public final boolean cleanup;
     public final String classpath;
-    public final boolean checkTime;
+    public final ModifiedCheck checkTime;
     public final boolean unpreprocess;
     public final boolean addInterface;
 
@@ -36,7 +37,7 @@ public final class Options {
     public final String log;
     public final String runtimeMapperClass;
 
-    Options(Path tmpDir, boolean cleanup, String classpath, boolean checkTime, boolean unpreprocess, boolean addInterface, Path srcRoot, Path destRoot, String ifacePack, Charset encoding, int tabSize, String driverClass, String mapperClass, String checkerClass, String url, String user, String pass, SQLGWarn warn, String log, String runtimeMapperClass) {
+    Options(Path tmpDir, boolean cleanup, String classpath, ModifiedCheck checkTime, boolean unpreprocess, boolean addInterface, Path srcRoot, Path destRoot, String ifacePack, Charset encoding, int tabSize, String driverClass, String mapperClass, String checkerClass, String url, String user, String pass, SQLGWarn warn, String log, String runtimeMapperClass) {
         this.tmpDir = tmpDir;
         this.cleanup = cleanup;
         this.classpath = classpath;

@@ -52,12 +52,19 @@ public class Preprocess extends Task {
     }
 
     /**
-     * Sets timestamp check mode.
-     * @param force false to compare timestamp on original file and generated row type implementation,
-     * true to always re-generate files.
+     * Sets timestamp filter mode.
+     * @param what
+     * one of the following values:
+     * <ul>
+     * <li>"all_if_any_changed" to compare timestamp of the source files and generated interfaces; if any source file is
+     * newer then all files are preprocessed (this is the default)</li>
+     * <li>"only_changed" to compare timestamp of the source files and generated interfaces; only modified source files
+     * are preprocessed</li>
+     * <li>"all_always" to always preprocess all files without timestamp check</li>
+     * </ul>
      */
-    public void setForce(boolean force) {
-        options.checkTime = !force;
+    public void setWhat(ModifiedCheck what) {
+        options.checkTime = what;
     }
 
     /**

@@ -86,7 +86,7 @@ final class MethodRunner {
             }
             entryMethods.add(new RunMethod(entry, toCall));
             if (log != null) {
-                log.getLog().println(toCall.getName());
+                log.getLog().println("\t" + toCall.getName());
             }
             test.startCall(displayEntryName);
             Constructor<?> constructor = cls.getConstructor(GContext.class);

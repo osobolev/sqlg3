@@ -118,8 +118,17 @@ public final class GlobalContext {
                 return Proxy.newProxyInstance(
                     rowType.getClassLoader(), new Class[] {rowType, Serializable.class},
                     (proxy, method, args) -> {
-                        String field = method.getName();
-                        return rowData.get(field);
+                        String name = method.getName();
+                        int paramCount = method.getParameterCount();
+                        if ("toString".equals(name) && paramCount == 0) {
+                            return rowData.toString();
+                        } else if ("hashCode".equals(name) && paramCount == 0) {
+                            return System.identityHashCode(proxy);
+                        } else if ("equals".equals(name) && paramCount == 1 && Object.class.equals(method.getParameterTypes()[0])) {
+                            return proxy == args[0];
+                        } else {
+                            return rowData.get(name);
+                        }
                     }
                 );
             };

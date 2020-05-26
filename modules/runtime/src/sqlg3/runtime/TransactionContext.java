@@ -13,20 +13,20 @@ import java.sql.SQLException;
 final class TransactionContext {
 
     private final GlobalContext global;
-    private final ConnectionManager cman;
+    private final SessionContext session;
 
     private final Object connLock = new Object();
     private Connection connection = null;
 
-    TransactionContext(GlobalContext global, ConnectionManager cman) {
+    TransactionContext(GlobalContext global, SessionContext session) {
         this.global = global;
-        this.cman = cman;
+        this.session = session;
     }
 
     Connection getConnection() throws SQLException {
         synchronized (connLock) {
             if (connection == null) {
-                connection = cman.allocConnection();
+                connection = session.cman.allocConnection();
             }
             return connection;
         }
@@ -42,7 +42,7 @@ final class TransactionContext {
             try {
                 ImplCache cached = global.getImpl(iface);
                 Method daoMethod = cached.dao.getMethod(method.getName(), method.getParameterTypes());
-                try (GContext ctx = new GContext(global, this)) {
+                try (GContext ctx = new GContext(global, session, this)) {
                     Object instance = cached.constructor.newInstance(ctx);
                     result = daoMethod.invoke(instance, args);
                     ctx.ok();
@@ -84,7 +84,7 @@ final class TransactionContext {
 
     private void releaseConnection(SQLException error) throws SQLException {
         try {
-            cman.releaseConnection(connection);
+            session.cman.releaseConnection(connection);
         } catch (SQLException ex) {
             if (error != null) {
                 error.addSuppressed(ex);

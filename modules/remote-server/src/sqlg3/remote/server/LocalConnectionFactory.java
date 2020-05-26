@@ -3,8 +3,8 @@ package sqlg3.remote.server;
 import sqlg3.remote.common.IConnectionFactory;
 import sqlg3.remote.common.IRemoteDBInterface;
 import sqlg3.remote.common.SessionInfo;
-import sqlg3.runtime.ConnectionManager;
 import sqlg3.runtime.GlobalContext;
+import sqlg3.runtime.SessionContext;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -55,11 +55,10 @@ public final class LocalConnectionFactory implements IConnectionFactory {
         this.server = server;
     }
 
-    private DBInterface newDBInterface(ConnectionManager cman, String user, Object userObject,
-                                       String host, boolean background) {
+    private DBInterface newDBInterface(SessionContext session, String user, String host, boolean background) {
         long sessionOrderId = connectionCount.getAndIncrement();
         String sessionLongId = UUID.randomUUID().toString();
-        DBInterface lw = new DBInterface(user, host, cman, this, userObject, sessionOrderId, sessionLongId, server);
+        DBInterface lw = new DBInterface(user, host, session, this, sessionOrderId, sessionLongId, server);
         synchronized (this) {
             connectionMap.put(sessionLongId, new SessionRecord(lw, background));
         }
@@ -71,8 +70,8 @@ public final class LocalConnectionFactory implements IConnectionFactory {
     }
 
     private DBInterface openConnection(String user, String password, String host, boolean background) throws SQLException {
-        SessionFactory.SessionData loginData = sessionFactory.login(logger, user, password);
-        return newDBInterface(loginData.cman, user, loginData.userObject, host, background);
+        SessionContext session = sessionFactory.login(logger, user, password);
+        return newDBInterface(session, user, host, background);
     }
 
     public IRemoteDBInterface openConnection(String user, String password) throws SQLException {

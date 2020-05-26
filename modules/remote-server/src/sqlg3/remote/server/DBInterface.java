@@ -5,23 +5,19 @@ import sqlg3.core.ITransaction;
 import sqlg3.remote.common.IRemoteDBInterface;
 import sqlg3.remote.common.SessionInfo;
 import sqlg3.remote.common.WatcherThread;
-import sqlg3.runtime.ConnectionManager;
-import sqlg3.runtime.GlobalContext;
-import sqlg3.runtime.SimpleTransaction;
-import sqlg3.runtime.Transaction;
+import sqlg3.runtime.*;
 
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicLong;
 
 final class DBInterface implements IRemoteDBInterface {
 
-    private final ConnectionManager cman;
+    private final SessionContext session;
     private final String userLogin;
     private final String userHost;
     private final LocalConnectionFactory fact;
     private final GlobalContext global;
     private final SQLGLogger logger;
-    private final Object userObject;
     private final boolean server;
     final long sessionOrderId;
     final String sessionLongId;
@@ -29,15 +25,14 @@ final class DBInterface implements IRemoteDBInterface {
     private final AtomicLong lastActive = new AtomicLong(getCurrentTime());
 
     DBInterface(String userLogin, String userHost,
-                ConnectionManager cman, LocalConnectionFactory fact,
-                Object userObject, long sessionOrderId, String sessionLongId, boolean server) {
+                SessionContext session, LocalConnectionFactory fact,
+                long sessionOrderId, String sessionLongId, boolean server) {
         this.userLogin = userLogin;
         this.userHost = userHost;
-        this.cman = cman;
+        this.session = session;
         this.fact = fact;
         this.global = fact.global;
         this.logger = fact.logger;
-        this.userObject = userObject;
         this.sessionOrderId = sessionOrderId;
         this.sessionLongId = sessionLongId;
         this.server = server;
@@ -51,11 +46,11 @@ final class DBInterface implements IRemoteDBInterface {
     }
 
     public ISimpleTransaction getSimpleTransaction() {
-        return new SimpleTransaction(global, cman);
+        return new SimpleTransaction(global, session);
     }
 
     public ITransaction getTransaction() {
-        return new Transaction(global, cman);
+        return new Transaction(global, session);
     }
 
     static long getCurrentTime() {
@@ -81,7 +76,7 @@ final class DBInterface implements IRemoteDBInterface {
             }
         }
         try {
-            cman.close();
+            session.close();
         } catch (SQLException ex) {
             logger.error(ex);
         }
@@ -101,7 +96,7 @@ final class DBInterface implements IRemoteDBInterface {
     }
 
     public Object getUserObject() {
-        return userObject;
+        return session.getUserObject();
     }
 
     boolean isTimedOut(long time) {

@@ -743,4 +743,8 @@ public class GBase implements ISimpleTransaction {
     public final GlobalContext getGlobal() {
         return ctx.global;
     }
+
+    public final Object getUserObject() {
+        return ctx.session.getUserObject();
+    }
 }

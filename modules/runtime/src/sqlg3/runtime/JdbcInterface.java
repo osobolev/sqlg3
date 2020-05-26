@@ -14,17 +14,22 @@ import java.sql.Connection;
  * ITest iface = trans.getInterface(ITest.class);
  * </pre>
  */
-public class JdbcInterface implements ISimpleTransaction {
+public final class JdbcInterface implements ISimpleTransaction {
 
     private final TransactionContext transaction;
     private final boolean commitCalls;
 
     public JdbcInterface(GlobalContext global, Connection connection, boolean commitCalls) {
-        this.transaction = new TransactionContext(global, new SingleConnectionManager(connection));
+        this(global, connection, commitCalls, null);
+    }
+
+    public JdbcInterface(GlobalContext global, Connection connection, boolean commitCalls, Object userObject) {
+        SessionContext session = new SessionContext(new SingleConnectionManager(connection), userObject);
+        this.transaction = new TransactionContext(global, session);
         this.commitCalls = commitCalls;
     }
 
-    public final <T extends IDBCommon> T getInterface(Class<T> iface) {
+    public <T extends IDBCommon> T getInterface(Class<T> iface) {
         return transaction.getInterface(iface, commitCalls);
     }
 }

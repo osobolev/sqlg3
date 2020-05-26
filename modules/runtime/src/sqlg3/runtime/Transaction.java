@@ -9,8 +9,8 @@ public final class Transaction implements ITransaction {
 
     private final TransactionContext transaction;
 
-    public Transaction(GlobalContext global, ConnectionManager cman) {
-        this.transaction = new TransactionContext(global, cman);
+    public Transaction(GlobalContext global, SessionContext session) {
+        this.transaction = new TransactionContext(global, session);
     }
 
     @Override

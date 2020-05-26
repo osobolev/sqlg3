@@ -7,8 +7,8 @@ public final class SimpleTransaction implements ISimpleTransaction {
 
     private final TransactionContext transaction;
 
-    public SimpleTransaction(GlobalContext global, ConnectionManager cman) {
-        this.transaction = new TransactionContext(global, cman);
+    public SimpleTransaction(GlobalContext global, SessionContext session) {
+        this.transaction = new TransactionContext(global, session);
     }
 
     @Override

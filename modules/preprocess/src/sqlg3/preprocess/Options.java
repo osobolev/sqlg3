@@ -79,7 +79,7 @@ public final class Options {
         } else {
             return new RunLog(
                 true,
-                () -> new PrintStream(Files.newOutputStream(Paths.get(log), StandardOpenOption.APPEND), true, "UTF-8")
+                () -> new PrintStream(Files.newOutputStream(Paths.get(log), StandardOpenOption.CREATE, StandardOpenOption.APPEND), true, "UTF-8")
             );
         }
     }

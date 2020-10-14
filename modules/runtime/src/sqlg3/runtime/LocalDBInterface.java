@@ -11,13 +11,9 @@ public final class LocalDBInterface implements IDBInterface {
     private final GlobalContext global;
     private final SessionContext session;
 
-    public LocalDBInterface(GlobalContext global, ConnectionManager cman) {
-        this(global, cman, null);
-    }
-
-    public LocalDBInterface(GlobalContext global, ConnectionManager cman, Object userObject) {
+    public LocalDBInterface(GlobalContext global, SessionContext session) {
         this.global = global;
-        this.session = new SessionContext(cman, userObject);
+        this.session = session;
     }
 
     @Override

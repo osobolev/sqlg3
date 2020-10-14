@@ -11,7 +11,7 @@ public abstract class GTest {
     public static GContext testContext(Connection connection, DBSpecific specific, RuntimeMapper mappers) {
         SqlTrace noTrace = (ok, time, getMessages) -> {};
         GlobalContext global = new GlobalContext(specific, mappers, noTrace);
-        SessionContext session = new SessionContext(new SingleConnectionManager(connection), null);
+        SessionContext session = new SessionContext(new SingleConnectionManager(connection), null, null);
         return new GContext(global, session, new TransactionContext(global, session));
     }
 

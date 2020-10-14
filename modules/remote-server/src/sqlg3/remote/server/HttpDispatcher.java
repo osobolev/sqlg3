@@ -168,9 +168,9 @@ public final class HttpDispatcher {
         lw.logger.error(ex);
     }
 
-    private Object dispatch(HttpId id, HttpCommand command,
-                            Class<? extends IDBCommon> iface, String method, Class<?>[] paramTypes, Object[] params,
-                            String hostName) throws Throwable {
+    public Object dispatch(HttpId id, HttpCommand command,
+                           Class<? extends IDBCommon> iface, String method, Class<?>[] paramTypes, Object[] params,
+                           String hostName) throws Throwable {
         Throwable invocationError;
         try {
             DBInterface db = null;
@@ -220,7 +220,7 @@ public final class HttpDispatcher {
         serializer.serverToClient(is, call, os);
     }
 
-    public static void writeResponse(IServerSerializer serializer, OutputStream os, Object result, Throwable error) throws IOException {
+    public static void writeError(IServerSerializer serializer, OutputStream os, Throwable error) throws IOException {
         serializer.sendError(os, error);
     }
 

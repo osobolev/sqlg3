@@ -5,8 +5,8 @@ package sqlg3.core;
  */
 public class SQLGException extends RuntimeException {
 
-    public SQLGException(String s) {
-        super(s);
+    public SQLGException(String message) {
+        super(message);
     }
 
     public SQLGException(String message, Throwable cause) {

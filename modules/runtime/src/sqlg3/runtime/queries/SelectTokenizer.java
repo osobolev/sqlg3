@@ -44,6 +44,11 @@ final class SelectTokenizer extends NameParser {
                 }
             case ':':
                 {
+                    if (pos > 0 && source.charAt(pos - 1) == ':') {
+                        pos++;
+                        value = ":";
+                        return TokenKind.R_CHAR;
+                    }
                     int pos1 = ++pos;
                     skipSpaces();
                     if (pos >= sourceLength) {

@@ -472,6 +472,18 @@ public class GBase implements ISimpleTransaction {
         return ret;
     }
 
+    public static void consumeResultSet(PreparedStatement stmt) throws SQLException {
+        if (test != null) {
+            test.checkSql(stmt);
+        } else {
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    // consume
+                }
+            }
+        }
+    }
+
     ///////////////////////////////// Class statements /////////////////////////////////
 
     private <T> T fetchFromResultSet(Class<T> rowType, ResultSet rs, boolean meta) throws SQLException {

@@ -144,6 +144,8 @@ final class GTestImpl extends GTest {
             while (rs.next()) {
                 int paramKind = rs.getShort(5);
                 if (paramKind != DatabaseMetaData.procedureColumnUnknown) {
+                    if (paramCount >= parameters.length)
+                        throw new SQLException("Too few parameters in call to " + procNameToCall + ": " + parameters.length);
                     boolean needOut = paramKind == DatabaseMetaData.procedureColumnInOut || paramKind == DatabaseMetaData.procedureColumnOut;
                     boolean actualOut = parameters[paramCount].isOut();
                     if (needOut != actualOut) {

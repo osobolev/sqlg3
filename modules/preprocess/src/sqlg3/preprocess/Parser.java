@@ -78,7 +78,7 @@ final class Parser extends ParserBase {
         return null;
     }
 
-    private MethodEntry parseMethodHeader(String javadoc, String annotation) throws ParseException {
+    private MethodEntry parseMethodHeader(String javadoc, Set<String> annotations) throws ParseException {
         String entryName = null;
         boolean wasParen = false;
         while (!eof()) {
@@ -101,7 +101,7 @@ final class Parser extends ParserBase {
         if (entryName == null)
             return null;
 
-        boolean publish = !CHECK_PARAMS_ANNOTATION.equals(annotation);
+        boolean publish = annotations.contains(BUSINESS_ANNOTATION);
         return new MethodEntry(javadoc, entryName, publish);
     }
 
@@ -388,6 +388,40 @@ final class Parser extends ParserBase {
         }
     }
 
+    private Set<String> parseAnnotations() {
+        Set<String> annotations = new HashSet<>();
+        while (!eof()) {
+            Token t0 = get();
+            if (t0.getType() != Java8Lexer.AT)
+                break;
+            String annotation = getAnnotation();
+            if (annotation == null)
+                break;
+            annotations.add(annotation);
+            skipSpaces();
+            if (eof())
+                break;
+            Token t = get();
+            if (t.getType() == Java8Lexer.LPAREN) {
+                next();
+                int count = 1;
+                while (!eof()) {
+                    Token t2 = get();
+                    next();
+                    if (t2.getType() == Java8Lexer.LPAREN) {
+                        count++;
+                    } else if (t2.getType() == Java8Lexer.RPAREN) {
+                        count--;
+                        if (count <= 0)
+                            break;
+                    }
+                }
+                skipSpaces();
+            }
+        }
+        return annotations;
+    }
+
     ParseResult parseAll(boolean requireSQLG) throws ParseException {
         HeaderResult header = parseHeader(requireSQLG);
         if (header == null)
@@ -400,10 +434,10 @@ final class Parser extends ParserBase {
             Token t = get();
             int id = t.getType();
             if (id == Java8Lexer.AT) {
-                String annotation = getAnnotation();
-                if (BUSINESS_ANNOTATION.equals(annotation) || CHECK_PARAMS_ANNOTATION.equals(annotation)) {
+                Set<String> annotations = parseAnnotations();
+                if (annotations.contains(BUSINESS_ANNOTATION) || annotations.contains(CHECK_PARAMS_ANNOTATION)) {
                     if (!eof()) {
-                        MethodEntry entry = parseMethodHeader(lastComment, annotation);
+                        MethodEntry entry = parseMethodHeader(lastComment, annotations);
                         parseMethodBody(entry == null ? identBeforeParen : entry.methodToCall);
                         if (entry != null) {
                             entries.add(entry);

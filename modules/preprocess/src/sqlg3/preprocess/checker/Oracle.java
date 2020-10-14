@@ -1,26 +1,19 @@
 package sqlg3.preprocess.checker;
 
-import sqlg3.preprocess.SqlChecker;
-import sqlg3.runtime.DBSpecific;
 import sqlg3.runtime.queries.QueryParser;
 
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
  * SQL checker for Oracle
  */
-public final class Oracle implements SqlChecker {
+public final class Oracle extends Generic {
 
-    private final DBSpecific oracle = new sqlg3.runtime.specific.Oracle();
-
-    @Override
-    public DBSpecific getSpecific() {
-        return oracle;
-    }
-
-    @Override
-    public String getCurrentSchema(DatabaseMetaData meta) throws SQLException {
-        return meta.getUserName();
+    public Oracle() {
+        super(new sqlg3.runtime.specific.Oracle());
     }
 
     @Override

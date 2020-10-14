@@ -9,6 +9,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Base class for all classes which are processed by preprocessor. Wraps access to JDBC methods allowing
@@ -121,19 +122,10 @@ public class GBase implements ISimpleTransaction {
             return doPrepareAnyStatement(parsedSql, params, (connection, sql) -> {
                 if (autoKeys.length > 0) {
                     DatabaseMetaData meta = connection.getMetaData();
-                    String[] autoColumns;
-                    if (meta.storesUpperCaseIdentifiers()) {
-                        autoColumns = new String[autoKeys.length];
-                        for (int i = 0; i < autoKeys.length; i++) {
-                            autoColumns[i] = autoKeys[i].toUpperCase();
-                        }
-                    } else if (meta.storesLowerCaseIdentifiers()) {
-                        autoColumns = new String[autoKeys.length];
-                        for (int i = 0; i < autoKeys.length; i++) {
-                            autoColumns[i] = autoKeys[i].toLowerCase();
-                        }
-                    } else {
-                        autoColumns = autoKeys;
+                    Function<String, String> canonicalizer = QueryParser.getCanonicalizer(meta);
+                    String[] autoColumns = new String[autoKeys.length];
+                    for (int i = 0; i < autoKeys.length; i++) {
+                        autoColumns[i] = canonicalizer.apply(autoKeys[i]);
                     }
                     return connection.prepareStatement(sql, autoColumns);
                 } else {

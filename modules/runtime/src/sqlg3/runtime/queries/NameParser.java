@@ -1,5 +1,7 @@
 package sqlg3.runtime.queries;
 
+import java.util.function.Function;
+
 class NameParser {
 
     protected String source;
@@ -94,11 +96,11 @@ class NameParser {
         }
     }
 
-    protected final String getCanonicIdent() {
+    protected final String getCanonicIdent(Function<String, String> canonicalizer) {
         if (isQuote) {
             return name;
         } else {
-            return name.toUpperCase();
+            return canonicalizer.apply(name);
         }
     }
 }

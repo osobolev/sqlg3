@@ -1,7 +1,10 @@
 package sqlg3.runtime.queries;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public final class QueryParser {
 
@@ -168,7 +171,7 @@ public final class QueryParser {
         return query.toString();
     }
 
-    public static String[] parseIdent(String name) {
+    public static String[] parseIdent(String name, DatabaseMetaData meta) throws SQLException {
         SelectTokenizer st = new SelectTokenizer(name);
         while (true) {
             TokenKind t1 = st.getToken();
@@ -178,7 +181,8 @@ public final class QueryParser {
                 break;
             return null;
         }
-        String name1 = st.getCanonicIdent();
+        Function<String, String> canonicalizer = getCanonicalizer(meta);
+        String name1 = st.getCanonicIdent(canonicalizer);
         while (true) {
             TokenKind t2 = st.getToken();
             if (t2 == TokenKind.R_THEEND)
@@ -197,7 +201,7 @@ public final class QueryParser {
                 break;
             return null;
         }
-        String name2 = st.getCanonicIdent();
+        String name2 = st.getCanonicIdent(canonicalizer);
         while (true) {
             TokenKind t4 = st.getToken();
             if (t4 == TokenKind.R_THEEND)
@@ -216,7 +220,7 @@ public final class QueryParser {
                 break;
             return null;
         }
-        String name3 = st.getCanonicIdent();
+        String name3 = st.getCanonicIdent(canonicalizer);
         while (true) {
             TokenKind t6 = st.getToken();
             if (t6 == TokenKind.R_THEEND)
@@ -224,6 +228,16 @@ public final class QueryParser {
             if (t6 == TokenKind.R_WS)
                 continue;
             return null;
+        }
+    }
+
+    public static Function<String, String> getCanonicalizer(DatabaseMetaData meta) throws SQLException {
+        if (meta.storesUpperCaseIdentifiers()) {
+            return String::toUpperCase;
+        } else if (meta.storesLowerCaseIdentifiers()) {
+            return String::toLowerCase;
+        } else {
+            return Function.identity();
         }
     }
 }

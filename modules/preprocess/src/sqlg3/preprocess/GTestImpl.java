@@ -163,10 +163,10 @@ final class GTestImpl extends GTest {
 
     @Override
     public void checkStoredProcName(String procNameToCall, Parameter[] parameters) throws SQLException {
-        String[] parsed = QueryParser.parseIdent(procNameToCall);
+        DatabaseMetaData meta = connection.getMetaData();
+        String[] parsed = QueryParser.parseIdent(procNameToCall, meta);
         if (parsed == null)
             throw new SQLException("Invalid procedure name: " + procNameToCall);
-        DatabaseMetaData meta = connection.getMetaData();
         String[] procSchemas;
         String[] procCatalogs;
         String procName;

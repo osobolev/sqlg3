@@ -17,6 +17,8 @@ public final class QueryParser {
 
         abstract boolean matchToken(TokenKind id, String currValue, String lastValue,
                                     StringBuilder synthQuery);
+
+        abstract void matchEnd(StringBuilder synthQuery);
     }
 
     private static String parseQueryAny(String statement, List<String> usedParameters, TokenMatch match) {
@@ -47,6 +49,7 @@ public final class QueryParser {
         if (lastValue != null) {
             synthQuery.append(lastValue);
         }
+        match.matchEnd(synthQuery);
         return synthQuery.toString();
     }
 
@@ -92,9 +95,30 @@ public final class QueryParser {
 
             private int brackets = 0;
             private int columnCount = 1;
+            private Boolean isSelect = null;
+            private boolean wasFrom = false;
             private final List<Range> specials = new ArrayList<>();
 
+            private void finishSelectColumns(String lastValue, StringBuilder synthQuery) {
+                for (Range range : specials) {
+                    if (range.to > 0) {
+                        synthQuery.append(", '' \"" + SPECIAL + range.name + "$" + range.from + "$" + range.to + "\"");
+                    }
+                }
+                if (lastValue != null) {
+                    synthQuery.append(lastValue);
+                }
+                columnCount = 0;
+            }
+
             boolean matchToken(TokenKind id, String currValue, String lastValue, StringBuilder synthQuery) {
+                if (isSelect == null) {
+                    if (id == TokenKind.R_ID && "SELECT".equalsIgnoreCase(currValue)) {
+                        isSelect = true;
+                    } else if (id != TokenKind.R_WS) {
+                        isSelect = false;
+                    }
+                }
                 if (id == TokenKind.R_CHAR) {
                     if ("{".equals(currValue)) {
                         if (brackets == 0 && columnCount > 0) {
@@ -124,20 +148,19 @@ public final class QueryParser {
                     }
                 } else if (id == TokenKind.R_ID) {
                     if (brackets == 0 && "FROM".equalsIgnoreCase(currValue)) {
-                        for (Range range : specials) {
-                            if (range.to > 0) {
-                                synthQuery.append(", '' \"" + SPECIAL + range.name + "$" + range.from + "$" + range.to + "\"");
-                            }
-                        }
-                        if (lastValue != null) {
-                            synthQuery.append(lastValue);
-                        }
-                        columnCount = 0;
+                        finishSelectColumns(lastValue, synthQuery);
                         synthQuery.append(currValue);
+                        wasFrom = true;
                         return false;
                     }
                 }
                 return true;
+            }
+
+            void matchEnd(StringBuilder synthQuery) {
+                if (brackets == 0 && isSelect != null && isSelect.booleanValue() && !wasFrom) {
+                    finishSelectColumns(null, synthQuery);
+                }
             }
         };
         return parseQueryAny(statement, null, tokenMatch);
@@ -145,8 +168,12 @@ public final class QueryParser {
 
     public static String getParameters(String statement, List<String> usedParameters) {
         TokenMatch tokenMatch = new TokenMatch() {
+
             boolean matchToken(TokenKind id, String currValue, String lastValue, StringBuilder synthQuery) {
                 return true;
+            }
+
+            void matchEnd(StringBuilder synthQuery) {
             }
         };
         return parseQueryAny(statement, usedParameters, tokenMatch);

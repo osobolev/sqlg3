@@ -39,13 +39,19 @@ public final class HttpDispatcher {
 
     private abstract static class HttpAction {
 
+        protected final boolean hasSqlException;
+
+        protected HttpAction(boolean hasSqlException) {
+            this.hasSqlException = hasSqlException;
+        }
+
         abstract Object perform(HttpId id, String hostName, Object... params) throws Exception;
     }
 
     private final EnumMap<HttpCommand, HttpAction> actions = new EnumMap<>(HttpCommand.class);
 
     {
-        actions.put(HttpCommand.OPEN, new HttpAction() {
+        actions.put(HttpCommand.OPEN, new HttpAction(true) {
             Object perform(HttpId id, String hostName, Object... params) throws SQLException {
                 checkApplication(id);
                 String user = (String) params[0];
@@ -53,13 +59,13 @@ public final class HttpDispatcher {
                 return openConnection(id, user, password, hostName);
             }
         });
-        actions.put(HttpCommand.GET_SESSIONS, new HttpAction() {
+        actions.put(HttpCommand.GET_SESSIONS, new HttpAction(false) {
             Object perform(HttpId id, String hostName, Object... params) {
                 checkSession(id);
                 return lw.getActiveSessions();
             }
         });
-        actions.put(HttpCommand.GET_TRANSACTION, new HttpAction() {
+        actions.put(HttpCommand.GET_TRANSACTION, new HttpAction(true) {
             Object perform(HttpId id, String hostName, Object... params) {
                 DBInterface db = checkSession(id);
                 ITransaction trans = db.getTransaction();
@@ -68,7 +74,7 @@ public final class HttpDispatcher {
                 return id.createTransaction(transactionId);
             }
         });
-        actions.put(HttpCommand.PING, new HttpAction() {
+        actions.put(HttpCommand.PING, new HttpAction(false) {
             Object perform(HttpId id, String hostName, Object... params) {
                 DBInterface db = checkSession(id);
                 db.ping();
@@ -76,14 +82,14 @@ public final class HttpDispatcher {
                 return null;
             }
         });
-        actions.put(HttpCommand.CLOSE, new HttpAction() {
+        actions.put(HttpCommand.CLOSE, new HttpAction(true) {
             Object perform(HttpId id, String hostName, Object... params) {
                 DBInterface db = checkSession(id);
                 db.close();
                 return null;
             }
         });
-        actions.put(HttpCommand.KILL_SESSION, new HttpAction() {
+        actions.put(HttpCommand.KILL_SESSION, new HttpAction(false) {
             Object perform(HttpId id, String hostName, Object... params) {
                 checkSession(id);
                 String sessionLongId = (String) params[0];
@@ -91,13 +97,13 @@ public final class HttpDispatcher {
                 return null;
             }
         });
-        actions.put(HttpCommand.GET_CURRENT_SESSION, new HttpAction() {
+        actions.put(HttpCommand.GET_CURRENT_SESSION, new HttpAction(false) {
             Object perform(HttpId id, String hostName, Object... params) {
                 DBInterface db = checkSession(id);
                 return lw.getSessionInfo(db);
             }
         });
-        actions.put(HttpCommand.ROLLBACK, new HttpAction() {
+        actions.put(HttpCommand.ROLLBACK, new HttpAction(true) {
             Object perform(HttpId id, String hostName, Object... params) throws SQLException {
                 if (id.transactionId == null)
                     throw new RemoteException("Cannot call method: rollback");
@@ -110,7 +116,7 @@ public final class HttpDispatcher {
                 return null;
             }
         });
-        actions.put(HttpCommand.COMMIT, new HttpAction() {
+        actions.put(HttpCommand.COMMIT, new HttpAction(true) {
             Object perform(HttpId id, String hostName, Object... params) throws SQLException {
                 if (id.transactionId == null)
                     throw new RemoteException("Cannot call method: commit");
@@ -172,6 +178,7 @@ public final class HttpDispatcher {
                            Class<? extends IDBCommon> iface, String method, Class<?>[] paramTypes, Object[] params,
                            String hostName) throws Throwable {
         Throwable invocationError;
+        boolean rethrowSqlExcepion = false;
         try {
             DBInterface db = null;
             if (id.sessionId != null) {
@@ -196,13 +203,19 @@ public final class HttpDispatcher {
                     invocationError = ex.getTargetException();
                 }
             } else {
-                return actions.get(command).perform(id, hostName, params);
+                HttpAction httpAction = actions.get(command);
+                rethrowSqlExcepion = httpAction.hasSqlException;
+                return httpAction.perform(id, hostName, params);
             }
         } catch (RemoteException ex) {
             throw ex;
         } catch (Throwable ex) {
             log(ex);
-            throw new RemoteException(ex);
+            if (ex instanceof SQLException && rethrowSqlExcepion) {
+                throw ex;
+            } else {
+                throw new RemoteException(ex);
+            }
         }
         log(invocationError);
         throw invocationError;

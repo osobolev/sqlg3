@@ -49,25 +49,25 @@ public final class SafeDBInterface implements IRemoteDBInterface {
         this.watcher.runThread();
     }
 
-    private IRemoteDBInterface getDb() {
+    private IRemoteDBInterface getDb() throws Exception {
         synchronized (this) {
             if (idb == null && producer != null) {
                 if (unrecoverable)
                     throw new RemoteException("Unrecoverable error, please restart application");
-                try {
                     idb = producer.open();
-                } catch (RemoteException rex) {
-                    throw rex;
-                } catch (Exception ex) {
-                    throw new RemoteException(ex);
-                }
             }
             return idb;
         }
     }
 
     ISimpleTransaction createSimpleTransaction() throws SQLException {
-        return getDb().getSimpleTransaction();
+        try {
+            return getDb().getSimpleTransaction();
+        } catch (RemoteException | SQLException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RemoteException(ex);
+        }
     }
 
     public ISimpleTransaction getSimpleTransaction() throws SQLException {
@@ -79,11 +79,23 @@ public final class SafeDBInterface implements IRemoteDBInterface {
     }
 
     public ITransaction getTransaction() throws SQLException {
-        return getDb().getTransaction();
+        try {
+            return getDb().getTransaction();
+        } catch (RemoteException | SQLException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RemoteException(ex);
+        }
     }
 
     public void ping() {
-        getDb().ping();
+        try {
+            getDb().ping();
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RemoteException(ex);
+        }
     }
 
     public void close() throws SQLException {
@@ -97,27 +109,63 @@ public final class SafeDBInterface implements IRemoteDBInterface {
     }
 
     public String getUserLogin() {
-        return getDb().getUserLogin();
+        try {
+            return getDb().getUserLogin();
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RemoteException(ex);
+        }
     }
 
     public String getUserHost() {
-        return getDb().getUserHost();
+        try {
+            return getDb().getUserHost();
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RemoteException(ex);
+        }
     }
 
     public Object getUserObject() {
-        return getDb().getUserObject();
+        try {
+            return getDb().getUserObject();
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RemoteException(ex);
+        }
     }
 
     public SessionInfo[] getActiveSessions() {
-        return getDb().getActiveSessions();
+        try {
+            return getDb().getActiveSessions();
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RemoteException(ex);
+        }
     }
 
     public void killSession(String sessionLongId) {
-        getDb().killSession(sessionLongId);
+        try {
+            getDb().killSession(sessionLongId);
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RemoteException(ex);
+        }
     }
 
     public SessionInfo getCurrentSession() {
-        return getDb().getCurrentSession();
+        try {
+            return getDb().getCurrentSession();
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RemoteException(ex);
+        }
     }
 
     <T extends IDBCommon> T wrap(Class<T> iface, SafeWrapper<T> obj) {

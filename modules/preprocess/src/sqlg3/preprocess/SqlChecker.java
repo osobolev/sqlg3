@@ -1,9 +1,9 @@
 package sqlg3.preprocess;
 
 import sqlg3.runtime.DBSpecific;
+import sqlg3.runtime.Parameter;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -12,37 +12,16 @@ import java.sql.SQLException;
  */
 public interface SqlChecker {
 
-    /**
-     * Returns checker of SQL statements for this DB.
-     */
     DBSpecific getSpecific();
 
-    /**
-     * Returns current schema name (for stored proc search).
-     *
-     * @return current schema
-     */
-    String getCurrentSchema(DatabaseMetaData meta) throws SQLException;
-
-    /**
-     * Checks whether sequence generator exists in database.
-     *
-     * @param name sequence name
-     * @throws SQLException when no such sequence
-     */
     void checkSequenceExists(Connection conn, String name) throws SQLException;
 
-    /**
-     * Checks SQL statement syntax.
-     *
-     * @throws SQLException when SQL is invalid
-     */
-    void checkSql(Connection conn, String sql) throws SQLException;
+    void checkStoredProcName(Connection conn, String procNameToCall, Parameter[] parameters) throws SQLException;
 
     /**
      * Checks SQL statement syntax.
      *
-     * @throws SQLException when SQL is invalid
+     * @param sql can be null
      */
-    void checkStatement(PreparedStatement stmt) throws SQLException;
+    void checkSql(Connection conn, PreparedStatement stmt, String sql) throws SQLException;
 }

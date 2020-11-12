@@ -472,18 +472,6 @@ public class GBase implements ISimpleTransaction {
         return ret;
     }
 
-    public static void consumeResultSet(PreparedStatement stmt) throws SQLException {
-        if (test != null) {
-            test.checkSql(stmt);
-        } else {
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    // consume
-                }
-            }
-        }
-    }
-
     ///////////////////////////////// Class statements /////////////////////////////////
 
     private <T> T fetchFromResultSet(Class<T> rowType, ResultSet rs, boolean meta) throws SQLException {
@@ -674,10 +662,7 @@ public class GBase implements ISimpleTransaction {
         }
         String sql = getProcCallSql(name, params);
         CallableStatement cs = prepareCall(sql, params);
-        if (test == null) {
-            cs.execute();
-            Parameter.getOutParameters(ctx.global.mappers, cs, params);
-        }
+        executeCall(cs);
     }
 
     ///////////////////////////////// Utility methods /////////////////////////////////

@@ -16,13 +16,7 @@ public final class Oracle extends Generic {
         super(new sqlg3.runtime.specific.Oracle());
     }
 
-    @Override
-    public void checkSequenceExists(Connection conn, String name) throws SQLException {
-        checkSql(conn, sqlg3.runtime.specific.Oracle.getNextSeqSql(name));
-    }
-
-    @Override
-    public void checkSql(Connection conn, String sql) throws SQLException {
+    private static void checkSql(Connection conn, String sql) throws SQLException {
         String trim = sql.trim().toUpperCase();
         if (trim.startsWith("CREATE") || trim.startsWith("ALTER") || trim.startsWith("DROP"))
             return;
@@ -42,10 +36,20 @@ public final class Oracle extends Generic {
         try (CallableStatement cs = conn.prepareCall(txt)) {
             cs.setString(1, QueryParser.unparseQuery(sql));
             cs.execute();
+        } catch (SQLException ex) {
+            throw new SQLException("Invalid SQL: " + sql + "\n" + ex.getMessage(), ex);
         }
     }
 
     @Override
-    public void checkStatement(PreparedStatement stmt) {
+    public void checkSequenceExists(Connection conn, String name) throws SQLException {
+        checkSql(conn, sqlg3.runtime.specific.Oracle.getNextSeqSql(name));
+    }
+
+    @Override
+    public void checkSql(Connection conn, PreparedStatement stmt, String sql) throws SQLException {
+        if (sql == null)
+            return;
+        checkSql(conn, sql);
     }
 }

@@ -33,6 +33,10 @@ subprojects {
     jar.manifest.attributes('Implementation-Version': project.version)
 
     javadoc.enabled = false
+
+    clean.doLast {
+        project.delete "$projectDir/out"
+    }
 }
 
 project(':sqlg3-core') {

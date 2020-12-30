@@ -54,7 +54,7 @@ public final class SafeDBInterface implements IRemoteDBInterface {
             if (idb == null && producer != null) {
                 if (unrecoverable)
                     throw new RemoteException("Unrecoverable error, please restart application");
-                    idb = producer.open();
+                idb = producer.open();
             }
             return idb;
         }

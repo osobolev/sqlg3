@@ -21,7 +21,7 @@ final class RowTypeInfo {
     }
 
     private String getColumnType(ColumnInfo column) {
-        return ClassUtils.getClassName(meta ? MetaColumn.class: column.type);
+        return ClassUtils.getClassName(meta ? MetaColumn.class : column.type);
     }
 
     String generateRowTypeBody(String start, String tab, Class<?> rowType) {

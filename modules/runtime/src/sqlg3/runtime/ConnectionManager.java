@@ -16,7 +16,6 @@ public interface ConnectionManager {
 
     /**
      * Connection allocation.
-     *
      */
     Connection allocConnection() throws SQLException;
 

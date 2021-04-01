@@ -5,6 +5,7 @@ import sqlg3.core.ISimpleTransaction;
 import sqlg3.core.SQLGException;
 import sqlg3.runtime.queries.QueryParser;
 
+import java.lang.reflect.Proxy;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,6 +62,25 @@ public class GBase implements ISimpleTransaction {
         if (test != null)
             throw new IllegalStateException("Cannot use Connection in preprocess mode");
         return getConnection();
+    }
+
+    public final DatabaseMetaData getMetaData() throws SQLException {
+        DatabaseMetaData dbmd = getConnection().getMetaData();
+        if (test != null) {
+            return (DatabaseMetaData) Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class[] {DatabaseMetaData.class},
+                (proxy, method, args) -> {
+                    if ("getConnection".equals(method.getName()) && method.getParameterCount() == 0) {
+                        throw new IllegalStateException("Cannot use Connection in preprocess mode");
+                    } else {
+                        return method.invoke(dbmd, args);
+                    }
+                }
+            );
+        } else {
+            return dbmd;
+        }
     }
 
     private void setSql(String sql, Parameter[] params) {

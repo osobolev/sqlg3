@@ -1,17 +1,17 @@
 subprojects {
 
-    apply plugin: 'java-library'
-    apply plugin: 'maven-publish'
+    apply(plugin: "java-library")
+    apply(plugin: "maven-publish")
 
-    group = 'com.github.osobolev.sqlg3'
-    version = '1.0'
+    group = "com.github.osobolev.sqlg3"
+    version = "1.0"
 
-    compileJava.options.compilerArgs << '-Xlint:-options,deprecation,unchecked'
-    compileJava.options.encoding = 'UTF-8'
-    sourceCompatibility = '8'
-    targetCompatibility = '8'
-    sourceSets.main.java.srcDirs = ['src']
-    sourceSets.test.java.srcDirs = ['test']
+    compileJava.options.compilerArgs << "-Xlint:-options,deprecation,unchecked"
+    compileJava.options.encoding = "UTF-8"
+    sourceCompatibility = "8"
+    targetCompatibility = "8"
+    sourceSets.main.java.srcDirs = ["src"]
+    sourceSets.test.java.srcDirs = ["test"]
 
     repositories {
         mavenLocal()
@@ -25,88 +25,89 @@ subprojects {
     publishing {
         publications {
             mavenJava(MavenPublication) {
-                from components.java
+                from(components.java)
             }
         }
     }
 
-    jar.manifest.attributes('Implementation-Version': project.version)
+    jar.manifest.attributes("Implementation-Version": project.version)
 
     javadoc.enabled = false
 
     clean.doLast {
-        project.delete "$projectDir/out"
+        project.delete("$projectDir/out")
     }
 }
 
-project(':sqlg3-core') {
+project(":sqlg3-core") {
 }
 
-project(':sqlg3-runtime') {
+project(":sqlg3-runtime") {
     dependencies {
-        api project(':sqlg3-core')
+        api(project(":sqlg3-core"))
     }
 }
 
-project(':sqlg3-preprocess') {
+project(":sqlg3-preprocess") {
 
     configurations { antlr }
 
     dependencies {
-        api project(':sqlg3-runtime')
-        implementation 'org.antlr:antlr4-runtime:4.7.2'
-        compileOnly 'org.apache.ant:ant:1.9.5'
+        api(project(":sqlg3-runtime"))
+        implementation("org.antlr:antlr4-runtime:4.7.2")
+        compileOnly("org.apache.ant:ant:1.9.5")
 
-        testRuntimeOnly 'org.postgresql:postgresql:42.2.9'
+        testRuntimeOnly("org.postgresql:postgresql:42.2.9")
 
-        antlr 'org.antlr:antlr4:4.7.2'
+        antlr("org.antlr:antlr4:4.7.2")
     }
 
     task lexer(type: JavaExec) {
-        onlyIf { file('grammar/Java8Lexer.g4').lastModified() > file('src/sqlg3/preprocess/lexer/Java8Lexer.java').lastModified() }
-        main = 'org.antlr.v4.Tool'
+        inputs.files(file("grammar/Java8Lexer.g4"))
+        outputs.files(file("src/sqlg3/preprocess/lexer/Java8Lexer.java"))
+        main = "org.antlr.v4.Tool"
         classpath = configurations.antlr
-        args '-package', 'sqlg3.preprocess.lexer', '-o', 'src/sqlg3/preprocess/lexer', '-encoding', 'UTF-8', 'grammar/Java8Lexer.g4'
+        args("-package", "sqlg3.preprocess.lexer", "-o", "src/sqlg3/preprocess/lexer", "-encoding", "UTF-8", "grammar/Java8Lexer.g4")
     }
     compileJava.dependsOn lexer
 }
 
-project(':sqlg3-remote-common') {
+project(":sqlg3-remote-common") {
     dependencies {
-        api project(':sqlg3-core')
+        api(project(":sqlg3-core"))
     }
 }
 
-project(':sqlg3-remote-client') {
+project(":sqlg3-remote-client") {
     dependencies {
-        api project(':sqlg3-remote-common')
+        api(project(":sqlg3-remote-common"))
     }
 }
 
-project(':sqlg3-remote-server') {
+project(":sqlg3-remote-server") {
     dependencies {
-        api project(':sqlg3-remote-common')
-        api project(':sqlg3-runtime')
+        api(project(":sqlg3-remote-common"))
+        api(project(":sqlg3-runtime"))
     }
 }
 
-project(':sqlg3-remote-kryo') {
+project(":sqlg3-remote-kryo") {
     dependencies {
-        api project(':sqlg3-remote-common')
-        api 'com.esotericsoftware:kryo:5.0.0-RC5'
+        api(project(":sqlg3-remote-common"))
+        api("com.esotericsoftware:kryo:5.1.0")
     }
 }
 
-project(':sqlg3-remote-client-kryo') {
+project(":sqlg3-remote-client-kryo") {
     dependencies {
-        api project(':sqlg3-remote-client')
-        api project(':sqlg3-remote-kryo')
+        api(project(":sqlg3-remote-client"))
+        api(project(":sqlg3-remote-kryo"))
     }
 }
 
-project(':sqlg3-remote-server-kryo') {
+project(":sqlg3-remote-server-kryo") {
     dependencies {
-        api project(':sqlg3-remote-server')
-        api project(':sqlg3-remote-kryo')
+        api(project(":sqlg3-remote-server"))
+        api(project(":sqlg3-remote-kryo"))
     }
 }

@@ -1,4 +1,4 @@
-rootProject.name = 'sqlg3'
+rootProject.name = "sqlg3"
 
 def add(name) {
     def mname = "modules/$name"
@@ -6,12 +6,12 @@ def add(name) {
     project(":$mname").name = "sqlg3-$name"
 }
 
-add('core')
-add('preprocess')
-add('remote-common')
-add('remote-client')
-add('remote-server')
-add('remote-kryo')
-add('remote-client-kryo')
-add('remote-server-kryo')
-add('runtime')
+add("core")
+add("preprocess")
+add("remote-common")
+add("remote-client")
+add("remote-server")
+add("remote-kryo")
+add("remote-client-kryo")
+add("remote-server-kryo")
+add("runtime")

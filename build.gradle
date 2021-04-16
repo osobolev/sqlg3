@@ -67,7 +67,7 @@ project(":sqlg3-preprocess") {
         outputs.files(file("src/sqlg3/preprocess/lexer/Java8Lexer.java"))
         main = "org.antlr.v4.Tool"
         classpath = configurations.antlr
-        args("-package", "sqlg3.preprocess.lexer", "-o", "src/sqlg3/preprocess/lexer", "-encoding", "UTF-8", "grammar/Java8Lexer.g4")
+        args("-package", "sqlg3.preprocess.lexer", "-Xexact-output-dir", "-o", "src/sqlg3/preprocess/lexer", "-encoding", "UTF-8", "grammar/Java8Lexer.g4")
     }
     compileJava.dependsOn lexer
 }

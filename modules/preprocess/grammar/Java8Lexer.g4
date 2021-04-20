@@ -1117,9 +1117,9 @@ ELLIPSIS : '...';
 WS  :  [ \t\r\n\u000C]+ //-> skip
     ;
 
-JAVADOC
-    :   '/**' .*? '*/' //-> skip
-    ;
+//JAVADOC
+//    :   '/**' .*? '*/' //-> skip
+//    ;
 
 COMMENT
     :   '/*' .*? '*/' //-> skip

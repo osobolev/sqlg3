@@ -13,6 +13,6 @@ public final class SimpleTransaction implements ISimpleTransaction {
 
     @Override
     public <T extends IDBCommon> T getInterface(Class<T> iface) {
-        return transaction.getInterface(iface, true);
+        return transaction.getInterface(iface, true, true);
     }
 }

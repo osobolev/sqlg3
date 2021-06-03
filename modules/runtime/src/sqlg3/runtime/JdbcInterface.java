@@ -28,7 +28,7 @@ public final class JdbcInterface implements ISimpleTransaction {
     }
 
     public <T extends IDBCommon> T getInterface(Class<T> iface) {
-        return transaction.getInterface(iface, commitCalls);
+        return transaction.getInterface(iface, commitCalls, true);
     }
 
     public static Builder builder() {

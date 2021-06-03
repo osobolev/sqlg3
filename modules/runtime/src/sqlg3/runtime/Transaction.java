@@ -15,7 +15,7 @@ public final class Transaction implements ITransaction {
 
     @Override
     public <T extends IDBCommon> T getInterface(Class<T> iface) {
-        return transaction.getInterface(iface, false);
+        return transaction.getInterface(iface, false, true);
     }
 
     @Override

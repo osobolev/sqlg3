@@ -712,7 +712,7 @@ public class GBase implements ISimpleTransaction {
         if (test != null) {
             return test.getNullInterface(iface);
         } else {
-            return ctx.transaction.getInterface(iface, false);
+            return ctx.transaction.getInterface(iface, false, false);
         }
     }
 

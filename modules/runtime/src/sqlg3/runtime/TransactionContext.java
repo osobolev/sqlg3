@@ -33,7 +33,7 @@ final class TransactionContext {
     }
 
     @SuppressWarnings("unchecked")
-    <T extends IDBCommon> T getInterface(Class<T> iface, boolean commitCalls) {
+    <T extends IDBCommon> T getInterface(Class<T> iface, boolean commitCalls, boolean checkCall) {
         ClassLoader classLoader = iface.getClassLoader();
         return (T) Proxy.newProxyInstance(classLoader, new Class[] {iface}, (proxy, method, args) -> {
             boolean success = false;
@@ -42,7 +42,7 @@ final class TransactionContext {
             try {
                 ImplCache cached = global.getImpl(iface);
                 Method daoMethod = cached.dao.getMethod(method.getName(), method.getParameterTypes());
-                if (session.beforeCall != null) {
+                if (checkCall && session.beforeCall != null) {
                     session.beforeCall.accept(daoMethod);
                 }
                 try (GContext ctx = new GContext(global, session, this)) {

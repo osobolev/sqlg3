@@ -162,7 +162,7 @@ public final class HttpDispatcher {
             throw new RemoteException("Invalid session");
         DBInterface db = lw.getSession(id.sessionId);
         if (db == null)
-            throw new RemoteException("Session closed");
+            throw new RemoteException("Session closed", true);
         return db;
     }
 

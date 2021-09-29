@@ -3,9 +3,7 @@ package sqlg3.runtime;
 import sqlg3.core.IDBCommon;
 import sqlg3.core.ISimpleTransaction;
 
-import java.lang.reflect.Method;
 import java.sql.Connection;
-import java.util.function.Consumer;
 
 /**
  * This class can be used to call SQLG code from JDBC code. If you have {@link Connection} instance then
@@ -21,7 +19,7 @@ public final class JdbcInterface implements ISimpleTransaction {
     private final TransactionContext transaction;
     private final boolean commitCalls;
 
-    public JdbcInterface(GlobalContext global, Connection connection, boolean commitCalls, Object userObject, Consumer<Method> beforeCall) {
+    public JdbcInterface(GlobalContext global, Connection connection, boolean commitCalls, Object userObject, PreCallCheck beforeCall) {
         SessionContext session = new SessionContext(new SingleConnectionManager(connection), userObject, beforeCall);
         this.transaction = new TransactionContext(global, session);
         this.commitCalls = commitCalls;
@@ -39,7 +37,7 @@ public final class JdbcInterface implements ISimpleTransaction {
 
         private boolean commitCalls = false;
         private Object userObject = null;
-        private Consumer<Method> beforeCall = null;
+        private PreCallCheck beforeCall = null;
 
         public Builder setCommitCalls(boolean commitCalls) {
             this.commitCalls = commitCalls;
@@ -51,7 +49,7 @@ public final class JdbcInterface implements ISimpleTransaction {
             return this;
         }
 
-        public Builder setBeforeCall(Consumer<Method> beforeCall) {
+        public Builder setBeforeCall(PreCallCheck beforeCall) {
             this.beforeCall = beforeCall;
             return this;
         }

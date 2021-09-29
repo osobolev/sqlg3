@@ -43,7 +43,7 @@ final class TransactionContext {
                 ImplCache cached = global.getImpl(iface);
                 Method daoMethod = cached.dao.getMethod(method.getName(), method.getParameterTypes());
                 if (checkCall && session.beforeCall != null) {
-                    session.beforeCall.accept(daoMethod);
+                    session.beforeCall.check(daoMethod, args);
                 }
                 try (GContext ctx = new GContext(global, session, this)) {
                     Object instance = cached.constructor.newInstance(ctx);

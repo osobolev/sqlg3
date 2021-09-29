@@ -76,7 +76,11 @@ public final class Parameter {
 
     public String toString() {
         if (inputValue != null) {
-            return inputValue.toString();
+            String str = inputValue.toString();
+            if (str != null && str.length() > 1000) {
+                return str.substring(0, 1000) + "...";
+            }
+            return str;
         } else if (cls != null) {
             return "type " + cls;
         } else {

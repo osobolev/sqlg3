@@ -54,12 +54,12 @@ project(":sqlg3-preprocess") {
 
     dependencies {
         api(project(":sqlg3-runtime"))
-        implementation("org.antlr:antlr4-runtime:4.7.2")
-        compileOnly("org.apache.ant:ant:1.9.5")
+        implementation("org.antlr:antlr4-runtime:4.9.2")
+        compileOnly("org.apache.ant:ant:1.10.11")
 
-        testRuntimeOnly("org.postgresql:postgresql:42.2.9")
+        testRuntimeOnly("org.postgresql:postgresql:42.2.24")
 
-        antlr("org.antlr:antlr4:4.7.2")
+        antlr("org.antlr:antlr4:4.9.2")
     }
 
     task lexer(type: JavaExec) {

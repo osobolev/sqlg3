@@ -120,9 +120,12 @@ public final class Main {
         }
 
         Parser newParser(Path file, String simpleClassName, String fullClassName) throws IOException {
-            parentClasses.add(fullClassName);
             String text = FileUtils.readFile(file, encoding);
             return new Parser(file, text, simpleClassName, fullClassName, rowTypeMap);
+        }
+
+        void parsedTopLevel(String fullClassName) {
+            parentClasses.add(fullClassName);
         }
     }
 
@@ -172,6 +175,7 @@ public final class Main {
             }
             ToProcess src;
             if (header != null) {
+                pctx.parsedTopLevel(file.fullClassName);
                 JavaClassFile iface = getInterface(file);
                 IfaceCutPaste ifaceCP;
                 if (o.addInterface) {
@@ -306,6 +310,7 @@ public final class Main {
                     continue;
                 Path source = CodeGenerator.getSourceFile(parentClass, srcRoots);
                 Parser parser = pctx.newParser(source, parentClass.getSimpleName(), fullParentName);
+                pctx.parsedTopLevel(fullParentName);
                 otherParents.add(parser.parseAll(false));
             }
             for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : runGlobal.generatedIn.entrySet()) {

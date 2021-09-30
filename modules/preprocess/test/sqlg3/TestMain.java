@@ -17,7 +17,7 @@ final class TestMain {
         o.cleanup = false;
         o.checkTime = ModifiedCheck.all_always;
         o.tmpDir = Paths.get("C:/TEMP");
-        o.classpath = "C:\\Users\\User\\.m2\\repository\\com\\github\\osobolev\\sqlg3\\sqlg3-preprocess\\1.0\\sqlg3-preprocess-1.0.jar;C:\\Users\\User\\.m2\\repository\\com\\github\\osobolev\\sqlg3\\sqlg3-runtime\\1.0\\sqlg3-runtime-1.0.jar;C:\\Users\\User\\.m2\\repository\\com\\github\\osobolev\\sqlg3\\sqlg3-core\\1.0\\sqlg3-core-1.0.jar";
+        o.classpath = "C:\\Users\\User\\.m2\\repository\\com\\github\\osobolev\\sqlg3\\sqlg3-preprocess\\2.0\\sqlg3-preprocess-2.0.jar;C:\\Users\\User\\.m2\\repository\\com\\github\\osobolev\\sqlg3\\sqlg3-runtime\\2.0\\sqlg3-runtime-2.0.jar;C:\\Users\\User\\.m2\\repository\\com\\github\\osobolev\\sqlg3\\sqlg3-core\\2.0\\sqlg3-core-2.0.jar";
         o.user = "sqlg2";
         o.pass = "sqlg2";
         o.checkerClass = Postgres.class.getName();

@@ -108,59 +108,9 @@ public final class SafeDBInterface implements IRemoteDBInterface {
         }
     }
 
-    public String getUserLogin() {
-        try {
-            return getDb().getUserLogin();
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new RemoteException(ex);
-        }
-    }
-
-    public String getUserHost() {
-        try {
-            return getDb().getUserHost();
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new RemoteException(ex);
-        }
-    }
-
     public Object getUserObject() {
         try {
             return getDb().getUserObject();
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new RemoteException(ex);
-        }
-    }
-
-    public SessionInfo[] getActiveSessions() {
-        try {
-            return getDb().getActiveSessions();
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new RemoteException(ex);
-        }
-    }
-
-    public void killSession(String sessionLongId) {
-        try {
-            getDb().killSession(sessionLongId);
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new RemoteException(ex);
-        }
-    }
-
-    public SessionInfo getCurrentSession() {
-        try {
-            return getDb().getCurrentSession();
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {

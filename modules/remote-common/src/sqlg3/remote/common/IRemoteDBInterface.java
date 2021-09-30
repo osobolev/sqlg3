@@ -15,33 +15,7 @@ public interface IRemoteDBInterface extends IDBInterface {
     void ping();
 
     /**
-     * Returns user login (which was passed to {@link IConnectionFactory#openConnection(String, String)}).
-     *
-     * @return user login
-     */
-    String getUserLogin();
-
-    /**
-     * User host name.
-     *
-     * @return host name
-     */
-    String getUserHost();
-
-    /**
      * Returns user identifier object.
      */
     Object getUserObject();
-
-    /**
-     * Returns active sessions descriptors.
-     */
-    SessionInfo[] getActiveSessions();
-
-    void killSession(String sessionLongId);
-
-    /**
-     * Returns calling session descriptor
-     */
-    SessionInfo getCurrentSession();
 }

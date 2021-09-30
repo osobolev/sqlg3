@@ -9,10 +9,7 @@ import java.lang.reflect.*;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
@@ -195,5 +192,27 @@ public final class GlobalContext {
 
     ImplCache getImpl(Class<?> iface) {
         return implCache.computeIfAbsent(iface, i -> createImpl(iface));
+    }
+
+    private final List<SessionListener> sessionListeners = new ArrayList<>();
+
+    public void addSessionListener(SessionListener listener) {
+        synchronized (sessionListeners) {
+            sessionListeners.add(listener);
+        }
+    }
+
+    public void removeSessionListener(SessionListener listener) {
+        synchronized (sessionListeners) {
+            sessionListeners.remove(listener);
+        }
+    }
+
+    public void fireSessionListeners(Consumer<SessionListener> consumer) {
+        synchronized (sessionListeners) {
+            for (SessionListener listener : sessionListeners) {
+                consumer.accept(listener);
+            }
+        }
     }
 }

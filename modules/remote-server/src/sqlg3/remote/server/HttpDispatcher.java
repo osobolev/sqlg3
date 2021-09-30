@@ -59,12 +59,6 @@ public final class HttpDispatcher {
                 return openConnection(id, user, password, hostName);
             }
         });
-        actions.put(HttpCommand.GET_SESSIONS, new HttpAction(false) {
-            Object perform(HttpId id, String hostName, Object... params) {
-                checkSession(id);
-                return lw.getActiveSessions();
-            }
-        });
         actions.put(HttpCommand.GET_TRANSACTION, new HttpAction(true) {
             Object perform(HttpId id, String hostName, Object... params) {
                 DBInterface db = checkSession(id);
@@ -87,20 +81,6 @@ public final class HttpDispatcher {
                 DBInterface db = checkSession(id);
                 db.close();
                 return null;
-            }
-        });
-        actions.put(HttpCommand.KILL_SESSION, new HttpAction(false) {
-            Object perform(HttpId id, String hostName, Object... params) {
-                checkSession(id);
-                String sessionLongId = (String) params[0];
-                lw.killSession(sessionLongId);
-                return null;
-            }
-        });
-        actions.put(HttpCommand.GET_CURRENT_SESSION, new HttpAction(false) {
-            Object perform(HttpId id, String hostName, Object... params) {
-                DBInterface db = checkSession(id);
-                return lw.getSessionInfo(db);
             }
         });
         actions.put(HttpCommand.ROLLBACK, new HttpAction(true) {
@@ -143,12 +123,10 @@ public final class HttpDispatcher {
     }
 
     private HttpDBInterfaceInfo openConnection(HttpId id, String user, String password, String hostName) throws SQLException {
-        DBInterface db = lw.createConnection(user, password, hostName, false);
+        DBInterface db = lw.openConnection(user, password, hostName);
         String sessionId = db.sessionLongId;
-        String login = db.getUserLogin();
-        String host = db.getUserHost();
         Object userObject = db.getUserObject();
-        return new HttpDBInterfaceInfo(id.createSession(sessionId), login, host, userObject);
+        return new HttpDBInterfaceInfo(id.createSession(sessionId), userObject);
     }
 
     private void checkApplication(HttpId id) {
@@ -162,7 +140,7 @@ public final class HttpDispatcher {
             throw new RemoteException("Invalid session");
         DBInterface db = lw.getSession(id.sessionId);
         if (db == null)
-            throw new RemoteException("Session closed", true);
+            throw new RemoteException("Session closed");
         return db;
     }
 
@@ -242,10 +220,6 @@ public final class HttpDispatcher {
      */
     public void shutdown() {
         watcher.shutdown();
-    }
-
-    public SessionInfo[] getActiveSessions() {
-        return lw.getActiveSessions();
     }
 
     public String getApplication() {

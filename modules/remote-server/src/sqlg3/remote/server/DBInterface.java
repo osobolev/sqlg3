@@ -3,9 +3,11 @@ package sqlg3.remote.server;
 import sqlg3.core.ISimpleTransaction;
 import sqlg3.core.ITransaction;
 import sqlg3.remote.common.IRemoteDBInterface;
-import sqlg3.remote.common.SessionInfo;
 import sqlg3.remote.common.WatcherThread;
-import sqlg3.runtime.*;
+import sqlg3.runtime.GlobalContext;
+import sqlg3.runtime.SessionContext;
+import sqlg3.runtime.SimpleTransaction;
+import sqlg3.runtime.Transaction;
 
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -13,8 +15,6 @@ import java.util.concurrent.atomic.AtomicLong;
 final class DBInterface implements IRemoteDBInterface {
 
     private final SessionContext session;
-    private final String userLogin;
-    private final String userHost;
     private final LocalConnectionFactory fact;
     private final GlobalContext global;
     private final SQLGLogger logger;
@@ -24,11 +24,8 @@ final class DBInterface implements IRemoteDBInterface {
 
     private final AtomicLong lastActive = new AtomicLong(getCurrentTime());
 
-    DBInterface(String userLogin, String userHost,
-                SessionContext session, LocalConnectionFactory fact,
+    DBInterface(SessionContext session, LocalConnectionFactory fact,
                 long sessionOrderId, String sessionLongId, boolean server) {
-        this.userLogin = userLogin;
-        this.userHost = userHost;
         this.session = session;
         this.fact = fact;
         this.global = fact.global;
@@ -80,19 +77,12 @@ final class DBInterface implements IRemoteDBInterface {
         } catch (SQLException ex) {
             logger.error(ex);
         }
+        global.fireSessionListeners(listener -> listener.closed(sessionOrderId));
     }
 
     public void close() {
         close(true);
         fact.endSession(this);
-    }
-
-    public String getUserLogin() {
-        return userLogin;
-    }
-
-    public String getUserHost() {
-        return userHost;
     }
 
     public Object getUserObject() {
@@ -105,17 +95,5 @@ final class DBInterface implements IRemoteDBInterface {
             close(false);
         }
         return timeout;
-    }
-
-    public SessionInfo[] getActiveSessions() {
-        return fact.getActiveSessions();
-    }
-
-    public void killSession(String sessionLongId) {
-        fact.killSession(sessionLongId);
-    }
-
-    public SessionInfo getCurrentSession() {
-        return fact.getSessionInfo(this);
     }
 }

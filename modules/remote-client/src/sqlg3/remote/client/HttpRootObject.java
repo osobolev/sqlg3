@@ -29,13 +29,11 @@ final class HttpRootObject {
     Object httpInvoke(Type retType, HttpCommand command, HttpId id, Class<? extends IDBCommon> iface, String method, Class<?>[] paramTypes, Object[] params) throws Throwable {
         Object result;
         Throwable error;
-        try {
-            try (IHttpClient conn = clientFactory.getClient()) {
-                IClientSerializer.ReqRespProcessor processor = conn.getProcessor();
-                HttpResult httpResult = serializer.clientToServer(processor, id, command, iface, retType, method, paramTypes, params);
-                result = httpResult.result;
-                error = httpResult.error;
-            }
+        try (IHttpClient conn = clientFactory.getClient()) {
+            IClientSerializer.ReqRespProcessor processor = conn.getProcessor();
+            HttpResult httpResult = serializer.clientToServer(processor, id, command, iface, retType, method, paramTypes, params);
+            result = httpResult.result;
+            error = httpResult.error;
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {

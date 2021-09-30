@@ -4,7 +4,7 @@ subprojects {
     apply(plugin: "maven-publish")
 
     group = "com.github.osobolev.sqlg3"
-    version = "1.0"
+    version = "2.0"
 
     compileJava.options.compilerArgs << "-Xlint:-options,deprecation,unchecked"
     compileJava.options.encoding = "UTF-8"

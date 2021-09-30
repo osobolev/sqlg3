@@ -13,5 +13,5 @@ public interface SessionFactory {
      * @return session data, always not null
      * @throws SQLException if user/password is not valid or other DB error occured
      */
-    SessionContext login(SQLGLogger logger, String user, String password) throws SQLException;
+    SessionContext login(SQLGLogger logger, long sessionId, String user, String password) throws SQLException;
 }

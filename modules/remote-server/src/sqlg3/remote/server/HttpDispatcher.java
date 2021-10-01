@@ -7,8 +7,6 @@ import sqlg3.remote.common.*;
 import sqlg3.runtime.GlobalContext;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
@@ -19,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Server-side object for HTTP access to business interfaces.
- * Method {@link #dispatch(String, InputStream, OutputStream)} should be invoked from servlets.
+ * Method {@link #dispatch(String, IHttpRequest)} should be invoked from servlets.
  * <p>
  * Servlet container can have more than one {@link HttpDispatcher} object, and distinguish them by
  * application name (which should be reflected in servlet URL; for example, servlet on
@@ -31,7 +29,6 @@ public final class HttpDispatcher {
 
     private final String application;
     private final LocalConnectionFactory lw;
-    private IServerSerializer serializer = new ServerJavaSerializer();
     private final WatcherThread watcher;
     private final ConcurrentMap<Long, ITransaction> transactions = new ConcurrentHashMap<>();
 
@@ -118,10 +115,6 @@ public final class HttpDispatcher {
         this.watcher.runThread();
     }
 
-    public void setSerializer(IServerSerializer serializer) {
-        this.serializer = serializer;
-    }
-
     private HttpDBInterfaceInfo openConnection(HttpId id, String user, String password, String hostName) throws SQLException {
         DBInterface db = lw.openConnection(user, password, hostName);
         String sessionId = db.sessionLongId;
@@ -203,16 +196,17 @@ public final class HttpDispatcher {
      * Dispatch of HTTP PUT request.
      *
      * @param hostName host name of client from which call originated
-     * @param is       input data
-     * @param os       output data
+     * @param request HTTP request
      */
-    public void dispatch(String hostName, InputStream is, OutputStream os) throws IOException {
-        IServerSerializer.ServerCall call = (id, command, iface, method, paramTypes, params) -> dispatch(id, command, iface, method, paramTypes, params, hostName);
-        serializer.serverToClient(is, call, os);
-    }
-
-    public static void writeError(IServerSerializer serializer, OutputStream os, Throwable error) throws IOException {
-        serializer.sendError(os, error);
+    public void dispatch(String hostName, IHttpRequest request) throws IOException {
+        request.perform((id, command, iface, method, paramTypes, params) -> {
+            try {
+                Object result = dispatch(id, command, iface, method, paramTypes, params, hostName);
+                return new HttpResult(result, null);
+            } catch (Throwable ex) {
+                return new HttpResult(null, ex);
+            }
+        });
     }
 
     /**

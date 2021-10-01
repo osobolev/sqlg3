@@ -1,50 +1,89 @@
 package sqlg3.remote.client;
 
+import sqlg3.remote.common.HttpRequest;
 import sqlg3.remote.common.HttpResult;
+import sqlg3.remote.common.ISerializer;
+import sqlg3.remote.common.JavaSerializer;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.Proxy;
-import java.net.URL;
+import java.lang.reflect.Type;
+import java.net.*;
 
-public class DefaultHttpClient implements IHttpClient, IClientSerializer.ReqRespProcessor {
+public final class DefaultHttpClient implements IHttpClient {
 
-    private final HttpURLConnection conn;
-    private boolean connected = false;
+    private final URL url;
+    private final Proxy proxy;
+    private final int connectTimeout;
+    private final ISerializer serializer;
 
-    public DefaultHttpClient(HttpURLConnection conn) {
-        this.conn = conn;
+    public static final class Builder {
+
+        private final URL url;
+        private int connectTimeout = 3000;
+        private ISerializer serializer = null;
+        private Proxy proxy = Proxy.NO_PROXY;
+
+        public Builder(URL url) {
+            this.url = url;
+        }
+
+        public Builder setConnectTimeout(int connectTimeout) {
+            this.connectTimeout = connectTimeout;
+            return this;
+        }
+
+        public Builder setSerializer(ISerializer serializer) {
+            this.serializer = serializer;
+            return this;
+        }
+
+        public Builder setProxy(Proxy proxy) {
+            this.proxy = proxy;
+            return this;
+        }
+
+        public DefaultHttpClient build() {
+            return new DefaultHttpClient(url, proxy, connectTimeout, serializer == null ? new JavaSerializer() : serializer);
+        }
     }
 
-    public static DefaultHttpClient create(URL url, Proxy proxy, int connectTimeout) throws IOException {
+    public static Builder builder(URL url) {
+        return new Builder(url);
+    }
+
+    public static Builder builder(String url) throws URISyntaxException, MalformedURLException {
+        return builder(new URI(url).normalize().toURL());
+    }
+
+    public DefaultHttpClient(URL url, Proxy proxy, int connectTimeout, ISerializer serializer) {
+        this.url = url;
+        this.proxy = proxy;
+        this.connectTimeout = connectTimeout;
+        this.serializer = serializer;
+    }
+
+    public static HttpURLConnection open(URL url, Proxy proxy, int connectTimeout) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection(proxy);
         conn.setDoOutput(true);
         conn.setRequestMethod("POST");
         conn.setConnectTimeout(connectTimeout);
         conn.setUseCaches(false);
         conn.setAllowUserInteraction(false);
-        return new DefaultHttpClient(conn);
+        return conn;
     }
 
-    public IClientSerializer.ReqRespProcessor getProcessor() {
-        return this;
-    }
-
-    public HttpResult process(IClientSerializer.ReqRespConsumer consumer) throws IOException {
-        connected = true;
+    @Override
+    public HttpResult call(Type retType, HttpRequest request) throws IOException {
+        HttpURLConnection conn = open(url, proxy, connectTimeout);
         conn.connect();
-        try (OutputStream os = conn.getOutputStream()) {
-            consumer.writeToServer(os);
-        }
-        try (InputStream is = conn.getInputStream()) {
-            return consumer.readFromServer(is);
-        }
-    }
-
-    public void close() throws IOException {
-        if (connected) {
+        try {
+            try (ISerializer.Writer toServer = serializer.newWriter(conn.getOutputStream())) {
+                toServer.write(request, HttpRequest.class);
+            }
+            try (ISerializer.Reader fromServer = serializer.newReader(conn.getInputStream())) {
+                return fromServer.read(HttpResult.class);
+            }
+        } finally {
             conn.disconnect();
         }
     }

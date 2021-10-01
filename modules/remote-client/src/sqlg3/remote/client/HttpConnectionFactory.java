@@ -2,7 +2,6 @@ package sqlg3.remote.client;
 
 import sqlg3.remote.common.*;
 
-import java.net.*;
 import java.sql.SQLException;
 
 /**
@@ -13,21 +12,9 @@ public final class HttpConnectionFactory implements IConnectionFactory {
     private final HttpId id;
     private final HttpRootObject rootObject;
 
-    public HttpConnectionFactory(String url, Proxy proxy, String application) throws URISyntaxException, MalformedURLException {
-        this(new URI(url).normalize().toURL(), proxy, application);
-    }
-
-    public HttpConnectionFactory(URL url, Proxy proxy, String application) {
-        this(application, () -> DefaultHttpClient.create(url, proxy, 3000));
-    }
-
-    public HttpConnectionFactory(String application, IHttpClientFactory clientFactory) {
+    public HttpConnectionFactory(String application, IHttpClient client) {
         this.id = new HttpId(application);
-        this.rootObject = new HttpRootObject(clientFactory);
-    }
-
-    public void setSerializer(IClientSerializer serializer) {
-        rootObject.setSerializer(serializer);
+        this.rootObject = new HttpRootObject(client);
     }
 
     public IRemoteDBInterface openConnection(String user, String password) throws SQLException {

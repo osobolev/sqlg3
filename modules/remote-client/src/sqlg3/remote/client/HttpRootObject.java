@@ -3,22 +3,17 @@ package sqlg3.remote.client;
 import sqlg3.core.IDBCommon;
 import sqlg3.remote.common.HttpCommand;
 import sqlg3.remote.common.HttpId;
+import sqlg3.remote.common.HttpRequest;
 import sqlg3.remote.common.HttpResult;
-import sqlg3.remote.common.RemoteException;
 
 import java.lang.reflect.Type;
 
 final class HttpRootObject {
 
-    private final IHttpClientFactory clientFactory;
-    private IClientSerializer serializer = new ClientJavaSerializer();
+    private final IHttpClient client;
 
-    HttpRootObject(IHttpClientFactory clientFactory) {
-        this.clientFactory = clientFactory;
-    }
-
-    void setSerializer(IClientSerializer serializer) {
-        this.serializer = serializer;
+    HttpRootObject(IHttpClient client) {
+        this.client = client;
     }
 
     @SuppressWarnings("unchecked")
@@ -27,23 +22,14 @@ final class HttpRootObject {
     }
 
     Object httpInvoke(Type retType, HttpCommand command, HttpId id, Class<? extends IDBCommon> iface, String method, Class<?>[] paramTypes, Object[] params) throws Throwable {
-        Object result;
-        Throwable error;
-        try (IHttpClient conn = clientFactory.getClient()) {
-            IClientSerializer.ReqRespProcessor processor = conn.getProcessor();
-            HttpResult httpResult = serializer.clientToServer(processor, id, command, iface, retType, method, paramTypes, params);
-            result = httpResult.result;
-            error = httpResult.error;
-        } catch (RuntimeException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new RemoteException(ex);
-        }
+        HttpRequest request = new HttpRequest(id, command, iface, method, paramTypes, params);
+        HttpResult result = client.call(retType, request);
+        Throwable error = result.error;
         if (error != null) {
             serverException(error);
             return null;
         } else {
-            return result;
+            return result.result;
         }
     }
 

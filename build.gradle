@@ -94,20 +94,6 @@ project(":sqlg3-remote-server") {
 project(":sqlg3-remote-kryo") {
     dependencies {
         api(project(":sqlg3-remote-common"))
-        api("com.esotericsoftware:kryo:5.1.0")
-    }
-}
-
-project(":sqlg3-remote-client-kryo") {
-    dependencies {
-        api(project(":sqlg3-remote-client"))
-        api(project(":sqlg3-remote-kryo"))
-    }
-}
-
-project(":sqlg3-remote-server-kryo") {
-    dependencies {
-        api(project(":sqlg3-remote-server"))
-        api(project(":sqlg3-remote-kryo"))
+        api("com.esotericsoftware:kryo:5.2.0")
     }
 }

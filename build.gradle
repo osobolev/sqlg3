@@ -22,10 +22,26 @@ subprojects {
         withSourcesJar()
     }
 
+    def nexusUrl = findProperty("nexusUrl")
+    def nexusLogin = findProperty("nexusLogin")
+    def nexusPassword = findProperty("nexusPassword")
     publishing {
         publications {
             mavenJava(MavenPublication) {
                 from(components.java)
+            }
+        }
+        if (nexusUrl != null) {
+            repositories {
+                maven {
+                    url = nexusUrl
+                    if (nexusLogin != null && nexusPassword != null) {
+                        credentials {
+                            username = nexusLogin
+                            password = nexusPassword
+                        }
+                    }
+                }
             }
         }
     }

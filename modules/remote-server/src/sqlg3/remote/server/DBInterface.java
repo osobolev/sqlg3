@@ -19,7 +19,7 @@ final class DBInterface implements IRemoteDBInterface {
     private final GlobalContext global;
     private final SQLGLogger logger;
     private final boolean server;
-    final long sessionOrderId;
+    private final long sessionOrderId;
     final String sessionLongId;
 
     private final AtomicLong lastActive = new AtomicLong(getCurrentTime());

@@ -1,8 +1,8 @@
 rootProject.name = "sqlg3"
 
-def add(name) {
-    def mname = "modules/$name"
-    include mname
+fun add(name: String) {
+    val mname = "modules/$name"
+    include(mname)
     project(":$mname").name = "sqlg3-$name"
 }
 

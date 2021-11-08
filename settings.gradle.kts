@@ -8,6 +8,7 @@ fun add(name: String) {
 
 add("core")
 add("preprocess")
+add("preprocess-ant")
 add("remote-common")
 add("remote-client")
 add("remote-server")

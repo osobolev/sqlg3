@@ -1,8 +1,5 @@
 package sqlg3.preprocess;
 
-import sqlg3.preprocess.ant.ModifiedCheck;
-import sqlg3.preprocess.ant.SQLGWarn;
-
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;

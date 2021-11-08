@@ -6,8 +6,10 @@ import org.apache.tools.ant.Location;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
 import sqlg3.preprocess.Main;
+import sqlg3.preprocess.ModifiedCheck;
 import sqlg3.preprocess.OptionsBuilder;
 import sqlg3.preprocess.ParseException;
+import sqlg3.preprocess.SQLGWarn;
 import sqlg3.runtime.GBase;
 
 import java.io.File;

@@ -1,4 +1,4 @@
-package sqlg3.preprocess.ant;
+package sqlg3.preprocess;
 
 /**
  * Warning output mode for ANT task

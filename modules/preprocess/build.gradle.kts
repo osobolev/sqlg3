@@ -1,4 +1,5 @@
 plugins {
+    `module-lib`
     `lib`
 }
 
@@ -7,7 +8,6 @@ val antlr by configurations.creating
 dependencies {
     api(project(":sqlg3-runtime"))
     implementation("org.antlr:antlr4-runtime:4.9.2")
-    compileOnly("org.apache.ant:ant:1.10.11")
 
     testRuntimeOnly("org.postgresql:postgresql:42.2.24")
 
@@ -21,8 +21,10 @@ tasks.register("lexer", JavaExec::class) {
     classpath = antlr
     args("-package", "sqlg3.preprocess.lexer", "-Xexact-output-dir", "-o", "src/sqlg3/preprocess/lexer", "-encoding", "UTF-8", "grammar/Java8Lexer.g4")
 }
-tasks.named("compileJava") {
-    dependsOn("lexer")
+tasks {
+    withType(JavaCompile::class) {
+        dependsOn("lexer")
+    }
 }
 tasks.named("sourcesJar") {
     dependsOn("lexer")

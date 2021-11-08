@@ -2,7 +2,7 @@ package sqlg3;
 
 import sqlg3.preprocess.Main;
 import sqlg3.preprocess.OptionsBuilder;
-import sqlg3.preprocess.ant.ModifiedCheck;
+import sqlg3.preprocess.ModifiedCheck;
 import sqlg3.preprocess.checker.Postgres;
 
 import java.nio.file.Path;

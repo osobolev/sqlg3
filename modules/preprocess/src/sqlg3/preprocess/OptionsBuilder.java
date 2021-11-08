@@ -1,7 +1,5 @@
 package sqlg3.preprocess;
 
-import sqlg3.preprocess.ant.ModifiedCheck;
-import sqlg3.preprocess.ant.SQLGWarn;
 import sqlg3.preprocess.checker.Generic;
 import sqlg3.runtime.RuntimeMapperImpl;
 

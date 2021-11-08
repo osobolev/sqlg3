@@ -1,4 +1,5 @@
 plugins {
+    `module-lib`
     `lib`
 }
 

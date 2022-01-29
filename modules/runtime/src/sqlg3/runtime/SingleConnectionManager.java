@@ -36,7 +36,8 @@ public class SingleConnectionManager implements ConnectionManager {
                 try {
                     lock.wait();
                 } catch (InterruptedException ex) {
-                    // ignore
+                    Thread.currentThread().interrupt();
+                    throw new SQLException(ex);
                 }
             }
             this.allocated = true;

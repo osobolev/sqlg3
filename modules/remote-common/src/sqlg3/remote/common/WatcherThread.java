@@ -25,7 +25,7 @@ public final class WatcherThread implements Runnable {
                 try {
                     waitLock.wait(ACTIVITY_CHECK_INTERVAL / divider);
                 } catch (InterruptedException ie) {
-                    // ignore
+                    break;
                 }
                 if (!running)
                     break;

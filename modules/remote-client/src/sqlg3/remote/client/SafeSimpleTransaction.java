@@ -11,13 +11,14 @@ final class SafeSimpleTransaction implements ISimpleTransaction {
     private ISimpleTransaction trans = null;
     private int currentCounter = -1;
     private final SafeDBInterface db;
+    private final Object dbLock = new Object();
 
     SafeSimpleTransaction(SafeDBInterface db) {
         this.db = db;
     }
 
     private ISimpleTransaction getTrans() {
-        synchronized (this) {
+        synchronized (dbLock) {
             int dbCounter = db.getResetCounter();
             if (dbCounter != currentCounter) {
                 trans = null;

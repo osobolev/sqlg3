@@ -20,6 +20,7 @@ public final class SafeDBInterface implements IRemoteDBInterface {
     private int resetCounter = 0;
     private boolean unrecoverable = false;
 
+    private final Object dbLock = new Object();
     private final WatcherThread watcher;
 
     public SafeDBInterface(Consumer<Throwable> logger, ConnectionProducer producer) throws Exception {
@@ -50,7 +51,7 @@ public final class SafeDBInterface implements IRemoteDBInterface {
     }
 
     private IRemoteDBInterface getDb() throws Exception {
-        synchronized (this) {
+        synchronized (dbLock) {
             if (idb == null && producer != null) {
                 if (unrecoverable)
                     throw new RemoteException("Unrecoverable error, please restart application");
@@ -100,7 +101,7 @@ public final class SafeDBInterface implements IRemoteDBInterface {
 
     public void close() throws SQLException {
         watcher.shutdown();
-        synchronized (this) {
+        synchronized (dbLock) {
             if (idb != null) {
                 idb.close();
                 idb = null;
@@ -133,7 +134,7 @@ public final class SafeDBInterface implements IRemoteDBInterface {
     }
 
     private void resetConnection(boolean unrecoverable) {
-        synchronized (this) {
+        synchronized (dbLock) {
             if (idb != null) {
                 try {
                     idb.close();
@@ -148,7 +149,7 @@ public final class SafeDBInterface implements IRemoteDBInterface {
     }
 
     int getResetCounter() {
-        synchronized (this) {
+        synchronized (dbLock) {
             return resetCounter;
         }
     }

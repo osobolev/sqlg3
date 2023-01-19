@@ -50,7 +50,7 @@ public final class LocalConnectionFactory implements IConnectionFactory {
         global.fireSessionListeners(listener -> listener.opened(sessionOrderId, user, host, session.getUserObject()));
         String sessionLongId = UUID.randomUUID().toString();
         DBInterface lw = new DBInterface(session, this, sessionOrderId, sessionLongId, server);
-        synchronized (this) {
+        synchronized (connectionMap) {
             connectionMap.put(sessionLongId, lw);
         }
         return lw;
@@ -61,20 +61,20 @@ public final class LocalConnectionFactory implements IConnectionFactory {
     }
 
     void endSession(DBInterface db) {
-        synchronized (this) {
+        synchronized (connectionMap) {
             connectionMap.remove(db.sessionLongId);
         }
     }
 
     DBInterface getSession(String sessionLongId) {
-        synchronized (this) {
+        synchronized (connectionMap) {
             return connectionMap.get(sessionLongId);
         }
     }
 
     void checkActivity() {
         long time = DBInterface.getCurrentTime();
-        synchronized (this) {
+        synchronized (connectionMap) {
             connectionMap.values().removeIf(db -> db.isTimedOut(time));
         }
     }

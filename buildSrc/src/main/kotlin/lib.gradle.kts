@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "io.github.osobolev.sqlg3"
-version = "2.2"
+version = "2.3"
 
 val pub = publishing.publications["mavenJava"] as MavenPublication
 pub.pom {

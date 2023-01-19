@@ -5,5 +5,5 @@ plugins {
 
 dependencies {
     api(project(":sqlg3-remote-common"))
-    api("com.esotericsoftware:kryo:5.3.0")
+    api("com.esotericsoftware:kryo:5.4.0")
 }

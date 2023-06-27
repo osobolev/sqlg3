@@ -17,12 +17,4 @@ public final class HttpId implements Serializable {
         this.sessionId = sessionId;
         this.transactionId = transactionId;
     }
-
-    public HttpId createSession(String sessionId) {
-        return new HttpId(application, sessionId, null);
-    }
-
-    public HttpId createTransaction(long transactionId) {
-        return new HttpId(application, sessionId, transactionId);
-    }
 }

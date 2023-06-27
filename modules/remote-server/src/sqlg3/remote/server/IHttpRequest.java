@@ -1,7 +1,5 @@
 package sqlg3.remote.server;
 
-import sqlg3.core.IDBCommon;
-import sqlg3.remote.common.HttpCommand;
 import sqlg3.remote.common.HttpId;
 import sqlg3.remote.common.HttpResult;
 
@@ -9,14 +7,19 @@ import java.io.IOException;
 
 public interface IHttpRequest {
 
-    interface ServerCall {
+    String hostName();
 
-        HttpResult call(HttpId id, HttpCommand command, Class<? extends IDBCommon> iface, String method, Class<?>[] paramTypes, Object[] params);
-    }
+    String newSessionId();
 
-    void perform(ServerCall call) throws IOException;
+    HttpId session(ServerHttpId id, String sessionId);
+
+    HttpId transaction(ServerHttpId id, long transactionId);
+
+    ServerHttpRequest requestData() throws IOException;
+
+    void write(HttpResult result) throws IOException;
 
     default void writeError(Throwable error) throws IOException {
-        perform((id, command, iface, method, paramTypes, params) -> new HttpResult(null, error));
+        write(new HttpResult(null, error));
     }
 }

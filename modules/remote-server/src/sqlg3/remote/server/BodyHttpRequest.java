@@ -1,37 +1,34 @@
 package sqlg3.remote.server;
 
-import sqlg3.remote.common.HttpRequest;
-import sqlg3.remote.common.HttpResult;
+import sqlg3.remote.common.HttpId;
 import sqlg3.remote.common.ISerializer;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public final class BodyHttpRequest implements IHttpRequest {
+public final class BodyHttpRequest extends BaseBodyHttpRequest {
 
-    private final ISerializer serializer;
-    private final InputStream in;
-    private final OutputStream out;
-
-    public BodyHttpRequest(ISerializer serializer, InputStream in, OutputStream out) {
-        this.serializer = serializer;
-        this.in = in;
-        this.out = out;
+    public BodyHttpRequest(ISerializer serializer, String hostName, InputStream in, OutputStream out) {
+        super(serializer, hostName, in, out);
     }
 
     @Override
-    public void perform(ServerCall call) throws IOException {
-        HttpRequest request;
-        try (ISerializer.Reader fromClient = serializer.newReader(in)) {
-            request = fromClient.read(HttpRequest.class);
-        }
-        HttpResult result = call.call(
-            request.id, request.getCommand(),
-            request.iface, request.method, request.paramTypes, request.params
-        );
-        try (ISerializer.Writer toClient = serializer.newWriter(out)) {
-            toClient.write(result, HttpResult.class);
-        }
+    protected ServerHttpId serverId(HttpId id) {
+        return new ServerHttpId(id.application, id.sessionId, id.transactionId);
+    }
+
+    @Override
+    public String newSessionId() {
+        return null;
+    }
+
+    @Override
+    public HttpId session(ServerHttpId id, String sessionId) {
+        return new HttpId(id.application, sessionId, null);
+    }
+
+    @Override
+    public HttpId transaction(ServerHttpId id, long transactionId) {
+        return new HttpId(id.application, id.sessionId, transactionId);
     }
 }

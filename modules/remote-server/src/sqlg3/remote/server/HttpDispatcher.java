@@ -1,6 +1,5 @@
 package sqlg3.remote.server;
 
-import sqlg3.core.IDBCommon;
 import sqlg3.core.ISimpleTransaction;
 import sqlg3.core.ITransaction;
 import sqlg3.remote.common.*;
@@ -17,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Server-side object for HTTP access to business interfaces.
- * Method {@link #dispatch(String, IHttpRequest)} should be invoked from servlets.
+ * Method {@link #dispatch(IHttpRequest)} should be invoked from servlets.
  * <p>
  * Servlet container can have more than one {@link HttpDispatcher} object, and distinguish them by
  * application name (which should be reflected in servlet URL; for example, servlet on
@@ -34,77 +33,59 @@ public final class HttpDispatcher {
 
     private final AtomicLong transactionCount = new AtomicLong(0);
 
-    private abstract static class HttpAction {
+    private interface HttpAction {
 
-        protected final boolean hasSqlException;
-
-        protected HttpAction(boolean hasSqlException) {
-            this.hasSqlException = hasSqlException;
-        }
-
-        abstract Object perform(HttpId id, String hostName, Object... params) throws Exception;
+        Object perform(IHttpRequest request, ServerHttpId id, Object[] params) throws Exception;
     }
 
     private final EnumMap<HttpCommand, HttpAction> actions = new EnumMap<>(HttpCommand.class);
 
     {
-        actions.put(HttpCommand.OPEN, new HttpAction(true) {
-            Object perform(HttpId id, String hostName, Object... params) throws SQLException {
-                checkApplication(id);
-                String user = (String) params[0];
-                String password = (String) params[1];
-                return openConnection(id, user, password, hostName);
-            }
+        actions.put(HttpCommand.OPEN, (request, id, params) -> {
+            checkApplication(id);
+            String user = (String) params[0];
+            String password = (String) params[1];
+            return openConnection(request, id, user, password);
         });
-        actions.put(HttpCommand.GET_TRANSACTION, new HttpAction(true) {
-            Object perform(HttpId id, String hostName, Object... params) {
-                DBInterface db = checkSession(id);
-                ITransaction trans = db.getTransaction();
-                long transactionId = transactionCount.getAndIncrement();
-                transactions.put(transactionId, trans);
-                return id.createTransaction(transactionId);
-            }
+        actions.put(HttpCommand.GET_TRANSACTION, (request, id, params) -> {
+            DBInterface db = checkSession(id);
+            ITransaction trans = db.getTransaction();
+            long transactionId = transactionCount.getAndIncrement();
+            transactions.put(transactionId, trans);
+            return request.transaction(id, transactionId);
         });
-        actions.put(HttpCommand.PING, new HttpAction(false) {
-            Object perform(HttpId id, String hostName, Object... params) {
-                DBInterface db = checkSession(id);
-                db.ping();
-                db.tracePing();
-                return null;
-            }
+        actions.put(HttpCommand.PING, (request, id, params) -> {
+            DBInterface db = checkSession(id);
+            db.ping();
+            db.tracePing();
+            return null;
         });
-        actions.put(HttpCommand.CLOSE, new HttpAction(true) {
-            Object perform(HttpId id, String hostName, Object... params) {
-                DBInterface db = checkSession(id);
-                db.close();
-                return null;
-            }
+        actions.put(HttpCommand.CLOSE, (request, id, params) -> {
+            DBInterface db = checkSession(id);
+            db.close();
+            return null;
         });
-        actions.put(HttpCommand.ROLLBACK, new HttpAction(true) {
-            Object perform(HttpId id, String hostName, Object... params) throws SQLException {
-                if (id.transactionId == null)
-                    throw new RemoteException("Cannot call method: rollback");
-                checkSession(id);
-                ITransaction transaction = transactions.get(id.transactionId);
-                if (transaction == null)
-                    throw new RemoteException("Cannot rollback - transaction inactive: " + id.transactionId);
-                transaction.rollback();
-                freeTransaction(id);
-                return null;
-            }
+        actions.put(HttpCommand.ROLLBACK, (request, id, params) -> {
+            if (id.transactionId == null)
+                throw new RemoteException("Cannot call method: rollback");
+            checkSession(id);
+            ITransaction transaction = transactions.get(id.transactionId);
+            if (transaction == null)
+                throw new RemoteException("Cannot rollback - transaction inactive: " + id.transactionId);
+            transaction.rollback();
+            freeTransaction(id);
+            return null;
         });
-        actions.put(HttpCommand.COMMIT, new HttpAction(true) {
-            Object perform(HttpId id, String hostName, Object... params) throws SQLException {
-                if (id.transactionId == null)
-                    throw new RemoteException("Cannot call method: commit");
-                checkSession(id);
-                ITransaction transaction = transactions.get(id.transactionId);
-                if (transaction == null)
-                    throw new RemoteException("Cannot commit - transaction inactive: " + id.transactionId);
-                transaction.commit();
-                freeTransaction(id);
-                return null;
-            }
+        actions.put(HttpCommand.COMMIT, (request, id, params) -> {
+            if (id.transactionId == null)
+                throw new RemoteException("Cannot call method: commit");
+            checkSession(id);
+            ITransaction transaction = transactions.get(id.transactionId);
+            if (transaction == null)
+                throw new RemoteException("Cannot commit - transaction inactive: " + id.transactionId);
+            transaction.commit();
+            freeTransaction(id);
+            return null;
         });
     }
 
@@ -115,19 +96,18 @@ public final class HttpDispatcher {
         this.watcher.runThread();
     }
 
-    private HttpDBInterfaceInfo openConnection(HttpId id, String user, String password, String hostName) throws SQLException {
-        DBInterface db = lw.openConnection(user, password, hostName);
-        String sessionId = db.sessionLongId;
+    private HttpDBInterfaceInfo openConnection(IHttpRequest request, ServerHttpId id, String user, String password) throws SQLException {
+        DBInterface db = lw.openConnection(user, password, request.hostName(), request.newSessionId());
         Object userObject = db.getUserObject();
-        return new HttpDBInterfaceInfo(id.createSession(sessionId), userObject);
+        return new HttpDBInterfaceInfo(request.session(id, db.sessionLongId), userObject);
     }
 
-    private void checkApplication(HttpId id) {
+    private void checkApplication(ServerHttpId id) {
         if (!application.equals(id.application))
             throw new RemoteException("Wrong application");
     }
 
-    private DBInterface checkSession(HttpId id) {
+    private DBInterface checkSession(ServerHttpId id) {
         checkApplication(id);
         if (id.sessionId == null)
             throw new RemoteException("Invalid session");
@@ -137,7 +117,7 @@ public final class HttpDispatcher {
         return db;
     }
 
-    private void freeTransaction(HttpId id) {
+    private void freeTransaction(ServerHttpId id) {
         transactions.remove(id.transactionId);
     }
 
@@ -145,38 +125,34 @@ public final class HttpDispatcher {
         lw.logger.error(ex);
     }
 
-    public Object dispatch(HttpId id, HttpCommand command,
-                           Class<? extends IDBCommon> iface, String method, Class<?>[] paramTypes, Object[] params,
-                           String hostName) throws Throwable {
+    public Object dispatch(IHttpRequest request, ServerHttpRequest data) throws Throwable {
         Throwable invocationError;
         boolean rethrowSqlExcepion = false;
         try {
-            DBInterface db = null;
-            if (id.sessionId != null) {
-                db = checkSession(id);
-            }
+            ServerHttpId id = data.id;
+            HttpCommand command = data.command;
             if (command == HttpCommand.INVOKE) {
+                DBInterface db = checkSession(id);
                 Object impl;
                 if (id.transactionId != null) {
                     ITransaction transaction = transactions.get(id.transactionId);
                     if (transaction == null)
                         throw new RemoteException("Transaction inactive: " + id.transactionId);
-                    impl = transaction.getInterface(iface);
+                    impl = transaction.getInterface(data.iface);
                 } else {
-                    assert db != null;
                     ISimpleTransaction t = db.getSimpleTransaction();
-                    impl = t.getInterface(iface);
+                    impl = t.getInterface(data.iface);
                 }
-                Method toInvoke = impl.getClass().getMethod(method, paramTypes);
+                Method toInvoke = impl.getClass().getMethod(data.method, data.paramTypes);
                 try {
-                    return toInvoke.invoke(impl, params);
+                    return toInvoke.invoke(impl, data.params);
                 } catch (InvocationTargetException ex) {
                     invocationError = ex.getTargetException();
                 }
             } else {
                 HttpAction httpAction = actions.get(command);
-                rethrowSqlExcepion = httpAction.hasSqlException;
-                return httpAction.perform(id, hostName, params);
+                rethrowSqlExcepion = command != HttpCommand.PING;
+                return httpAction.perform(request, id, data.params);
             }
         } catch (RemoteException ex) {
             throw ex;
@@ -193,20 +169,20 @@ public final class HttpDispatcher {
     }
 
     /**
-     * Dispatch of HTTP PUT request.
+     * Dispatch of HTTP POST request.
      *
-     * @param hostName host name of client from which call originated
      * @param request HTTP request
      */
-    public void dispatch(String hostName, IHttpRequest request) throws IOException {
-        request.perform((id, command, iface, method, paramTypes, params) -> {
-            try {
-                Object result = dispatch(id, command, iface, method, paramTypes, params, hostName);
-                return new HttpResult(result, null);
-            } catch (Throwable ex) {
-                return new HttpResult(null, ex);
-            }
-        });
+    public void dispatch(IHttpRequest request) throws IOException {
+        ServerHttpRequest data = request.requestData();
+        HttpResult httpResult;
+        try {
+            Object result = dispatch(request, data);
+            httpResult = new HttpResult(result, null);
+        } catch (Throwable ex) {
+            httpResult = new HttpResult(null, ex);
+        }
+        request.write(httpResult);
     }
 
     /**

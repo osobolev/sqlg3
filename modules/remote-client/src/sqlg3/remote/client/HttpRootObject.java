@@ -26,7 +26,12 @@ final class HttpRootObject {
     Object httpInvoke(Type retType, Object clientContext, HttpCommand command, HttpId id, Class<? extends IDBCommon> iface, String method,
                       Class<?>[] paramTypes, Object[] params) throws Throwable {
         HttpRequest request = new HttpRequest(id, command, iface, method, paramTypes, params);
-        HttpResult result = client.call(retType, clientContext, request);
+        HttpResult result;
+        try {
+            result = client.call(retType, clientContext, request);
+        } catch (IOException ex) {
+            throw new RemoteException(ex);
+        }
         Throwable error = result.error;
         if (error != null) {
             serverException(error);

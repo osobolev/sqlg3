@@ -10,20 +10,22 @@ final class HttpDBInterface implements IRemoteDBInterface {
 
     private final HttpRootObject rootObject;
     private final HttpDBInterfaceInfo info;
+    private final Object clientContext;
 
-    HttpDBInterface(HttpRootObject rootObject, HttpDBInterfaceInfo info) {
+    HttpDBInterface(HttpRootObject rootObject, HttpDBInterfaceInfo info, Object clientContext) {
         this.rootObject = rootObject;
         this.info = info;
+        this.clientContext = clientContext;
     }
 
     public ISimpleTransaction getSimpleTransaction() {
-        return new HttpSimpleTransaction(rootObject, info.id, HttpCommand.INVOKE);
+        return new HttpSimpleTransaction(rootObject, info.id, clientContext, HttpCommand.INVOKE);
     }
 
     public ITransaction getTransaction() throws SQLException {
         try {
-            HttpId transactionId = rootObject.httpInvoke(HttpId.class, HttpCommand.GET_TRANSACTION, info.id);
-            return new HttpTransaction(rootObject, transactionId);
+            HttpId transactionId = rootObject.httpInvoke(HttpId.class, clientContext, HttpCommand.GET_TRANSACTION, info.id);
+            return new HttpTransaction(rootObject, transactionId, clientContext);
         } catch (SQLException | RuntimeException ex) {
             throw ex;
         } catch (Throwable ex) {
@@ -33,7 +35,7 @@ final class HttpDBInterface implements IRemoteDBInterface {
 
     public void ping() {
         try {
-            rootObject.httpInvoke(void.class, HttpCommand.PING, info.id);
+            rootObject.httpInvoke(void.class, clientContext, HttpCommand.PING, info.id);
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Throwable ex) {
@@ -43,7 +45,7 @@ final class HttpDBInterface implements IRemoteDBInterface {
 
     public void close() {
         try {
-            rootObject.httpInvoke(void.class, HttpCommand.CLOSE, info.id);
+            rootObject.httpInvoke(void.class, clientContext, HttpCommand.CLOSE, info.id);
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Throwable ex) {

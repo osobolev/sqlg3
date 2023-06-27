@@ -11,11 +11,13 @@ class HttpSimpleTransaction implements ISimpleTransaction {
 
     protected final HttpRootObject rootObject;
     protected final HttpId id;
+    protected final Object clientContext;
     private final HttpCommand command;
 
-    HttpSimpleTransaction(HttpRootObject rootObject, HttpId id, HttpCommand command) {
+    HttpSimpleTransaction(HttpRootObject rootObject, HttpId id, Object clientContext, HttpCommand command) {
         this.rootObject = rootObject;
         this.id = id;
+        this.clientContext = clientContext;
         this.command = command;
     }
 
@@ -23,7 +25,7 @@ class HttpSimpleTransaction implements ISimpleTransaction {
         return iface.cast(Proxy.newProxyInstance(
             iface.getClassLoader(),
             new Class<?>[] {iface},
-            (proxy, method, args) -> rootObject.httpInvoke(method.getGenericReturnType(), command, id, iface, method.getName(), method.getParameterTypes(), args)
+            (proxy, method, args) -> rootObject.httpInvoke(method.getGenericReturnType(), clientContext, command, id, iface, method.getName(), method.getParameterTypes(), args)
         ));
     }
 }

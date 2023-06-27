@@ -19,8 +19,9 @@ public final class HttpConnectionFactory implements IConnectionFactory {
 
     public IRemoteDBInterface openConnection(String user, String password) throws SQLException {
         try {
-            HttpDBInterfaceInfo info = rootObject.httpInvoke(HttpDBInterfaceInfo.class, HttpCommand.OPEN, id, user, password);
-            return new HttpDBInterface(rootObject, info);
+            Object clientContext = rootObject.newContext();
+            HttpDBInterfaceInfo info = rootObject.httpInvoke(HttpDBInterfaceInfo.class, clientContext, HttpCommand.OPEN, id, user, password);
+            return new HttpDBInterface(rootObject, info, clientContext);
         } catch (SQLException | RuntimeException ex) {
             throw ex;
         } catch (Throwable ex) {

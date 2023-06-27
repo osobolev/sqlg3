@@ -73,7 +73,12 @@ public final class DefaultHttpClient implements IHttpClient {
     }
 
     @Override
-    public HttpResult call(Type retType, HttpRequest request) throws IOException {
+    public Object newContext() {
+        return null;
+    }
+
+    @Override
+    public HttpResult call(Type retType, Object clientContext, HttpRequest request) throws IOException {
         HttpURLConnection conn = open(url, proxy, connectTimeout);
         conn.connect();
         try {

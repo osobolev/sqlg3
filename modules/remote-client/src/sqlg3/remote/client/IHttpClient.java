@@ -8,5 +8,7 @@ import java.lang.reflect.Type;
 
 public interface IHttpClient {
 
-    HttpResult call(Type retType, HttpRequest request) throws IOException;
+    Object newContext();
+
+    HttpResult call(Type retType, Object clientContext, HttpRequest request) throws IOException;
 }

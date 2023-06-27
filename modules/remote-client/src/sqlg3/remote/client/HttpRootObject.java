@@ -1,11 +1,9 @@
 package sqlg3.remote.client;
 
 import sqlg3.core.IDBCommon;
-import sqlg3.remote.common.HttpCommand;
-import sqlg3.remote.common.HttpId;
-import sqlg3.remote.common.HttpRequest;
-import sqlg3.remote.common.HttpResult;
+import sqlg3.remote.common.*;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 
 final class HttpRootObject {
@@ -16,14 +14,19 @@ final class HttpRootObject {
         this.client = client;
     }
 
-    @SuppressWarnings("unchecked")
-    <T> T httpInvoke(Class<T> retType, HttpCommand command, HttpId id, Object... params) throws Throwable {
-        return (T) httpInvoke(retType, command, id, null, null, null, params);
+    Object newContext() {
+        return client.newContext();
     }
 
-    Object httpInvoke(Type retType, HttpCommand command, HttpId id, Class<? extends IDBCommon> iface, String method, Class<?>[] paramTypes, Object[] params) throws Throwable {
+    @SuppressWarnings("unchecked")
+    <T> T httpInvoke(Class<T> retType, Object clientContext, HttpCommand command, HttpId id, Object... params) throws Throwable {
+        return (T) httpInvoke(retType, clientContext, command, id, null, null, null, params);
+    }
+
+    Object httpInvoke(Type retType, Object clientContext, HttpCommand command, HttpId id, Class<? extends IDBCommon> iface, String method,
+                      Class<?>[] paramTypes, Object[] params) throws Throwable {
         HttpRequest request = new HttpRequest(id, command, iface, method, paramTypes, params);
-        HttpResult result = client.call(retType, request);
+        HttpResult result = client.call(retType, clientContext, request);
         Throwable error = result.error;
         if (error != null) {
             serverException(error);

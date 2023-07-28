@@ -3,7 +3,7 @@ plugins {
 }
 
 fun getMajor(version: String, majorDepth: Int): String {
-    var p = -1;
+    var p = -1
     for (i in 0 until majorDepth) {
         p = version.indexOf('.', p + 1)
         if (p < 0) return version

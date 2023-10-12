@@ -58,9 +58,9 @@ final class DBInterface implements IRemoteDBInterface {
         lastActive.set(getCurrentTime());
     }
 
-    void tracePing() {
+    void tracePing(String host) {
         if (LocalConnectionFactory.TRACE) {
-            logger.trace(":: Ping");
+            logger.trace(":: Ping from " + host);
         }
     }
 

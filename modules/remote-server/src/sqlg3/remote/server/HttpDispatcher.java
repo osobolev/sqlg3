@@ -57,7 +57,7 @@ public final class HttpDispatcher {
         actions.put(HttpCommand.PING, (request, id, params) -> {
             DBInterface db = checkSession(id);
             db.ping();
-            db.tracePing();
+            db.tracePing(request.hostName());
             return null;
         });
         actions.put(HttpCommand.CLOSE, (request, id, params) -> {

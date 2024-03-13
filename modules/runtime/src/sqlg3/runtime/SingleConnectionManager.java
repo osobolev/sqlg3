@@ -28,7 +28,16 @@ public class SingleConnectionManager implements ConnectionManager {
             }
         }
         Connection conn = DriverManager.getConnection(url, user, pass);
-        conn.setAutoCommit(false);
+        try {
+            conn.setAutoCommit(false);
+        } catch (SQLException ex) {
+            try {
+                conn.close();
+            } catch (SQLException ex2) {
+                ex.addSuppressed(ex2);
+            }
+            throw ex;
+        }
         return conn;
     }
 

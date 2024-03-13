@@ -9,12 +9,6 @@ import java.sql.SQLException;
 public interface ConnectionManager {
 
     /**
-     * Error message ({@link SQLException#getMessage()})
-     * for "JDBC driver not found"
-     */
-    String DRIVER_NOT_FOUND = "JDBC driver not found";
-
-    /**
      * Connection allocation.
      */
     Connection allocConnection() throws SQLException;

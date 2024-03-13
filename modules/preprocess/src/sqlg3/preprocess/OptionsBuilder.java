@@ -36,9 +36,6 @@ public final class OptionsBuilder {
     public String runtimeMapperClass = RuntimeMapperImpl.class.getName();
 
     public Options build() throws ParseException {
-        if (driverClass == null) {
-            throw new ParseException("Property 'driverClass' not set");
-        }
         if (url == null) {
             throw new ParseException("Property 'url' not set");
         }

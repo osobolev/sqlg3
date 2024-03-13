@@ -21,7 +21,6 @@ final class TestMain {
         o.user = "sqlg2";
         o.pass = "sqlg2";
         o.checkerClass = Postgres.class.getName();
-        o.driverClass = "org.postgresql.Driver";
         o.url = "jdbc:postgresql://localhost:5432/sqlg2";
 
         o.srcRoot = Paths.get("sample/daold/src");

@@ -20,14 +20,20 @@ public class SingleConnectionManager implements ConnectionManager {
     }
 
     public static Connection openConnection(String driver, String url, String user, String pass) throws SQLException {
-        try {
-            Class.forName(driver);
-        } catch (ClassNotFoundException ex) {
-            throw new SQLException(ex);
+        if (driver != null) {
+            try {
+                Class.forName(driver);
+            } catch (ClassNotFoundException ex) {
+                throw new SQLException(ex);
+            }
         }
         Connection conn = DriverManager.getConnection(url, user, pass);
         conn.setAutoCommit(false);
         return conn;
+    }
+
+    public static Connection openConnection(String url, String user, String pass) throws SQLException {
+        return openConnection(null, url, user, pass);
     }
 
     public Connection allocConnection() throws SQLException {

@@ -22,10 +22,18 @@ sourceSets {
         java.srcDir("src")
         resources.srcDir("resources")
     }
-    test {
+    create("manual") {
         java.srcDir("test")
         resources.srcDir("testResources")
     }
+}
+
+configurations["manualImplementation"].extendsFrom(configurations["implementation"])
+configurations["manualRuntimeOnly"].extendsFrom(configurations["runtimeOnly"])
+configurations["manualCompileOnly"].extendsFrom(configurations["compileOnly"])
+
+dependencies {
+    "manualImplementation"(sourceSets["main"].output)
 }
 
 tasks {

@@ -5,8 +5,7 @@ plugins {
 group = "io.github.osobolev.sqlg3"
 version = "2.6"
 
-val pub = publishing.publications["mavenJava"] as MavenPublication
-pub.pom {
+(publishing.publications["mavenJava"] as MavenPublication).pom {
     name.set("sqlg3")
     description.set("SQLG is a preprocessor and a library that uses code generation to simplify writing JDBC code")
     url.set("https://github.com/osobolev/sqlg3")

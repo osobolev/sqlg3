@@ -22,6 +22,10 @@ sourceSets {
         java.srcDir("src")
         resources.srcDir("resources")
     }
+    test {
+        java.srcDir("unit")
+        resources.srcDir("unitResources")
+    }
     create("manual") {
         java.srcDir("test")
         resources.srcDir("testResources")

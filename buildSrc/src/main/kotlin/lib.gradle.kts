@@ -6,7 +6,7 @@ group = "io.github.osobolev.sqlg3"
 version = "2.6"
 
 (publishing.publications["mavenJava"] as MavenPublication).pom {
-    name.set("sqlg3")
+    name.set("${project.group}:${project.name}")
     description.set("SQLG is a preprocessor and a library that uses code generation to simplify writing JDBC code")
     url.set("https://github.com/osobolev/sqlg3")
     licenses {

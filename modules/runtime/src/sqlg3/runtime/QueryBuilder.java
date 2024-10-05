@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Query builder (used to concatenate multiple {@link QueryPiece}s effectively, just as StringBuilder for Strings).
  */
-public final class QueryBuilder {
+public final class QueryBuilder implements QueryLike {
 
     private final StringBuilder sql;
     private final List<Parameter> data;
@@ -30,6 +30,16 @@ public final class QueryBuilder {
     public QueryBuilder(QueryPiece piece) {
         this.sql = new StringBuilder(piece.sql);
         this.data = new ArrayList<>(Arrays.asList(piece.data));
+    }
+
+    @Override
+    public String getSql() {
+        return sql.toString();
+    }
+
+    @Override
+    public Parameter[] getParameters() {
+        return data.toArray(new Parameter[0]);
     }
 
     private void append(CharSequence sql, List<Parameter> data, boolean breakLine) {

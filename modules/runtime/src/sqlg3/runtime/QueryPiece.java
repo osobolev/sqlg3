@@ -3,7 +3,7 @@ package sqlg3.runtime;
 /**
  * Query piece encapsulating query text and query parameters.
  */
-public final class QueryPiece {
+public final class QueryPiece implements QueryLike {
 
     public final String sql;
     public final Parameter[] data;
@@ -17,6 +17,16 @@ public final class QueryPiece {
     public QueryPiece(CharSequence sql, Parameter[] data) {
         this.sql = sql.toString();
         this.data = data;
+    }
+
+    @Override
+    public String getSql() {
+        return sql;
+    }
+
+    @Override
+    public Parameter[] getParameters() {
+        return data;
     }
 
     /**

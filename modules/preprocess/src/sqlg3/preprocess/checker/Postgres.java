@@ -3,8 +3,6 @@ package sqlg3.preprocess.checker;
 import sqlg3.runtime.Parameter;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 /**
  * SQL checker for PostgreSQL
@@ -17,13 +15,5 @@ public final class Postgres extends Generic {
 
     @Override
     public void checkStoredProcName(Connection conn, String procNameToCall, Parameter[] parameters) {
-    }
-
-    @Override
-    public void checkSequenceExists(Connection conn, String name) throws SQLException {
-        String sql = getSpecific().getNextIdSql(name);
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            checkSql(conn, stmt, sql);
-        }
     }
 }

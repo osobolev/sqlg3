@@ -105,11 +105,6 @@ final class GTestImpl extends GTest {
         checker.checkStoredProcName(connection, procNameToCall, parameters);
     }
 
-    @Override
-    public void checkSequenceExists(String sequence) throws SQLException {
-        checker.checkSequenceExists(connection, sequence);
-    }
-
     void startClass(Map<ParamName, List<ParamCutPaste>> bindMap) {
         this.bindMap = bindMap;
         this.paramTypeMap.clear();

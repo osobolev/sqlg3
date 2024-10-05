@@ -42,11 +42,6 @@ public final class Oracle extends Generic {
     }
 
     @Override
-    public void checkSequenceExists(Connection conn, String name) throws SQLException {
-        checkSql(conn, getSpecific().getNextIdSql(name));
-    }
-
-    @Override
     public void checkSql(Connection conn, PreparedStatement stmt, String sql) throws SQLException {
         if (sql == null)
             return;

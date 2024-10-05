@@ -14,9 +14,6 @@ public interface SqlChecker {
 
     DBSpecific getSpecific();
 
-    // todo: remove it!!!
-    void checkSequenceExists(Connection conn, String name) throws SQLException;
-
     void checkStoredProcName(Connection conn, String procNameToCall, Parameter[] parameters) throws SQLException;
 
     /**

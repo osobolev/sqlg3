@@ -614,11 +614,13 @@ public class GBase {
      * @param sequence sequence name
      */
     public final long getNextId(String sequence) throws SQLException {
+        String sql = ctx.global.db.getNextIdSql(sequence);
         if (test != null) {
-            test.checkSequenceExists(sequence);
+            try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+                test.checkSql(stmt, sql);
+            }
             return 0;
         } else {
-            String sql = ctx.global.db.getNextIdSql(sequence);
             return singleRowQueryReturningLong(query(sql));
         }
     }

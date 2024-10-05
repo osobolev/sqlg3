@@ -31,11 +31,6 @@ public class Generic implements SqlChecker {
         return meta.getUserName();
     }
 
-    @Override
-    public void checkSequenceExists(Connection conn, String name) throws SQLException {
-        throw new SQLException("Database does not support sequences");
-    }
-
     private static String kindStr(boolean out) {
         return out ? "OUT" : "IN";
     }

@@ -28,6 +28,4 @@ public abstract class GTest {
     public abstract Class<?> setParamType(String paramId, Class<?> paramClass);
 
     public abstract void checkStoredProcName(String procNameToCall, Parameter[] parameters) throws SQLException;
-
-    public abstract void checkSequenceExists(String sequence) throws SQLException;
 }

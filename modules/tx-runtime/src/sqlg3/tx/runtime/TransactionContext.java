@@ -45,7 +45,7 @@ final class TransactionContext {
                 if (session.beforeCall != null) {
                     session.beforeCall.check(daoMethod, args);
                 }
-                GContext ctx = new GContext(global.global, session.getUserObject(), getConnection());
+                GContext ctx = new GContext(global.getGlobal(), session.getUserObject(), getConnection());
                 Object instance = cached.constructor.newInstance(ctx);
                 result = daoMethod.invoke(instance, args);
                 success = true;

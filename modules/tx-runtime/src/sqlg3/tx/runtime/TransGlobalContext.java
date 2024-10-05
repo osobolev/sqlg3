@@ -14,13 +14,16 @@ import java.util.function.Consumer;
 
 public final class TransGlobalContext {
 
-    // todo: use accessor!!!
-    public final GlobalContext global;
+    private final GlobalContext global;
 
     private final ConcurrentMap<Class<?>, ImplCache> implCache = new ConcurrentHashMap<>();
 
     public TransGlobalContext(GlobalContext global) {
         this.global = global;
+    }
+
+    public GlobalContext getGlobal() {
+        return global;
     }
 
     private static ImplCache createImpl(Class<?> iface) {

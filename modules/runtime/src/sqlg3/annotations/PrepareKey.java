@@ -28,6 +28,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.LOCAL_VARIABLE)
+@Deprecated
 public @interface PrepareKey {
 
     /**

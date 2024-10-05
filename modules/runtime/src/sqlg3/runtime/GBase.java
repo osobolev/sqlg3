@@ -106,7 +106,7 @@ public class GBase implements ISimpleTransaction {
      * to use this method manually.
      * <p>
      * After piece is created, it can be used to build large query (see {@link QueryBuilder}) or execute query
-     * (see {@link #prepareStatement(QueryPiece)})
+     * (see {@link #prepareStatement(QueryLike)})
      *
      * @param sql    query text, possibly containing references to parameters in the form of {@code ?}
      * @param params query parameters, see {@link #in}
@@ -169,8 +169,24 @@ public class GBase implements ISimpleTransaction {
      * @param sql    query text, possibly containing references to parameters in the form of {@code ?}
      * @param params query parameters, see {@link #in}
      */
+    @Deprecated
     public final PreparedStatement prepareStatement(String sql, Parameter... params) throws SQLException {
         return doPrepareStatement(null, sql, params);
+    }
+
+    /**
+     * Creates prepared statement from SQL query and its parameters.
+     * Later this statement can be executed by {@link #executeUpdate} or by one of many selection methods.
+     * Example:
+     * <pre>
+     * PreparedStatement stmt = prepareStatement("SELECT value FROM table WHERE id = ?", in(id, Long.class));
+     * int result = singleRowQueryReturningInt(stmt);
+     * </pre>
+     *
+     * @param sql    query text, possibly containing references to parameters in the form of {@code ?}
+     */
+    public final PreparedStatement prepareStatement(String sql) throws SQLException {
+        return doPrepareStatement(null, sql, new Parameter[0]);
     }
 
     /**
@@ -190,6 +206,7 @@ public class GBase implements ISimpleTransaction {
      * @param sql      query text, possibly containing references to parameters in the form of {@code ?}
      * @param params   query parameters, see {@link #in}
      */
+    @Deprecated
     public final PreparedStatement prepareStatementKey(String[] autoKeys, String sql, Parameter... params) throws SQLException {
         return doPrepareStatement(autoKeys, sql, params);
     }
@@ -207,8 +224,8 @@ public class GBase implements ISimpleTransaction {
      *
      * @param query query piece containing SQL query and its parameters
      */
-    public final PreparedStatement prepareStatement(QueryPiece query) throws SQLException {
-        return doPrepareStatement(null, query.sql, query.data);
+    public final PreparedStatement prepareStatement(QueryLike query) throws SQLException {
+        return doPrepareStatement(null, query.getSql(), query.getParameters());
     }
 
     /**
@@ -227,8 +244,9 @@ public class GBase implements ISimpleTransaction {
      *                 Pass {@link #ALL_KEYS} to retrieve all generated columns (does not work on some DBs).
      * @param query    query piece containing SQL query and its parameters
      */
-    public final PreparedStatement prepareStatementKey(String[] autoKeys, QueryPiece query) throws SQLException {
-        return doPrepareStatement(autoKeys, query.sql, query.data);
+    @Deprecated
+    public final PreparedStatement prepareStatementKey(String[] autoKeys, QueryLike query) throws SQLException {
+        return doPrepareStatement(autoKeys, query.getSql(), query.getParameters());
     }
 
     /**
@@ -246,8 +264,8 @@ public class GBase implements ISimpleTransaction {
         return doPrepareAnyStatement(sql, params, Connection::prepareCall);
     }
 
-    public final CallableStatement prepareCall(QueryPiece query) throws SQLException {
-        return prepareCall(query.sql, query.data);
+    public final CallableStatement prepareCall(QueryLike query) throws SQLException {
+        return prepareCall(query.getSql(), query.getParameters());
     }
 
     /**
@@ -379,6 +397,7 @@ public class GBase implements ISimpleTransaction {
      *
      * @param cls class with user-defined mapping (see {@link RuntimeMapper})
      */
+    @Deprecated
     public final <T> T singleRowQueryReturning(Class<T> cls, PreparedStatement stmt) throws SQLException {
         return singleOrOptionalRowQueryReturningT(cls, stmt, false);
     }
@@ -388,6 +407,7 @@ public class GBase implements ISimpleTransaction {
      * one row raises runtime exception, more or less than one column raises
      * preprocess-time exception). Result is returned as a single <code>int</code>. NULLs are returned as zeroes.
      */
+    @Deprecated
     public final int singleRowQueryReturningInt(PreparedStatement stmt) throws SQLException {
         Integer value = singleRowQueryReturning(Integer.class, stmt);
         return value == null ? 0 : value.intValue();
@@ -398,6 +418,7 @@ public class GBase implements ISimpleTransaction {
      * one row raises runtime exception, more or less than one column raises
      * preprocess-time exception). Result is returned as a single <code>long</code>. NULLs are returned as zeroes.
      */
+    @Deprecated
     public final long singleRowQueryReturningLong(PreparedStatement stmt) throws SQLException {
         Long value = singleRowQueryReturning(Long.class, stmt);
         return value == null ? 0L : value.longValue();
@@ -408,6 +429,7 @@ public class GBase implements ISimpleTransaction {
      * one row raises runtime exception, more or less than one column raises
      * preprocess-time exception). Result is returned as a single <code>double</code>. NULLs are returned as zeroes.
      */
+    @Deprecated
     public final double singleRowQueryReturningDouble(PreparedStatement stmt) throws SQLException {
         Double value = singleRowQueryReturning(Double.class, stmt);
         return value == null ? 0.0 : value.doubleValue();
@@ -419,8 +441,62 @@ public class GBase implements ISimpleTransaction {
      *
      * @param cls class with user-defined mapping (see {@link RuntimeMapper})
      */
+    @Deprecated
     public final <T> T optionalRowQueryReturning(Class<T> cls, PreparedStatement stmt) throws SQLException {
         return singleOrOptionalRowQueryReturningT(cls, stmt, true);
+    }
+
+    /**
+     * Executes select query, which should return one row and one column (more or less than
+     * one row raises runtime exception, more or less than one column raises
+     * preprocess-time exception).
+     *
+     * @param cls class with user-defined mapping (see {@link RuntimeMapper})
+     */
+    public final <T> T singleRowQueryReturning(Class<T> cls, QueryLike query) throws SQLException {
+        PreparedStatement stmt = prepareStatement(query);
+        return singleOrOptionalRowQueryReturningT(cls, stmt, false);
+    }
+
+    /**
+     * Executes select query, which should return one row and one column (more or less than
+     * one row raises runtime exception, more or less than one column raises
+     * preprocess-time exception). Result is returned as a single <code>int</code>. NULLs are returned as zeroes.
+     */
+    public final int singleRowQueryReturningInt(QueryLike query) throws SQLException {
+        PreparedStatement stmt = prepareStatement(query);
+        return singleRowQueryReturningInt(stmt);
+    }
+
+    /**
+     * Executes select query, which should return one row and one column (more or less than
+     * one row raises runtime exception, more or less than one column raises
+     * preprocess-time exception). Result is returned as a single <code>long</code>. NULLs are returned as zeroes.
+     */
+    public final long singleRowQueryReturningLong(QueryLike query) throws SQLException {
+        PreparedStatement stmt = prepareStatement(query);
+        return singleRowQueryReturningLong(stmt);
+    }
+
+    /**
+     * Executes select query, which should return one row and one column (more or less than
+     * one row raises runtime exception, more or less than one column raises
+     * preprocess-time exception). Result is returned as a single <code>double</code>. NULLs are returned as zeroes.
+     */
+    public final double singleRowQueryReturningDouble(QueryLike query) throws SQLException {
+        PreparedStatement stmt = prepareStatement(query);
+        return singleRowQueryReturningDouble(stmt);
+    }
+
+    /**
+     * Same as {@link #singleRowQueryReturning(Class, PreparedStatement)} but returns
+     * null when no rows found.
+     *
+     * @param cls class with user-defined mapping (see {@link RuntimeMapper})
+     */
+    public final <T> T optionalRowQueryReturning(Class<T> cls, QueryLike query) throws SQLException {
+        PreparedStatement stmt = prepareStatement(query);
+        return optionalRowQueryReturning(cls, stmt);
     }
 
     ///////////////////////////////// Column statements /////////////////////////////////
@@ -430,6 +506,7 @@ public class GBase implements ISimpleTransaction {
      *
      * @param cls class with user-defined mapping (see {@link RuntimeMapper})
      */
+    @Deprecated
     public final <T> List<T> columnOf(Class<T> cls, PreparedStatement stmt) throws SQLException {
         TypeMapper<T> mapper = getMapper(cls);
         List<T> list = new ArrayList<>();
@@ -446,8 +523,19 @@ public class GBase implements ISimpleTransaction {
     }
 
     /**
+     * Executes select query returning single column of T.
+     *
+     * @param cls class with user-defined mapping (see {@link RuntimeMapper})
+     */
+    public final <T> List<T> columnOf(Class<T> cls, QueryLike query) throws SQLException {
+        PreparedStatement stmt = prepareStatement(query);
+        return columnOf(cls, stmt);
+    }
+
+    /**
      * Executes select query returning single column of <code>int</code>.
      */
+    @Deprecated
     public final int[] columnOfInt(PreparedStatement stmt) throws SQLException {
         List<Integer> list = columnOf(Integer.class, stmt);
         int[] ret = new int[list.size()];
@@ -461,6 +549,7 @@ public class GBase implements ISimpleTransaction {
     /**
      * Executes select query returning single column of <code>long</code>.
      */
+    @Deprecated
     public final long[] columnOfLong(PreparedStatement stmt) throws SQLException {
         List<Long> list = columnOf(Long.class, stmt);
         long[] ret = new long[list.size()];
@@ -474,6 +563,7 @@ public class GBase implements ISimpleTransaction {
     /**
      * Executes select query returning single column of <code>double</code>.
      */
+    @Deprecated
     public final double[] columnOfDouble(PreparedStatement stmt) throws SQLException {
         List<Double> list = columnOf(Double.class, stmt);
         double[] ret = new double[list.size()];
@@ -515,6 +605,7 @@ public class GBase implements ISimpleTransaction {
      * @param stmt SQL statement
      * @param rowType  row type class or interface generated by preprocessor
      */
+    @Deprecated
     public final <T> T singleRowQuery(PreparedStatement stmt, Class<T> rowType) throws SQLException {
         return singleOrOptionalRowQuery(stmt, false, rowType);
     }
@@ -523,6 +614,7 @@ public class GBase implements ISimpleTransaction {
      * Same as {@link #singleRowQuery(PreparedStatement, Class)} but returns
      * null when no rows found.
      */
+    @Deprecated
     public final <T> T optionalRowQuery(PreparedStatement stmt, Class<T> rowType) throws SQLException {
         return singleOrOptionalRowQuery(stmt, true, rowType);
     }
@@ -534,6 +626,7 @@ public class GBase implements ISimpleTransaction {
      * @param stmt SQL statement
      * @param rowType  row type class or interface generated by preprocessor
      */
+    @Deprecated
     public final <T> List<T> multiRowQuery(PreparedStatement stmt, Class<T> rowType) throws SQLException {
         List<T> result = new ArrayList<>();
         try (ResultSet rs = stmt.executeQuery()) {
@@ -552,6 +645,40 @@ public class GBase implements ISimpleTransaction {
     }
 
     /**
+     * Executes select query, which should return exactly one row (more or less than
+     * one rows raises runtime exception).
+     * Result is returned as an object which class implementation is generated by preprocessor.
+     *
+     * @param query SQL statement
+     * @param rowType  row type class or interface generated by preprocessor
+     */
+    public final <T> T singleRowQuery(QueryLike query, Class<T> rowType) throws SQLException {
+        PreparedStatement stmt = prepareStatement(query);
+        return singleRowQuery(stmt, rowType);
+    }
+
+    /**
+     * Same as {@link #singleRowQuery(PreparedStatement, Class)} but returns
+     * null when no rows found.
+     */
+    public final <T> T optionalRowQuery(QueryLike query, Class<T> rowType) throws SQLException {
+        PreparedStatement stmt = prepareStatement(query);
+        return optionalRowQuery(stmt, rowType);
+    }
+
+    /**
+     * Executes select query returning multiple (zero or more) rows.
+     * Result is returned as a list of objects which class implementation is generated by preprocessor.
+     *
+     * @param query SQL statement
+     * @param rowType  row type class or interface generated by preprocessor
+     */
+    public final <T> List<T> multiRowQuery(QueryLike query, Class<T> rowType) throws SQLException {
+        PreparedStatement stmt = prepareStatement(query);
+        return multiRowQuery(stmt, rowType);
+    }
+
+    /**
      * Returns query ResultSet metadata as RowType object.
      */
     public final <T> T metaRowQuery(ResultSet rs, Class<T> rowType) throws SQLException {
@@ -567,10 +694,19 @@ public class GBase implements ISimpleTransaction {
     /**
      * Returns query ResultSet metadata as RowType object.
      */
+    @Deprecated
     public final <T> T metaRowQuery(PreparedStatement stmt, Class<T> rowType) throws SQLException {
         try (ResultSet rs = stmt.executeQuery()) {
             return metaRowQuery(rs, rowType);
         }
+    }
+
+    /**
+     * Returns query ResultSet metadata as RowType object.
+     */
+    public final <T> T metaRowQuery(QueryLike query, Class<T> rowType) throws SQLException {
+        PreparedStatement stmt = prepareStatement(query);
+        return metaRowQuery(stmt, rowType);
     }
 
     ///////////////////////////////// Executing DML /////////////////////////////////
@@ -597,12 +733,52 @@ public class GBase implements ISimpleTransaction {
     }
 
     /**
+     * Executes update/delete/insert SQL statement. This method should always be used
+     * instead of {@link PreparedStatement#executeUpdate()} because the latter can modify
+     * database state at preprocess phase.
+     * <p>
+     * This method does not close statement, so it can be called multiple times.
+     * You don't have to close statement manually if it was created with {@link #prepareStatement(String, Parameter...)} or the like,
+     * because all statements created with {@link GBase} methods are closed automatically after business method exit.
+     *
+     * @param query SQL statement
+     * @return number of modified database rows
+     */
+    public int executeUpdate(QueryLike query) throws SQLException {
+        PreparedStatement stmt = prepareStatement(query);
+        return executeUpdate(stmt);
+    }
+
+    /**
+     * Executes update/delete/insert SQL statement. This method should always be used
+     * instead of {@link PreparedStatement#executeUpdate()} because the latter can modify
+     * database state at preprocess phase.
+     * <p>
+     * This method does not close statement, so it can be called multiple times.
+     * You don't have to close statement manually if it was created with {@link #prepareStatement(String, Parameter...)} or the like,
+     * because all statements created with {@link GBase} methods are closed automatically after business method exit.
+     *
+     * @param query SQL statement
+     * @return number of modified database rows
+     */
+    public UpdateResult executeUpdate(QueryLike query, String autoKey, String... otherAutoKeys) throws SQLException {
+        String[] autoKeys = new String[1 + otherAutoKeys.length];
+        autoKeys[0] = autoKey;
+        System.arraycopy(otherAutoKeys, 0, autoKeys, 1, otherAutoKeys.length);
+        PreparedStatement stmt = prepareStatementKey(autoKeys, query);
+        int rows = executeUpdate(stmt);
+        Object[] generatedKeys = getGeneratedKeys(stmt);
+        return new UpdateResult(rows, generatedKeys);
+    }
+
+    /**
      * Returns array of auto-generated keys for insert/update statement. List of auto-generated
      * columns is provided by {@link #prepareStatementKey} <code>autoKeys</code>
      * parameter or by {@link sqlg3.annotations.PrepareKey} annotation value. Number of elements in array is equal to the number
      * of auto-generated columns.
      */
-    public static Number[] getGeneratedKeys(PreparedStatement stmt) throws SQLException {
+    @Deprecated
+    public static Object[] getGeneratedKeys(PreparedStatement stmt) throws SQLException {
         if (test != null) {
             Number[] ret = new Number[10];
             Arrays.fill(ret, 0);
@@ -612,21 +788,23 @@ public class GBase implements ISimpleTransaction {
                 ResultSetMetaData rsmd = rs.getMetaData();
                 int count = rsmd.getColumnCount();
                 rs.next();
-                Number[] ret = new Number[count];
+                Object[] ret = new Number[count];
                 for (int i = 0; i < count; i++) {
-                    ret[i] = (Number) rs.getObject(i + 1);
+                    ret[i] = rs.getObject(i + 1);
                 }
                 return ret;
             }
         }
     }
 
+    @Deprecated
     public static int getGeneratedInt(PreparedStatement ps) throws SQLException {
-        return getGeneratedKeys(ps)[0].intValue();
+        return ((Number) getGeneratedKeys(ps)[0]).intValue();
     }
 
+    @Deprecated
     public static long getGeneratedLong(PreparedStatement ps) throws SQLException {
-        return getGeneratedKeys(ps)[0].longValue();
+        return ((Number) getGeneratedKeys(ps)[0]).longValue();
     }
 
     ///////////////////////////////// Executing calls /////////////////////////////////

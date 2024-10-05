@@ -43,7 +43,7 @@ public final class Oracle extends Generic {
 
     @Override
     public void checkSequenceExists(Connection conn, String name) throws SQLException {
-        checkSql(conn, sqlg3.runtime.specific.Oracle.getNextSeqSql(name));
+        checkSql(conn, getSpecific().getNextIdSql(name));
     }
 
     @Override

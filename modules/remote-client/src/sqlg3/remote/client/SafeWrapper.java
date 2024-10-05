@@ -1,6 +1,6 @@
 package sqlg3.remote.client;
 
-import sqlg3.core.IDBCommon;
+import sqlg3.tx.api.IDBCommon;
 
 final class SafeWrapper<T extends IDBCommon> {
 

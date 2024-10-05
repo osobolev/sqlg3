@@ -1,9 +1,9 @@
 package sqlg3.remote.server;
 
-import sqlg3.core.ISimpleTransaction;
-import sqlg3.core.ITransaction;
 import sqlg3.remote.common.*;
-import sqlg3.runtime.GlobalContext;
+import sqlg3.tx.api.ISimpleTransaction;
+import sqlg3.tx.api.ITransaction;
+import sqlg3.tx.runtime.TransGlobalContext;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -89,7 +89,7 @@ public final class HttpDispatcher {
         });
     }
 
-    public HttpDispatcher(String application, SessionFactory sessionFactory, SQLGLogger logger, GlobalContext global) {
+    public HttpDispatcher(String application, SessionFactory sessionFactory, SQLGLogger logger, TransGlobalContext global) {
         this.application = application;
         this.lw = new LocalConnectionFactory(sessionFactory, logger, global, true);
         this.watcher = new WatcherThread(1, lw::checkActivity);

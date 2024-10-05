@@ -1,4 +1,4 @@
-package sqlg3.runtime;
+package sqlg3.tx.runtime;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

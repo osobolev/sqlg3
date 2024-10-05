@@ -1,7 +1,7 @@
 package sqlg3.remote.client;
 
-import sqlg3.core.IDBCommon;
 import sqlg3.remote.common.*;
+import sqlg3.tx.api.IDBCommon;
 
 import java.io.IOException;
 import java.lang.reflect.Type;

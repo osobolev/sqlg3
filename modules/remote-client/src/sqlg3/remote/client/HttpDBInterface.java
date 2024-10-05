@@ -1,8 +1,8 @@
 package sqlg3.remote.client;
 
-import sqlg3.core.ISimpleTransaction;
-import sqlg3.core.ITransaction;
 import sqlg3.remote.common.*;
+import sqlg3.tx.api.ISimpleTransaction;
+import sqlg3.tx.api.ITransaction;
 
 import java.sql.SQLException;
 

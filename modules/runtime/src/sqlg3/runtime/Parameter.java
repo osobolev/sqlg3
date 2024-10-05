@@ -6,6 +6,7 @@ import java.lang.reflect.Array;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * This class represents query parameter (both IN or OUT). Parameter values are usually obtained by
@@ -123,7 +124,7 @@ public final class Parameter {
      *
      * @param in values array
      */
-    static void setParameters(RuntimeMapper mappers, PreparedStatement st, Parameter[] in) throws SQLException {
+    static void setParameters(RuntimeMapper mappers, PreparedStatement st, List<Parameter> in) throws SQLException {
         if (in == null)
             return;
         int index = 1;
@@ -132,7 +133,7 @@ public final class Parameter {
         }
     }
 
-    static void getOutParameters(RuntimeMapper mappers, CallableStatement cs, Parameter[] params) throws SQLException {
+    static void getOutParameters(RuntimeMapper mappers, CallableStatement cs, List<Parameter> params) throws SQLException {
         if (params == null)
             return;
         int index = 1;

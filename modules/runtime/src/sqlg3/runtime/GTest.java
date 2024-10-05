@@ -1,6 +1,9 @@
 package sqlg3.runtime;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public abstract class GTest {
 
@@ -11,11 +14,8 @@ public abstract class GTest {
     public static GContext testContext(Connection connection, DBSpecific specific, RuntimeMapper mappers) {
         SqlTrace noTrace = (ok, time, getMessages) -> {};
         GlobalContext global = new GlobalContext(specific, mappers, noTrace);
-        SessionContext session = new SessionContext(new SingleConnectionManager(connection), null, null);
-        return new GContext(global, session, new TransactionContext(global, session));
+        return new GContext(global, null, connection);
     }
-
-    public abstract <T> T getNullInterface(Class<T> iface);
 
     public abstract Object getTestObject(Class<?> paramType);
 
@@ -23,9 +23,7 @@ public abstract class GTest {
 
     public abstract void checkOneColumn(ResultSet rs, Class<?> cls) throws SQLException;
 
-    public abstract void checkSql(PreparedStatement stmt) throws SQLException;
-
-    public abstract void statementCreated(Statement stmt, String sql);
+    public abstract void checkSql(PreparedStatement stmt, String sql) throws SQLException;
 
     public abstract Class<?> setParamType(String paramId, Class<?> paramClass);
 

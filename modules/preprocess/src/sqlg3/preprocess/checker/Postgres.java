@@ -21,7 +21,7 @@ public final class Postgres extends Generic {
 
     @Override
     public void checkSequenceExists(Connection conn, String name) throws SQLException {
-        String sql = sqlg3.runtime.specific.Postgres.getNextSeqSql(name);
+        String sql = getSpecific().getNextIdSql(name);
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             checkSql(conn, stmt, sql);
         }

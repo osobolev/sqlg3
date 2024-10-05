@@ -1,13 +1,13 @@
 package sqlg3.remote.server;
 
-import sqlg3.core.ISimpleTransaction;
-import sqlg3.core.ITransaction;
 import sqlg3.remote.common.IRemoteDBInterface;
 import sqlg3.remote.common.WatcherThread;
-import sqlg3.runtime.GlobalContext;
-import sqlg3.runtime.SessionContext;
-import sqlg3.runtime.SimpleTransaction;
-import sqlg3.runtime.Transaction;
+import sqlg3.tx.api.ISimpleTransaction;
+import sqlg3.tx.api.ITransaction;
+import sqlg3.tx.runtime.SessionContext;
+import sqlg3.tx.runtime.SimpleTransaction;
+import sqlg3.tx.runtime.TransGlobalContext;
+import sqlg3.tx.runtime.Transaction;
 
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -16,7 +16,7 @@ final class DBInterface implements IRemoteDBInterface {
 
     private final SessionContext session;
     private final LocalConnectionFactory fact;
-    private final GlobalContext global;
+    private final TransGlobalContext global;
     private final SQLGLogger logger;
     private final boolean server;
     private final long sessionOrderId;

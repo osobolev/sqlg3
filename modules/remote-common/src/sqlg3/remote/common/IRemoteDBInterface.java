@@ -1,6 +1,6 @@
 package sqlg3.remote.common;
 
-import sqlg3.core.IDBInterface;
+import sqlg3.tx.api.IDBInterface;
 
 /**
  * Main DB interface class - DB connection abstraction.

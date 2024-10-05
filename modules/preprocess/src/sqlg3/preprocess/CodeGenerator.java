@@ -48,8 +48,8 @@ final class CodeGenerator {
             buf.append(javadoc).append("\n");
         }
         buf.append("@SuppressWarnings(\"UnnecessaryFullyQualifiedName\")\n");
-        buf.append("@sqlg3.core.Impl(\"" + cls.getName() + "\")\n");
-        buf.append("public interface " + interfaceName + " extends sqlg3.core.IDBCommon" + addIface + " {\n");
+        buf.append("@sqlg3.tx.api.Impl(\"" + cls.getName() + "\")\n");
+        buf.append("public interface " + interfaceName + " extends sqlg3.tx.api.IDBCommon" + addIface + " {\n");
     }
 
     void addMethod(Method method, String javadoc) {

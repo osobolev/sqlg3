@@ -1,6 +1,5 @@
 package sqlg3.preprocess;
 
-import sqlg3.runtime.QueryReplacer;
 import sqlg3.runtime.queries.QueryParser;
 
 import java.util.ArrayList;
@@ -71,8 +70,14 @@ final class QPParser {
         private int append1(String what, boolean single) {
             int whatPos;
             if (single) {
+                if (!onlySql) {
+                    total.append("query(");
+                }
                 whatPos = total.length();
                 total.append(what);
+                if (!onlySql) {
+                    total.append(")");
+                }
             } else {
                 if (onlySql) {
                     if (!first) {
@@ -165,7 +170,7 @@ final class QPParser {
                     total.append(".toQuery()");
                 }
             }
-            return new BindVarCutPaste(from, to, pred + total + (onlySql ? "" : ")"), pieces);
+            return new BindVarCutPaste(from, to, pred + total, pieces);
         }
     }
 }

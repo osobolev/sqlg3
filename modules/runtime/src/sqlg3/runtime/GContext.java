@@ -1,25 +1,24 @@
 package sqlg3.runtime;
 
-public final class GContext implements AutoCloseable {
+import java.sql.Connection;
+
+public final class GContext {
 
     final GlobalContext global;
-    final SessionContext session;
-    final TransactionContext transaction;
-    final CallContext call;
+    private final Object userObject;
+    final Connection connection;
 
-    GContext(GlobalContext global, SessionContext session, TransactionContext transaction) {
+    public GContext(GlobalContext global, Object userObject, Connection connection) {
         this.global = global;
-        this.session = session;
-        this.transaction = transaction;
-        this.call = new CallContext(global);
+        this.userObject = userObject;
+        this.connection = connection;
     }
 
-    void ok() {
-        call.ok();
+    public GlobalContext getGlobal() {
+        return global;
     }
 
-    @Override
-    public void close() {
-        call.close();
+    public Object getUserObject() {
+        return userObject;
     }
 }

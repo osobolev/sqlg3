@@ -1,9 +1,9 @@
 package sqlg3.remote.client;
 
-import sqlg3.core.IDBCommon;
-import sqlg3.core.ISimpleTransaction;
 import sqlg3.remote.common.HttpCommand;
 import sqlg3.remote.common.HttpId;
+import sqlg3.tx.api.IDBCommon;
+import sqlg3.tx.api.ISimpleTransaction;
 
 import java.lang.reflect.Proxy;
 

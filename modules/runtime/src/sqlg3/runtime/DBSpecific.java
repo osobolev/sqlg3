@@ -1,6 +1,5 @@
 package sqlg3.runtime;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
@@ -13,5 +12,5 @@ public interface DBSpecific {
      *
      * @param sequence sequence name
      */
-    long getNextId(Connection conn, String sequence) throws SQLException;
+    String getNextIdSql(String sequence) throws SQLException;
 }

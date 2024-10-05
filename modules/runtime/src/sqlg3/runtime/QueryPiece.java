@@ -1,5 +1,8 @@
 package sqlg3.runtime;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Query piece encapsulating query text and query parameters.
  */
@@ -25,8 +28,8 @@ public final class QueryPiece implements QueryLike {
     }
 
     @Override
-    public Parameter[] getParameters() {
-        return data;
+    public List<Parameter> getParameters() {
+        return Arrays.asList(data);
     }
 
     /**

@@ -1,8 +1,8 @@
 package sqlg3.preprocess;
 
+import sqlg3.runtime.ConnectionUtil;
 import sqlg3.runtime.GTest;
 import sqlg3.runtime.RuntimeMapper;
-import sqlg3.runtime.SingleConnectionManager;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -51,7 +51,7 @@ final class RunGlobalContext implements AutoCloseable {
             Mapper mapper = (Mapper) Class.forName(mapperClass).getDeclaredConstructor().newInstance();
             SqlChecker checker = (SqlChecker) Class.forName(checkerClass).getDeclaredConstructor().newInstance();
             RuntimeMapper runtimeMapper = (RuntimeMapper) Class.forName(runtimeMapperClass).getDeclaredConstructor().newInstance();
-            Connection connection = SingleConnectionManager.openConnection(driverClass, url, user, pass);
+            Connection connection = ConnectionUtil.openConnection(driverClass, url, user, pass);
             test = new GTestImpl(connection, checker, mapper, runtimeMapper, generatedIn, generatedOut);
             GTest.setTest(test);
         }

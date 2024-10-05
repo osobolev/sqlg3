@@ -90,8 +90,8 @@ final class MethodRunner {
             }
             test.startCall(displayEntryName);
             Constructor<?> constructor = cls.getConstructor(GContext.class);
-            try (CallContext call = new CallContext(test.connection);
-                 GContext ctx = GTest.testContext(call.connection, test.checker.getSpecific(), test.mappers)) {
+            try (CallContext call = new CallContext(test.connection)) {
+                GContext ctx = GTest.testContext(call.connection, test.checker.getSpecific(), test.mappers);
                 try {
                     Object instance = constructor.newInstance(ctx);
                     toCall.invoke(instance, getTestParams(toCall));

@@ -1,4 +1,4 @@
-package sqlg3.runtime;
+package sqlg3.preprocess;
 
 /**
  * Utility for replacing substrings like &amp;identifier to substitution strings.

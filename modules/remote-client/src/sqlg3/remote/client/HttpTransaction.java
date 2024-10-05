@@ -1,9 +1,9 @@
 package sqlg3.remote.client;
 
-import sqlg3.core.ITransaction;
 import sqlg3.remote.common.HttpCommand;
 import sqlg3.remote.common.HttpId;
 import sqlg3.remote.common.RemoteException;
+import sqlg3.tx.api.ITransaction;
 
 import java.sql.SQLException;
 

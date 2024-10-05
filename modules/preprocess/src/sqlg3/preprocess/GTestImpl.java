@@ -5,8 +5,10 @@ import sqlg3.runtime.GTest;
 import sqlg3.runtime.Parameter;
 import sqlg3.runtime.RuntimeMapper;
 
-import java.lang.reflect.Proxy;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +20,6 @@ final class GTestImpl extends GTest {
     private Map<ParamName, List<ParamCutPaste>> bindMap;
 
     private String displayEntryName;
-    private final Map<Statement, String> stmtMap = new HashMap<>();
 
     final Connection connection;
     final SqlChecker checker;
@@ -35,22 +36,6 @@ final class GTestImpl extends GTest {
         this.mappers = mappers;
         this.generatedIn = generatedIn;
         this.generatedOut = generatedOut;
-    }
-
-    private Object getValue(Class<?> cls) {
-        if (cls != null)
-            return getTestObject(cls);
-        return null;
-    }
-
-    @Override
-    public <T> T getNullInterface(Class<T> iface) {
-        Object ret = Proxy.newProxyInstance(
-            iface.getClassLoader(),
-            new Class[] {iface},
-            (proxy, method, args) -> getValue(method.getReturnType())
-        );
-        return iface.cast(ret);
     }
 
     @Override
@@ -86,16 +71,8 @@ final class GTestImpl extends GTest {
     }
 
     @Override
-    public void checkSql(PreparedStatement stmt) throws SQLException {
-        String sql = stmtMap.get(stmt);
+    public void checkSql(PreparedStatement stmt, String sql) throws SQLException {
         checker.checkSql(connection, stmt, sql);
-    }
-
-    @Override
-    public void statementCreated(Statement stmt, String sql) {
-        if (sql != null) {
-            stmtMap.put(stmt, sql);
-        }
     }
 
     @Override
@@ -144,6 +121,5 @@ final class GTestImpl extends GTest {
 
     void startCall(String displayEntryName) {
         this.displayEntryName = displayEntryName;
-        this.stmtMap.clear();
     }
 }

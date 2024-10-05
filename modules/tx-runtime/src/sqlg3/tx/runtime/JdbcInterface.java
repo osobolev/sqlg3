@@ -1,7 +1,7 @@
-package sqlg3.runtime;
+package sqlg3.tx.runtime;
 
-import sqlg3.core.IDBCommon;
-import sqlg3.core.ISimpleTransaction;
+import sqlg3.tx.api.IDBCommon;
+import sqlg3.tx.api.ISimpleTransaction;
 
 import java.sql.Connection;
 
@@ -19,14 +19,14 @@ public final class JdbcInterface implements ISimpleTransaction {
     private final TransactionContext transaction;
     private final boolean commitCalls;
 
-    public JdbcInterface(GlobalContext global, Connection connection, boolean commitCalls, Object userObject, PreCallCheck beforeCall) {
+    public JdbcInterface(TransGlobalContext global, Connection connection, boolean commitCalls, Object userObject, PreCallCheck beforeCall) {
         SessionContext session = new SessionContext(new SingleConnectionManager(connection), userObject, beforeCall);
         this.transaction = new TransactionContext(global, session);
         this.commitCalls = commitCalls;
     }
 
     public <T extends IDBCommon> T getInterface(Class<T> iface) {
-        return transaction.getInterface(iface, commitCalls, true);
+        return transaction.getInterface(iface, commitCalls);
     }
 
     public static Builder builder() {
@@ -54,7 +54,7 @@ public final class JdbcInterface implements ISimpleTransaction {
             return this;
         }
 
-        public JdbcInterface build(GlobalContext global, Connection connection) {
+        public JdbcInterface build(TransGlobalContext global, Connection connection) {
             return new JdbcInterface(global, connection, commitCalls, userObject, beforeCall);
         }
     }

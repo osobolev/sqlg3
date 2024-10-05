@@ -38,8 +38,8 @@ public final class QueryBuilder implements QueryLike {
     }
 
     @Override
-    public Parameter[] getParameters() {
-        return data.toArray(new Parameter[0]);
+    public List<Parameter> getParameters() {
+        return data;
     }
 
     private void append(CharSequence sql, List<Parameter> data, boolean breakLine) {

@@ -1,7 +1,6 @@
 package sqlg3.preprocess;
 
 import sqlg3.core.MetaColumn;
-import sqlg3.runtime.GlobalContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +23,7 @@ final class RowTypeInfo {
         return ClassUtils.getClassName(meta ? MetaColumn.class : column.type);
     }
 
-    String generateRowTypeBody(String start, String tab, Class<?> rowType) {
+    String generateRowTypeBody(String start, String tab, Class<?> rowType) throws ParseException {
         if (ClassUtils.isRecord(rowType)) {
             StringBuilder buf = new StringBuilder();
             buf.append('\n');
@@ -38,26 +37,7 @@ final class RowTypeInfo {
             }
             return buf.toString();
         } else if (rowType.isInterface()) {
-            StringBuilder getters = new StringBuilder();
-            getters.append("\n\n");
-
-            StringBuilder order = new StringBuilder();
-            order.append(start).append(tab).append("String[] ").append(GlobalContext.ORDER_FIELD).append(" = {");
-
-            for (int j = 0; j < columns.size(); j++) {
-                ColumnInfo column = columns.get(j);
-                String type = getColumnType(column);
-                getters.append(start).append(tab).append(type).append(' ').append(column.name).append("();\n");
-
-                if (j > 0) {
-                    order.append(", ");
-                }
-                order.append('"').append(column.name).append('"');
-            }
-
-            order.append("};\n");
-
-            return getters + "\n" + order + start;
+            throw new ParseException("Interface row types are not supported");
         } else {
             StringBuilder fields = new StringBuilder();
 

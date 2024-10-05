@@ -65,9 +65,7 @@ public class MapperImpl implements Mapper {
             return null;
         } else if (paramType.isArray()) {
             Class<?> cls = paramType.getComponentType();
-            Object array = Array.newInstance(cls, 1);
-            Array.set(array, 0, getTestObject(cls));
-            return array;
+            return Array.newInstance(cls, 0);
         } else if (paramType.isInterface()) {
             return Proxy.newProxyInstance(paramType.getClassLoader(), new Class<?>[] {paramType}, (proxy, method, args) -> {
                 Class<?> retType = method.getReturnType();

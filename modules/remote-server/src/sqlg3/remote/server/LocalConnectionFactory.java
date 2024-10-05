@@ -2,8 +2,8 @@ package sqlg3.remote.server;
 
 import sqlg3.remote.common.IConnectionFactory;
 import sqlg3.remote.common.IRemoteDBInterface;
-import sqlg3.runtime.GlobalContext;
-import sqlg3.runtime.SessionContext;
+import sqlg3.tx.runtime.SessionContext;
+import sqlg3.tx.runtime.TransGlobalContext;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -24,7 +24,7 @@ public final class LocalConnectionFactory implements IConnectionFactory {
     private final boolean server;
     private final SessionFactory sessionFactory;
     final SQLGLogger logger;
-    final GlobalContext global;
+    final TransGlobalContext global;
 
     private final AtomicLong connectionCount = new AtomicLong(0);
 
@@ -33,11 +33,11 @@ public final class LocalConnectionFactory implements IConnectionFactory {
     /**
      * Constructor.
      */
-    public LocalConnectionFactory(SessionFactory sessionFactory, SQLGLogger logger, GlobalContext global) {
+    public LocalConnectionFactory(SessionFactory sessionFactory, SQLGLogger logger, TransGlobalContext global) {
         this(sessionFactory, logger, global, false);
     }
 
-    LocalConnectionFactory(SessionFactory sessionFactory, SQLGLogger logger, GlobalContext global, boolean server) {
+    LocalConnectionFactory(SessionFactory sessionFactory, SQLGLogger logger, TransGlobalContext global, boolean server) {
         this.sessionFactory = sessionFactory;
         this.logger = logger;
         this.global = global;

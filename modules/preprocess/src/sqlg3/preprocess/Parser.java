@@ -12,9 +12,6 @@ final class Parser extends ParserBase {
 
     private static final String SQL_ANNOTATION = annotationName(Sql.class);
     private static final String QUERY_ANNOTATION = annotationName(Query.class);
-    private static final String STATEMENT_ANNOTATION = annotationName(Prepare.class);
-    private static final String KEY_STATEMENT_ANNOTATION = annotationName(PrepareKey.class);
-    private static final String CALL_ANNOTATION = annotationName(Call.class);
     private static final String BUSINESS_ANNOTATION = annotationName(Business.class);
     private static final String CHECK_PARAMS_ANNOTATION = annotationName(CheckParams.class);
     private static final String SQLG_ANNOTATION = annotationName(SQLG.class);
@@ -172,20 +169,14 @@ final class Parser extends ParserBase {
     }
 
     private AssignDescriptor parseStatement(String entryName, String lastSqlQuery,
-                                            boolean allowOutParams, String whatToCall, String addParameter, boolean onlySql) throws ParseException {
+                                            boolean allowOutParams, boolean onlySql) throws ParseException {
         if (lastSqlQuery == null)
             return null;
         AssignDescriptor desc = parseAssign();
         if (!(desc.from >= 0 && desc.to >= 0))
             return null;
-        String pred;
-        if (onlySql) {
-            pred = desc.assign + " ";
-        } else {
-            pred = desc.assign + " " + whatToCall + "(" + addParameter;
-        }
         QPParser appender = new QPParser(
-            allowOutParams, pred, onlySql, parameters, bindMap,
+            allowOutParams, desc.assign + " ", onlySql, parameters, bindMap,
             paramName -> ParamName.fromLocation(fullClassName, entryName, paramName)
         );
         BindVarCutPaste cp = appender.getStatementCutPaste(desc.from, desc.to, lastSqlQuery);
@@ -218,24 +209,6 @@ final class Parser extends ParserBase {
         }
     }
 
-    private String parseAutoKeys() {
-        skipSpaces();
-        String auto = null;
-        if (!eof() && get().getType() == Java8Lexer.LPAREN) {
-            next();
-            skipSpaces();
-            if (!eof()) {
-                Token t = get();
-                if (t.getType() == Java8Lexer.StringLiteral) {
-                    auto = t.getText().substring(1, t.getText().length() - 1);
-                    next();
-                }
-            }
-            skipTo(Java8Lexer.RPAREN);
-        }
-        return auto;
-    }
-
     private void parseMethodBody(String entryName) throws ParseException {
         int count = 1;
         String lastSqlQuery = null;
@@ -261,31 +234,9 @@ final class Parser extends ParserBase {
             } else if (id == Java8Lexer.AT) {
                 String annotation = getAnnotation();
                 if (QUERY_ANNOTATION.equals(annotation)) {
-                    parseStatement(entryName, lastSqlQuery, false, "createQueryPiece", "", false);
+                    parseStatement(entryName, lastSqlQuery, true, false);
                 } else if (SQL_ANNOTATION.equals(annotation)) {
-                    parseStatement(entryName, lastSqlQuery, true, null, "", true);
-                } else if (STATEMENT_ANNOTATION.equals(annotation)) {
-                    parseStatement(entryName, lastSqlQuery, false, "prepareStatement", "", false);
-                } else if (KEY_STATEMENT_ANNOTATION.equals(annotation)) {
-                    String auto = parseAutoKeys();
-                    String autoKeys;
-                    if (auto != null) {
-                        StringBuilder buf = new StringBuilder();
-                        StringTokenizer tok = new StringTokenizer(auto, ",");
-                        while (tok.hasMoreTokens()) {
-                            String col = tok.nextToken().trim();
-                            if (buf.length() > 0) {
-                                buf.append(", ");
-                            }
-                            buf.append("\"" + col + "\"");
-                        }
-                        autoKeys = "new String[] {" + buf + "}";
-                    } else {
-                        autoKeys = "ALL_KEYS";
-                    }
-                    parseStatement(entryName, lastSqlQuery, false, "prepareStatementKey", autoKeys + ", ", false);
-                } else if (CALL_ANNOTATION.equals(annotation)) {
-                    parseStatement(entryName, lastSqlQuery, true, "prepareCall", "", false);
+                    parseStatement(entryName, lastSqlQuery, true, true);
                 }
                 continue;
             }

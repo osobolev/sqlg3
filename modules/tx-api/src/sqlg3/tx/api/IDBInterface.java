@@ -1,4 +1,4 @@
-package sqlg3.core;
+package sqlg3.tx.api;
 
 import java.sql.SQLException;
 

@@ -1,7 +1,13 @@
 package sqlg3.remote.client;
 
-import sqlg3.core.*;
-import sqlg3.remote.common.*;
+import sqlg3.remote.common.IRemoteDBInterface;
+import sqlg3.remote.common.RemoteException;
+import sqlg3.remote.common.UnrecoverableRemoteException;
+import sqlg3.remote.common.WatcherThread;
+import sqlg3.tx.api.IDBCommon;
+import sqlg3.tx.api.IDBInterface;
+import sqlg3.tx.api.ISimpleTransaction;
+import sqlg3.tx.api.ITransaction;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
@@ -125,9 +131,7 @@ public final class SafeDBInterface implements IRemoteDBInterface {
                 return method.invoke(obj.get(), args);
             } catch (InvocationTargetException itex) {
                 Throwable ex = itex.getTargetException();
-                if (!(ex instanceof InformationException)) {
-                    resetConnection(ex instanceof UnrecoverableRemoteException);
-                }
+                resetConnection(ex instanceof UnrecoverableRemoteException);
                 throw ex;
             }
         }));

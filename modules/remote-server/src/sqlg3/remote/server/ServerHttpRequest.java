@@ -1,7 +1,7 @@
 package sqlg3.remote.server;
 
-import sqlg3.core.IDBCommon;
 import sqlg3.remote.common.HttpCommand;
+import sqlg3.tx.api.IDBCommon;
 
 public final class ServerHttpRequest {
 

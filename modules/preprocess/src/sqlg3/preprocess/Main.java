@@ -197,7 +197,7 @@ public final class Main {
         // 1. Parse & check modification time
         ParseContext pctx = new ParseContext(o.encoding);
         List<InputFile> inputs0 = getInputs(inputFiles, pctx);
-        if (inputs0.isEmpty()) // todo: remove this???
+        if (inputs0.isEmpty())
             return;
         if (o.unpreprocess) {
             for (InputFile input : inputs0) {

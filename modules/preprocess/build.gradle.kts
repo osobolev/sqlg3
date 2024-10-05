@@ -9,7 +9,7 @@ dependencies {
     api(project(":sqlg3-runtime"))
     implementation("org.antlr:antlr4-runtime:4.9.3")
 
-    manualRuntimeOnly("org.postgresql:postgresql:42.7.3")
+    manualRuntimeOnly("org.postgresql:postgresql:42.7.4")
 
     antlr("org.antlr:antlr4:4.9.3")
 }

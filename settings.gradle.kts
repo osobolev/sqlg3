@@ -10,7 +10,7 @@ fun add(name: String) {
     project(":$mname").name = "sqlg3-$name"
 }
 
-add("core")
+add("types")
 add("preprocess")
 add("preprocess-ant")
 add("remote-common")

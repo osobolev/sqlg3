@@ -4,5 +4,5 @@ plugins {
 }
 
 dependencies {
-    api(project(":sqlg3-core"))
+    api(project(":sqlg3-types"))
 }

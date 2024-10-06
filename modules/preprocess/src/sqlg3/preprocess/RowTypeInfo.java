@@ -1,6 +1,6 @@
 package sqlg3.preprocess;
 
-import sqlg3.core.MetaColumn;
+import sqlg3.types.MetaColumn;
 
 import java.util.ArrayList;
 import java.util.List;

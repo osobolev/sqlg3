@@ -1,4 +1,4 @@
-package sqlg3.core;
+package sqlg3.types;
 
 import java.io.Serializable;
 

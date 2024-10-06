@@ -29,7 +29,7 @@ public final class TransGlobalContext {
     }
 
     Class<?> getImpl(Class<?> iface) {
-        return implCache.computeIfAbsent(iface, i -> getImplClass(iface));
+        return implCache.computeIfAbsent(iface, TransGlobalContext::getImplClass);
     }
 
     private final List<SessionListener> sessionListeners = new ArrayList<>();

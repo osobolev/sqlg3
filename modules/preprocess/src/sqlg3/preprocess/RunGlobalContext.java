@@ -1,6 +1,5 @@
 package sqlg3.preprocess;
 
-import sqlg3.runtime.ConnectionUtil;
 import sqlg3.runtime.GTest;
 import sqlg3.runtime.RuntimeMapper;
 
@@ -46,12 +45,34 @@ final class RunGlobalContext implements AutoCloseable {
         this.tmpDir = o.tmpDir;
     }
 
+    private static Connection openConnection(String driver, String url, String user, String pass) throws SQLException {
+        if (driver != null) {
+            try {
+                Class.forName(driver);
+            } catch (ClassNotFoundException ex) {
+                throw new SQLException(ex);
+            }
+        }
+        Connection conn = DriverManager.getConnection(url, user, pass);
+        try {
+            conn.setAutoCommit(false);
+        } catch (SQLException ex) {
+            try {
+                conn.close();
+            } catch (SQLException ex2) {
+                ex.addSuppressed(ex2);
+            }
+            throw ex;
+        }
+        return conn;
+    }
+
     GTestImpl getTest() throws SQLException, ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
         if (test == null) {
             Mapper mapper = (Mapper) Class.forName(mapperClass).getDeclaredConstructor().newInstance();
             SqlChecker checker = (SqlChecker) Class.forName(checkerClass).getDeclaredConstructor().newInstance();
             RuntimeMapper runtimeMapper = (RuntimeMapper) Class.forName(runtimeMapperClass).getDeclaredConstructor().newInstance();
-            Connection connection = ConnectionUtil.openConnection(driverClass, url, user, pass);
+            Connection connection = openConnection(driverClass, url, user, pass);
             test = new GTestImpl(connection, checker, mapper, runtimeMapper, generatedIn, generatedOut);
             GTest.setTest(test);
         }

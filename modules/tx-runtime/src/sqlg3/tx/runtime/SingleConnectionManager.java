@@ -1,8 +1,7 @@
 package sqlg3.tx.runtime;
 
-import sqlg3.runtime.ConnectionUtil;
-
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
@@ -21,7 +20,25 @@ public class SingleConnectionManager implements ConnectionManager {
     }
 
     public static Connection openConnection(String driver, String url, String user, String pass) throws SQLException {
-        return ConnectionUtil.openConnection(driver, url, user, pass);
+        if (driver != null) {
+            try {
+                Class.forName(driver);
+            } catch (ClassNotFoundException ex) {
+                throw new SQLException(ex);
+            }
+        }
+        Connection conn = DriverManager.getConnection(url, user, pass);
+        try {
+            conn.setAutoCommit(false);
+        } catch (SQLException ex) {
+            try {
+                conn.close();
+            } catch (SQLException ex2) {
+                ex.addSuppressed(ex2);
+            }
+            throw ex;
+        }
+        return conn;
     }
 
     public static Connection openConnection(String url, String user, String pass) throws SQLException {

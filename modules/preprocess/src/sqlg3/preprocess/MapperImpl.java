@@ -1,7 +1,7 @@
 package sqlg3.preprocess;
 
-import sqlg3.core.SQLGException;
 import sqlg3.runtime.RuntimeMapper;
+import sqlg3.runtime.SQLGException;
 import sqlg3.runtime.TypeMapper;
 import sqlg3.runtime.queries.QueryParser;
 

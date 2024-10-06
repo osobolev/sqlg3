@@ -1,7 +1,6 @@
 package sqlg3.runtime;
 
-import sqlg3.core.MetaColumn;
-import sqlg3.core.SQLGException;
+import sqlg3.types.MetaColumn;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

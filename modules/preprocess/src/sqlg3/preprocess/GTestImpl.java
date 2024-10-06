@@ -1,9 +1,9 @@
 package sqlg3.preprocess;
 
-import sqlg3.core.SQLGException;
 import sqlg3.runtime.GTest;
 import sqlg3.runtime.Parameter;
 import sqlg3.runtime.RuntimeMapper;
+import sqlg3.runtime.SQLGException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

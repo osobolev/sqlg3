@@ -1,5 +1,7 @@
 package sqlg3.runtime;
 
+import sqlg3.types.SQLGException;
+
 import java.lang.reflect.Array;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;

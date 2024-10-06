@@ -1,5 +1,7 @@
 package sqlg3.runtime;
 
+import sqlg3.types.SQLGException;
+
 import java.sql.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

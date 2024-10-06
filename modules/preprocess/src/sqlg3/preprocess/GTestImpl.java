@@ -3,7 +3,7 @@ package sqlg3.preprocess;
 import sqlg3.runtime.GTest;
 import sqlg3.runtime.Parameter;
 import sqlg3.runtime.RuntimeMapper;
-import sqlg3.runtime.SQLGException;
+import sqlg3.types.SQLGException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

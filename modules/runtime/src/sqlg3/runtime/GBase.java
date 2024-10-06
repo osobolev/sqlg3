@@ -1,6 +1,7 @@
 package sqlg3.runtime;
 
 import sqlg3.runtime.queries.QueryParser;
+import sqlg3.types.SQLGException;
 
 import java.lang.reflect.Proxy;
 import java.sql.*;

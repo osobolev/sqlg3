@@ -1,4 +1,4 @@
-package sqlg3.runtime;
+package sqlg3.types;
 
 /**
  * SQLG runtime exception - is raised in case of internal errors.

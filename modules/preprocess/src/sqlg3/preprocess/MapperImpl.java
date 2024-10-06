@@ -1,9 +1,9 @@
 package sqlg3.preprocess;
 
 import sqlg3.runtime.RuntimeMapper;
-import sqlg3.runtime.SQLGException;
 import sqlg3.runtime.TypeMapper;
 import sqlg3.runtime.queries.QueryParser;
+import sqlg3.types.SQLGException;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;

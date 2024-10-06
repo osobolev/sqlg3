@@ -1,9 +1,11 @@
 package sqlg3.runtime;
 
 import sqlg3.types.MetaColumn;
+import sqlg3.types.SQLGException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -25,6 +27,7 @@ public final class GlobalContext {
     public final Map<String, Object> userData = new ConcurrentHashMap<>();
 
     private final ConcurrentMap<Class<?>, RowTypeFactory<?>> rowTypeFactoryCache = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Constructor<?>> constructorCache = new ConcurrentHashMap<>();
 
     public GlobalContext(DBSpecific db, RuntimeMapper mappers, SqlTrace trace) {
         this.db = db;
@@ -108,5 +111,18 @@ public final class GlobalContext {
     @SuppressWarnings("unchecked")
     <T> RowTypeFactory<T> getRowTypeFactory(Class<T> rowType, boolean meta) {
         return (RowTypeFactory<T>) rowTypeFactoryCache.computeIfAbsent(rowType, c -> createRowTypeFactory(c, meta, checkRowTypes));
+    }
+
+    public static Constructor<?> getDaoConstructor(Class<?> cls) {
+        try {
+            return cls.getConstructor(GContext.class);
+        } catch (NoSuchMethodException ex) {
+            throw new SQLGException("Cannot find GContext constructor for " + cls.getCanonicalName());
+        }
+    }
+
+    public Object newDaoInstance(Class<?> cls, Connection connection, Object userObject) throws Exception {
+        Constructor<?> constructor = constructorCache.computeIfAbsent(cls, GlobalContext::getDaoConstructor);
+        return constructor.newInstance(new GContext(this, userObject, connection));
     }
 }

@@ -1,8 +1,7 @@
 package sqlg3.tx.runtime;
 
-import sqlg3.core.SQLGException;
-import sqlg3.runtime.GContext;
 import sqlg3.tx.api.IDBCommon;
+import sqlg3.tx.api.SQLGCallException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -40,19 +39,18 @@ final class TransactionContext {
             Object result = null;
             Throwable error = null;
             try {
-                ImplCache cached = global.getImpl(iface);
-                Method daoMethod = cached.dao.getMethod(method.getName(), method.getParameterTypes());
+                Class<?> implClass = global.getImpl(iface);
+                Method daoMethod = implClass.getMethod(method.getName(), method.getParameterTypes());
                 if (session.beforeCall != null) {
                     session.beforeCall.check(daoMethod, args);
                 }
-                GContext ctx = new GContext(global.getGlobal(), session.getUserObject(), getConnection());
-                Object instance = cached.constructor.newInstance(ctx);
+                Object instance = global.toImpl.newInstance(implClass, getConnection(), session.getUserObject());
                 result = daoMethod.invoke(instance, args);
                 success = true;
             } catch (InvocationTargetException ex) {
                 error = ex.getTargetException();
             } catch (ReflectiveOperationException ex) {
-                error = new SQLGException("Error calling DAO method " + iface.getCanonicalName() + "." + method.getName(), ex);
+                error = new SQLGCallException("Error calling DAO method " + iface.getCanonicalName() + "." + method.getName(), ex);
             } catch (Throwable ex) {
                 error = ex;
             }

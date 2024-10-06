@@ -1,11 +1,8 @@
 package sqlg3.tx.runtime;
 
-import sqlg3.core.SQLGException;
-import sqlg3.runtime.GContext;
-import sqlg3.runtime.GlobalContext;
 import sqlg3.tx.api.Impl;
+import sqlg3.tx.api.SQLGCallException;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,31 +11,25 @@ import java.util.function.Consumer;
 
 public final class TransGlobalContext {
 
-    private final GlobalContext global;
+    final ImplConstructor toImpl;
 
-    private final ConcurrentMap<Class<?>, ImplCache> implCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<?>, Class<?>> implCache = new ConcurrentHashMap<>();
 
-    public TransGlobalContext(GlobalContext global) {
-        this.global = global;
+    public TransGlobalContext(ImplConstructor toImpl) {
+        this.toImpl = toImpl;
     }
 
-    public GlobalContext getGlobal() {
-        return global;
-    }
-
-    private static ImplCache createImpl(Class<?> iface) {
+    private static Class<?> getImplClass(Class<?> iface) {
         try {
             Impl sqlg = iface.getAnnotation(Impl.class);
-            Class<?> dao = iface.getClassLoader().loadClass(sqlg.value());
-            Constructor<?> constructor = dao.getConstructor(GContext.class);
-            return new ImplCache(dao, constructor);
-        } catch (ClassNotFoundException | NoSuchMethodException ex) {
-            throw new SQLGException("Cannot find implementation for " + iface.getCanonicalName());
+            return iface.getClassLoader().loadClass(sqlg.value());
+        } catch (ClassNotFoundException ex) {
+            throw new SQLGCallException("Cannot find implementation for " + iface.getCanonicalName());
         }
     }
 
-    ImplCache getImpl(Class<?> iface) {
-        return implCache.computeIfAbsent(iface, i -> createImpl(iface));
+    Class<?> getImpl(Class<?> iface) {
+        return implCache.computeIfAbsent(iface, i -> getImplClass(iface));
     }
 
     private final List<SessionListener> sessionListeners = new ArrayList<>();

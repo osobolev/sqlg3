@@ -6,7 +6,7 @@ import sqlg3.tx.api.ISimpleTransaction;
 import java.sql.Connection;
 
 /**
- * This class can be used to call SQLG code from JDBC code. If you have {@link Connection} instance then
+ * This class can be used to call transactional code from plain JDBC connection. If you have {@link Connection} instance then
  * you can retrieve business interface <code>ITest</code> in the following way:
  * <pre>
  * Connection conn = ...;

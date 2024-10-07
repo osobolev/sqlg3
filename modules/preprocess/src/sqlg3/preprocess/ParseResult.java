@@ -5,7 +5,7 @@ import java.util.Map;
 
 final class ParseResult {
 
-    final String text;
+    private final String text;
     final HeaderResult header;
     final List<MethodEntry> entries;
     final Map<ParamName, List<ParamCutPaste>> bindMap;

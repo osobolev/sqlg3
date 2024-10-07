@@ -108,7 +108,7 @@ public class Preprocess extends Task {
     }
 
     /**
-     * Sets subpackage name for row type implementation classes.
+     * Sets subpackage name for interface classes.
      */
     public void setIfacepack(String sub) {
         options.ifacePack = sub;

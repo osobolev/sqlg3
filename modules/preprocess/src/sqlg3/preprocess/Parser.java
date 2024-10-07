@@ -5,7 +5,6 @@ import sqlg3.annotations.*;
 import sqlg3.preprocess.lexer.Java8Lexer;
 
 import java.lang.annotation.Annotation;
-import java.nio.file.Path;
 import java.util.*;
 
 final class Parser extends ParserBase {
@@ -16,7 +15,6 @@ final class Parser extends ParserBase {
     private static final String CHECK_PARAMS_ANNOTATION = annotationName(CheckParams.class);
     private static final String SQLG_ANNOTATION = annotationName(SQLG.class);
 
-    private final Path file;
     private final String displayClassName;
     private final String fullClassName;
 
@@ -25,9 +23,8 @@ final class Parser extends ParserBase {
     private final List<ParamName> parameters = new ArrayList<>();
     private final List<CutPaste> fragments = new ArrayList<>();
 
-    Parser(Path file, String text, String displayClassName, String fullClassName) {
+    Parser(String text, String displayClassName, String fullClassName) {
         super(text);
-        this.file = file;
         this.displayClassName = displayClassName;
         this.fullClassName = fullClassName;
     }

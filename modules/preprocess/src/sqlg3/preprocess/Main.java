@@ -117,7 +117,7 @@ public final class Main {
 
         Parser newParser(Path file, String simpleClassName, String fullClassName) throws IOException {
             String text = FileUtils.readFile(file, encoding);
-            return new Parser(file, text, simpleClassName, fullClassName);
+            return new Parser(text, simpleClassName, fullClassName);
         }
     }
 

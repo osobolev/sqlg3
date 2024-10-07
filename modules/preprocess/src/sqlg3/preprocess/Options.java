@@ -15,6 +15,7 @@ public final class Options {
     public final ModifiedCheck checkTime;
     public final boolean unpreprocess;
     public final boolean addInterface;
+    public final boolean txrpc;
 
     public final Path srcRoot;
 
@@ -34,13 +35,14 @@ public final class Options {
     public final String log;
     public final String runtimeMapperClass;
 
-    Options(Path tmpDir, boolean cleanup, String classpath, ModifiedCheck checkTime, boolean unpreprocess, boolean addInterface, Path srcRoot, Path destRoot, String ifacePack, Charset encoding, int tabSize, String driverClass, String mapperClass, String checkerClass, String url, String user, String pass, SQLGWarn warn, String log, String runtimeMapperClass) {
+    Options(Path tmpDir, boolean cleanup, String classpath, ModifiedCheck checkTime, boolean unpreprocess, boolean addInterface, boolean txrpc, Path srcRoot, Path destRoot, String ifacePack, Charset encoding, int tabSize, String driverClass, String mapperClass, String checkerClass, String url, String user, String pass, SQLGWarn warn, String log, String runtimeMapperClass) {
         this.tmpDir = tmpDir;
         this.cleanup = cleanup;
         this.classpath = classpath;
         this.checkTime = checkTime;
         this.unpreprocess = unpreprocess;
         this.addInterface = addInterface;
+        this.txrpc = txrpc;
         this.srcRoot = srcRoot;
         this.destRoot = destRoot;
         this.ifacePack = ifacePack;

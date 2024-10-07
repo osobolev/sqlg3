@@ -334,7 +334,7 @@ public final class Main {
                 ToProcess src = input.src;
                 String ifaceText;
                 {
-                    CodeGenerator g = new CodeGenerator(tab, src.iface.simpleClassName, src.iface.pack);
+                    CodeGenerator g = new CodeGenerator(tab, src.iface.simpleClassName, src.iface.pack, o.txrpc);
                     g.start(rr.cls, src.parsed.header.javadoc);
                     for (RunMethod runMethod : rr.methods) {
                         MethodEntry entry = runMethod.entry;

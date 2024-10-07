@@ -80,6 +80,13 @@ public class Preprocess extends Task {
     }
 
     /**
+     * @param txrpc if generate txrpc annotations for interfaces
+     */
+    public void setTxrpc(boolean txrpc) {
+        options.txrpc = txrpc;
+    }
+
+    /**
      * Source files root. Package of class is determined relative to the source root.
      */
     public void setSrcroot(File srcroot) {

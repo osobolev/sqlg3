@@ -25,11 +25,13 @@ final class CodeGenerator {
     private final String tab;
     private final String interfaceName;
     private final String interfacePackage;
+    private final boolean txrpc;
 
-    CodeGenerator(String tab, String interfaceName, String interfacePackage) {
+    CodeGenerator(String tab, String interfaceName, String interfacePackage, boolean txrpc) {
         this.tab = tab;
         this.interfaceName = interfaceName;
         this.interfacePackage = interfacePackage;
+        this.txrpc = txrpc;
     }
 
     void start(Class<?> cls, String javadoc) {
@@ -39,8 +41,15 @@ final class CodeGenerator {
         }
         Class<?>[] ifaces = cls.getInterfaces();
         StringBuilder addIface = new StringBuilder();
+        if (txrpc) {
+            addIface.append(" extends txrpc.api.IDBCommon");
+        }
         for (Class<?> iface : ifaces) {
-            addIface.append(", ");
+            if (buf.length() > 0) {
+                addIface.append(", ");
+            } else {
+                addIface.append(" extends ");
+            }
             addIface.append(iface.getName());
         }
         buf.append(GENERATED_WARNING + "\n");
@@ -48,8 +57,10 @@ final class CodeGenerator {
             buf.append(javadoc).append("\n");
         }
         buf.append("@SuppressWarnings(\"UnnecessaryFullyQualifiedName\")\n");
-        buf.append("@sqlg3.tx.api.Impl(\"" + cls.getName() + "\")\n");
-        buf.append("public interface " + interfaceName + " extends sqlg3.tx.api.IDBCommon" + addIface + " {\n");
+        if (txrpc) {
+            buf.append("@txrpc.api.Impl(\"" + cls.getName() + "\")\n");
+        }
+        buf.append("public interface " + interfaceName + addIface + " {\n");
     }
 
     void addMethod(Method method, String javadoc) {

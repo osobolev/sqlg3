@@ -9,7 +9,7 @@ import java.io.Writer;
 public final class EolnWriter extends Writer {
 
     private static final char EOLN_IN = '\n';
-    private static final char[] EOLN_OUT = System.getProperty("line.separator").toCharArray();
+    private static final char[] EOLN_OUT = System.lineSeparator().toCharArray();
 
     private final Writer out;
 

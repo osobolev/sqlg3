@@ -38,9 +38,9 @@ public final class OptionsBuilder {
     public String log = null;
     public String runtimeMapperClass = RuntimeMapperImpl.class.getName();
 
-    public Options build() throws ParseException {
+    public Options build() throws PreprocessException {
         if (url == null) {
-            throw new ParseException("Property 'url' not set");
+            throw new PreprocessException("Property 'url' not set");
         }
         Path destRoot;
         if (this.destRoot == null) {

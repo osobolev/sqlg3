@@ -168,7 +168,7 @@ public final class Main {
         return inputs;
     }
 
-    public void workFiles(List<Path> inputFiles, List<String> javacOptions) throws Throwable {
+    public void doProcessFiles(List<Path> inputFiles) throws Throwable {
         // 1. Parse & check modification time
         ParseContext pctx = new ParseContext(o.encoding);
         List<InputFile> inputs = getInputs(inputFiles, pctx);
@@ -271,6 +271,34 @@ public final class Main {
                 Files.createDirectories(src.iface.path.getParent());
                 FileUtils.writeFile(src.iface.path, ifaceText, o.encoding);
             }
+        }
+    }
+
+    public void processFiles(List<Path> inputFiles) throws PreprocessException {
+        try {
+            doProcessFiles(inputFiles);
+        } catch (ParseException ex) {
+            throw new PreprocessException(ex.getMessage(), ex);
+        } catch (Throwable ex) {
+            StackTraceElement[] st = ex.getStackTrace();
+            int lastBase = -1;
+            for (int i = st.length - 1; i >= 0; i--) {
+                StackTraceElement element = st[i];
+                if (GBase.class.getName().equals(element.getClassName())) {
+                    lastBase = i;
+                    break;
+                }
+            }
+            String at;
+            if (lastBase >= 0 && lastBase < st.length - 1) {
+                StackTraceElement element = st[lastBase + 1];
+                String fileName = element.getFileName();
+                int line = element.getLineNumber();
+                at = fileName + ":" + line + ": ";
+            } else {
+                at = "";
+            }
+            throw new PreprocessException(at + ex.getMessage(), ex);
         }
     }
 }

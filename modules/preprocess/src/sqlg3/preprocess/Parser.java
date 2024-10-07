@@ -86,7 +86,7 @@ final class Parser extends ParserBase {
                     entryName = t.getText();
                 }
             } else if (id == Java8Lexer.SEMI) {
-                throw new ParseException("Unexpected semicolon", displayClassName + (entryName == null ? "" : "." + entryName));
+                throw new ParseException("Unexpected semicolon at " + displayClassName + (entryName == null ? "" : "." + entryName));
             }
             next();
         }

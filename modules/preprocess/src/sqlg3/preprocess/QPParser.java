@@ -124,7 +124,7 @@ final class QPParser {
                                 expr = parameter.substring(1);
                                 out = true;
                             } else {
-                                throw new ParseException("OUT parameters are not allowed for PreparedStatements", id.toString());
+                                throw new ParseException("OUT parameters are not allowed for PreparedStatements at " + id.toString());
                             }
                         } else {
                             expr = parameter;

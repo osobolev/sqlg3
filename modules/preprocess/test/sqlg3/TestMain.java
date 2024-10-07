@@ -32,6 +32,6 @@ final class TestMain {
 //        o.addInterface = true;
 //        List<Path> files = Collections.singletonList(o.srcRoot.resolve("danew/Example2.java"));
 
-        new Main(o.build()).workFiles(files, Collections.emptyList());
+        new Main(o.build()).doProcessFiles(files);
     }
 }

@@ -2,11 +2,12 @@ package sqlg3.preprocess.ant;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
-import org.apache.tools.ant.Location;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
-import sqlg3.preprocess.*;
-import sqlg3.runtime.GBase;
+import sqlg3.preprocess.Main;
+import sqlg3.preprocess.OptionsBuilder;
+import sqlg3.preprocess.PreprocessException;
+import sqlg3.preprocess.SQLGWarn;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -206,35 +207,9 @@ public class Preprocess extends Task {
         }
         options.javacOptions = javacOptions.stream().map(JavacOption::getArg).filter(Objects::nonNull).collect(Collectors.toList());
         try {
-            new Main(options.build()).workFiles(
-                files,
-                javacOptions.stream().map(JavacOption::getArg).filter(Objects::nonNull).collect(Collectors.toList())
-            );
-        } catch (ParseException ex) {
-            String at = ex.at;
-            if (at == null) {
-                throw new BuildException(ex.getMessage(), ex);
-            } else {
-                throw new BuildException(ex.getMessage(), ex, new Location(at));
-            }
-        } catch (Throwable ex) {
-            StackTraceElement[] st = ex.getStackTrace();
-            int lastBase = -1;
-            for (int i = st.length - 1; i >= 0; i--) {
-                StackTraceElement element = st[i];
-                if (GBase.class.getName().equals(element.getClassName())) {
-                    lastBase = i;
-                    break;
-                }
-            }
-            if (lastBase >= 0 && lastBase < st.length - 1) {
-                StackTraceElement element = st[lastBase + 1];
-                String fileName = element.getFileName();
-                int line = element.getLineNumber();
-                throw new BuildException(fileName + ":" + line + ": " + ex.getMessage(), ex);
-            } else {
-                throw new BuildException(ex);
-            }
+            new Main(options.build()).processFiles(files);
+        } catch (PreprocessException ex) {
+            throw new BuildException(ex.getMessage(), ex);
         }
     }
 }

@@ -41,35 +41,12 @@ public class Preprocess extends Task {
     }
 
     /**
-     * @param timestamp timestamp file for up-to-date checks
-     */
-    public void setTimestamp(String timestamp) {
-        options.timestamp = timestamp;
-    }
-
-    /**
      * CLASSPATH to be used during compilation of processed files.
      * Should include all required files referenced in processed files.
      * Usual CLASSPATH format.
      */
     public void setClasspath(String classpath) {
         options.classpath = classpath;
-    }
-
-    /**
-     * Sets timestamp filter mode.
-     * @param what
-     * one of the following values:
-     * <ul>
-     * <li>"all_if_any_changed" to compare timestamp of the source files and generated interfaces; if any source file is
-     * newer then all files are preprocessed (this is the default)</li>
-     * <li>"only_changed" to compare timestamp of the source files and generated interfaces; only modified source files
-     * are preprocessed</li>
-     * <li>"all_always" to always preprocess all files without timestamp check</li>
-     * </ul>
-     */
-    public void setWhat(ModifiedCheck what) {
-        options.checkTime = what;
     }
 
     /**

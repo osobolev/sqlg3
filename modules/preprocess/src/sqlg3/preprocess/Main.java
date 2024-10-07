@@ -1,13 +1,11 @@
 package sqlg3.preprocess;
 
 import sqlg3.runtime.GBase;
-import sqlg3.types.SQLGException;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
@@ -124,34 +122,13 @@ public final class Main {
     }
 
     private List<InputFile> getInputs(List<Path> inputFiles, ParseContext pctx) throws IOException, ParseException {
-        List<Path> allIn;
-        if (inputFiles.isEmpty()) {
-            allIn = new ArrayList<>();
-            FileUtils.listAllJavaFiles(o.srcRoot, allIn);
-        } else {
-            allIn = inputFiles;
-        }
-
         List<Path> in;
-        if (!o.unpreprocess && o.checkTime != ModifiedCheck.all_always) {
-            if (o.timestamp == null)
-                throw new SQLGException("Timestamp file required for up-to-date checks");
-            List<Path> modified = new ArrayList<>();
-            Path tsFile = Paths.get(o.timestamp);
-            for (Path file : allIn) {
-                if (FileUtils.isModified(file, tsFile)) {
-                    modified.add(file);
-                }
-            }
-            if (o.checkTime == ModifiedCheck.all_if_any_changed) {
-                in = modified.isEmpty() ? modified : allIn;
-            } else {
-                in = modified;
-            }
+        if (inputFiles.isEmpty()) {
+            in = new ArrayList<>();
+            FileUtils.listAllJavaFiles(o.srcRoot, in);
         } else {
-            in = allIn;
+            in = inputFiles;
         }
-
 
         List<JavaClassFile> javaFiles = new ArrayList<>(in.size());
         for (Path path : in) {
@@ -206,9 +183,6 @@ public final class Main {
                 if (src.ifaceCP != null) {
                     FileUtils.writeFile(input.file.path, src.ifaceCP.removeIface(), o.encoding);
                 }
-            }
-            if (o.timestamp != null) {
-                Files.deleteIfExists(Paths.get(o.timestamp));
             }
             return;
         }
@@ -296,11 +270,6 @@ public final class Main {
 
                 Files.createDirectories(src.iface.path.getParent());
                 FileUtils.writeFile(src.iface.path, ifaceText, o.encoding);
-            }
-
-            // 6. Touch timestamp file
-            if (o.timestamp != null) {
-                Files.write(Paths.get(o.timestamp), new byte[0]);
             }
         }
     }

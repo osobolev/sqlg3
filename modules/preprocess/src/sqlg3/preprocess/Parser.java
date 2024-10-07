@@ -403,6 +403,6 @@ final class Parser extends ParserBase {
             }
             next();
         }
-        return new ParseResult(file, text, header, entries, bindMap, parameters, fragments);
+        return new ParseResult(text, header, entries, bindMap, parameters, fragments);
     }
 }

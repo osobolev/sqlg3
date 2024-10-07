@@ -26,8 +26,7 @@ final class RunGlobalContext implements AutoCloseable {
     private final boolean cleanup;
     private final Path tmpDir;
 
-    final Map<Class<?>, List<RowTypeInfo>> generatedIn = new LinkedHashMap<>();
-    final Map<Class<?>, List<RowTypeInfo>> generatedOut = new LinkedHashMap<>();
+    final Map<Class<?>, List<RowTypeInfo>> generated = new LinkedHashMap<>();
 
     private GTestImpl test = null;
 
@@ -73,7 +72,7 @@ final class RunGlobalContext implements AutoCloseable {
             SqlChecker checker = (SqlChecker) Class.forName(checkerClass).getDeclaredConstructor().newInstance();
             RuntimeMapper runtimeMapper = (RuntimeMapper) Class.forName(runtimeMapperClass).getDeclaredConstructor().newInstance();
             Connection connection = openConnection(driverClass, url, user, pass);
-            test = new GTestImpl(connection, checker, mapper, runtimeMapper, generatedIn, generatedOut);
+            test = new GTestImpl(connection, checker, mapper, runtimeMapper, generated);
             GTest.setTest(test);
         }
         return test;

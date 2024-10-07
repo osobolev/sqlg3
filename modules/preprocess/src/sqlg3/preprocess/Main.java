@@ -109,8 +109,6 @@ public final class Main {
 
     private static final class ParseContext {
 
-        final Map<ClassName, RowTypeCutPaste> rowTypeMap = new HashMap<>();
-        final Set<String> parentClasses = new HashSet<>();
         final Charset encoding;
 
         ParseContext(Charset encoding) {
@@ -119,11 +117,7 @@ public final class Main {
 
         Parser newParser(Path file, String simpleClassName, String fullClassName) throws IOException {
             String text = FileUtils.readFile(file, encoding);
-            return new Parser(file, text, simpleClassName, fullClassName, rowTypeMap);
-        }
-
-        void parsedTopLevel(String fullClassName) {
-            parentClasses.add(fullClassName);
+            return new Parser(file, text, simpleClassName, fullClassName);
         }
     }
 
@@ -173,7 +167,6 @@ public final class Main {
             }
             ToProcess src;
             if (header != null) {
-                pctx.parsedTopLevel(file.fullClassName);
                 JavaClassFile iface = getInterface(file);
                 IfaceCutPaste ifaceCP;
                 if (o.addInterface) {
@@ -299,29 +292,7 @@ public final class Main {
 
             // 4. Generate row types
             String tab = o.getTab();
-            List<ParseResult> otherParents = new ArrayList<>();
-            for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : runGlobal.generatedIn.entrySet()) {
-                Class<?> cls = entry.getKey();
-                Class<?> parentClass = cls.getDeclaringClass();
-                String fullParentName = parentClass.getName();
-                if (pctx.parentClasses.contains(fullParentName))
-                    continue;
-                Path source = CodeGenerator.getSourceFile(parentClass, srcRoots);
-                Parser parser = pctx.newParser(source, parentClass.getSimpleName(), fullParentName);
-                pctx.parsedTopLevel(fullParentName);
-                otherParents.add(parser.parseAll(false));
-            }
-            for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : runGlobal.generatedIn.entrySet()) {
-                Class<?> cls = entry.getKey();
-                RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
-                Class<?> parentClass = cls.getDeclaringClass();
-                ClassName key = ClassName.nested(parentClass.getName(), cls.getSimpleName());
-                RowTypeCutPaste cp = pctx.rowTypeMap.get(key);
-                if (cp == null)
-                    throw new ParseException("Row type " + key + " definition not found");
-                cp.replaceTo = rowType.generateRowTypeBody(tab, tab, cls);
-            }
-            for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : runGlobal.generatedOut.entrySet()) {
+            for (Map.Entry<Class<?>, List<RowTypeInfo>> entry : runGlobal.generated.entrySet()) {
                 Class<?> cls = entry.getKey();
                 RowTypeInfo rowType = checkCompatibility(cls, entry.getValue());
                 String body = rowType.generateRowTypeBody("", tab, cls);
@@ -358,10 +329,6 @@ public final class Main {
 
                 Files.createDirectories(src.iface.path.getParent());
                 FileUtils.writeFile(src.iface.path, ifaceText, o.encoding);
-            }
-            for (ParseResult parsed : otherParents) {
-                String newText = parsed.doCutPaste();
-                FileUtils.writeFile(parsed.file, newText, o.encoding);
             }
         }
     }

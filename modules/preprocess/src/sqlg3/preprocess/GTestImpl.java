@@ -25,17 +25,15 @@ final class GTestImpl extends GTest {
     final SqlChecker checker;
     private final Mapper mapper;
     final RuntimeMapper mappers;
-    private final Map<Class<?>, List<RowTypeInfo>> generatedIn;
-    private final Map<Class<?>, List<RowTypeInfo>> generatedOut;
+    private final Map<Class<?>, List<RowTypeInfo>> generated;
 
     GTestImpl(Connection connection, SqlChecker checker, Mapper mapper, RuntimeMapper mappers,
-              Map<Class<?>, List<RowTypeInfo>> generatedIn, Map<Class<?>, List<RowTypeInfo>> generatedOut) {
+              Map<Class<?>, List<RowTypeInfo>> generated) {
         this.connection = connection;
         this.checker = checker;
         this.mapper = mapper;
         this.mappers = mappers;
-        this.generatedIn = generatedIn;
-        this.generatedOut = generatedOut;
+        this.generated = generated;
     }
 
     @Override
@@ -47,8 +45,6 @@ final class GTestImpl extends GTest {
     public void getRowTypeFields(Class<?> rowType, ResultSet rs, boolean meta) throws SQLException {
         List<ColumnInfo> columns = mapper.getFields(rs.getMetaData(), meta, mappers);
         RowTypeInfo info = new RowTypeInfo(displayEntryName, columns, meta);
-
-        Map<Class<?>, List<RowTypeInfo>> generated = rowType.getDeclaringClass() == null ? generatedOut : generatedIn;
         generated.computeIfAbsent(rowType, k -> new ArrayList<>()).add(info);
     }
 

@@ -19,19 +19,17 @@ final class Parser extends ParserBase {
     private final Path file;
     private final String displayClassName;
     private final String fullClassName;
-    private final Map<ClassName, RowTypeCutPaste> rowTypeMap;
 
     private final List<MethodEntry> entries = new ArrayList<>();
     private final Map<ParamName, List<ParamCutPaste>> bindMap = new HashMap<>();
     private final List<ParamName> parameters = new ArrayList<>();
     private final List<CutPaste> fragments = new ArrayList<>();
 
-    Parser(Path file, String text, String displayClassName, String fullClassName, Map<ClassName, RowTypeCutPaste> rowTypeMap) {
+    Parser(Path file, String text, String displayClassName, String fullClassName) {
         super(text);
         this.file = file;
         this.displayClassName = displayClassName;
         this.fullClassName = fullClassName;
-        this.rowTypeMap = rowTypeMap;
     }
 
     private static String annotationName(Class<? extends Annotation> cls) {
@@ -244,10 +242,8 @@ final class Parser extends ParserBase {
         }
     }
 
-    private void parseClass(String nestedClassName) {
-        int from = get().getStartIndex();
+    private void parseClass() {
         int count = 1;
-        int to = -1;
         while (!eof()) {
             Token t = get();
             if (t.getType() == Java8Lexer.LBRACE) {
@@ -255,24 +251,16 @@ final class Parser extends ParserBase {
             } else if (t.getType() == Java8Lexer.RBRACE) {
                 count--;
                 if (count <= 0) {
-                    to = t.getStartIndex();
                     next();
                     break;
                 }
             }
             next();
         }
-        if (from >= 0 && to >= 0) {
-            RowTypeCutPaste rowType = new RowTypeCutPaste(from, to, nestedClassName);
-            fragments.add(rowType);
-            rowTypeMap.put(ClassName.nested(fullClassName, nestedClassName), rowType);
-        }
     }
 
-    private void parseRecord(String recordName) {
-        int from = get().getStartIndex();
+    private void parseRecord() {
         int count = 1;
-        int to = -1;
         while (!eof()) {
             Token t = get();
             if (t.getType() == Java8Lexer.LPAREN) {
@@ -280,17 +268,11 @@ final class Parser extends ParserBase {
             } else if (t.getType() == Java8Lexer.RPAREN) {
                 count--;
                 if (count <= 0) {
-                    to = t.getStartIndex();
                     next();
                     break;
                 }
             }
             next();
-        }
-        if (from >= 0 && to >= 0) {
-            RowTypeCutPaste rowType = new RowTypeCutPaste(from, to, recordName);
-            fragments.add(rowType);
-            rowTypeMap.put(ClassName.nested(fullClassName, recordName), rowType);
         }
     }
 
@@ -418,10 +400,9 @@ final class Parser extends ParserBase {
                     if (!eof()) {
                         Token name = get();
                         if (name.getType() == Java8Lexer.Identifier) {
-                            String recordName = name.getText();
                             Token lpar = skipTo(Java8Lexer.LPAREN);
                             if (lpar != null && !eof()) {
-                                parseRecord(recordName);
+                                parseRecord();
                             }
                         }
                     }
@@ -438,10 +419,9 @@ final class Parser extends ParserBase {
                     if (!eof()) {
                         Token name = get();
                         if (name.getType() == Java8Lexer.Identifier) {
-                            String nestedClassName = name.getText();
                             Token lbrace = skipTo(Java8Lexer.LBRACE);
                             if (lbrace != null && !eof()) {
-                                parseClass(nestedClassName);
+                                parseClass();
                             }
                         }
                     }

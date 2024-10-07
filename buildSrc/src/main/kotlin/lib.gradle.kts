@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "io.github.osobolev.sqlg3"
-version = "3.0"
+version = "3.1"
 
 (publishing.publications["mavenJava"] as MavenPublication).pom {
     name.set("${project.group}:${project.name}")

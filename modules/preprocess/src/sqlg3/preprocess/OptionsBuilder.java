@@ -12,6 +12,7 @@ public final class OptionsBuilder {
 
     public Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"));
     public boolean cleanup = true;
+    public String timestamp = null;
     public String classpath = null;
     public ModifiedCheck checkTime = ModifiedCheck.all_if_any_changed;
     public boolean unpreprocess = false;
@@ -47,7 +48,7 @@ public final class OptionsBuilder {
             destRoot = this.destRoot;
         }
         return new Options(
-            tmpDir, cleanup, classpath, checkTime, unpreprocess, addInterface, txrpc, srcRoot, destRoot, ifacePack,
+            tmpDir, cleanup, timestamp, classpath, checkTime, unpreprocess, addInterface, txrpc, srcRoot, destRoot, ifacePack,
             encoding, tabSize, driverClass, mapperClass, checkerClass, url, user, pass, warn, log, runtimeMapperClass
         );
     }

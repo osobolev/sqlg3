@@ -41,6 +41,13 @@ public class Preprocess extends Task {
     }
 
     /**
+     * @param timestamp timestamp file for up-to-date checks
+     */
+    public void setTimestamp(String timestamp) {
+        options.timestamp = timestamp;
+    }
+
+    /**
      * CLASSPATH to be used during compilation of processed files.
      * Should include all required files referenced in processed files.
      * Usual CLASSPATH format.

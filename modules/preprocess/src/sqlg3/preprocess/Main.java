@@ -1,11 +1,13 @@
 package sqlg3.preprocess;
 
 import sqlg3.runtime.GBase;
+import sqlg3.types.SQLGException;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
@@ -122,35 +124,38 @@ public final class Main {
     }
 
     private List<InputFile> getInputs(List<Path> inputFiles, ParseContext pctx) throws IOException, ParseException {
-        List<Path> in;
+        List<Path> allIn;
         if (inputFiles.isEmpty()) {
-            in = new ArrayList<>();
-            FileUtils.listAllJavaFiles(o.srcRoot, in);
+            allIn = new ArrayList<>();
+            FileUtils.listAllJavaFiles(o.srcRoot, allIn);
         } else {
-            in = inputFiles;
+            allIn = inputFiles;
         }
+
+        List<Path> in;
+        if (!o.unpreprocess && o.checkTime != ModifiedCheck.all_always) {
+            if (o.timestamp == null)
+                throw new SQLGException("Timestamp file required for up-to-date checks");
+            List<Path> modified = new ArrayList<>();
+            Path tsFile = Paths.get(o.timestamp);
+            for (Path file : allIn) {
+                if (FileUtils.isModified(file, tsFile)) {
+                    modified.add(file);
+                }
+            }
+            if (o.checkTime == ModifiedCheck.all_if_any_changed) {
+                in = modified.isEmpty() ? modified : allIn;
+            } else {
+                in = modified;
+            }
+        } else {
+            in = allIn;
+        }
+
 
         List<JavaClassFile> javaFiles = new ArrayList<>(in.size());
         for (Path path : in) {
             javaFiles.add(getJavaClass(path));
-        }
-
-        if (!o.unpreprocess && o.checkTime != ModifiedCheck.all_always) {
-            Set<Path> candidateInterfaces = new HashSet<>(javaFiles.size());
-            Map<Path, Path> classToIface = new LinkedHashMap<>(javaFiles.size());
-            for (JavaClassFile file : javaFiles) {
-                JavaClassFile iface = getInterface(file);
-                candidateInterfaces.add(iface.path);
-                classToIface.put(file.path, iface.path);
-            }
-            classToIface.keySet().removeAll(candidateInterfaces);
-            boolean isAnyModified = FileUtils.isAnyModified(
-                classToIface.entrySet().stream(),
-                Map.Entry::getKey,
-                Map.Entry::getValue
-            );
-            if (!isAnyModified)
-                return Collections.emptyList();
         }
 
         List<InputFile> inputs = new ArrayList<>(javaFiles.size());
@@ -189,11 +194,11 @@ public final class Main {
     public void workFiles(List<Path> inputFiles, List<String> javacOptions) throws Throwable {
         // 1. Parse & check modification time
         ParseContext pctx = new ParseContext(o.encoding);
-        List<InputFile> inputs0 = getInputs(inputFiles, pctx);
-        if (inputs0.isEmpty())
+        List<InputFile> inputs = getInputs(inputFiles, pctx);
+        if (inputs.isEmpty())
             return;
         if (o.unpreprocess) {
-            for (InputFile input : inputs0) {
+            for (InputFile input : inputs) {
                 ToProcess src = input.src;
                 if (src == null)
                     continue;
@@ -202,49 +207,11 @@ public final class Main {
                     FileUtils.writeFile(input.file.path, src.ifaceCP.removeIface(), o.encoding);
                 }
             }
+            if (o.timestamp != null) {
+                Files.deleteIfExists(Paths.get(o.timestamp));
+            }
             return;
         }
-        List<InputFile> inputs;
-        switch (o.checkTime) {
-        case all_always:
-            inputs = inputs0;
-            break;
-        case all_if_any_changed:
-            boolean isAnyModified = FileUtils.isAnyModified(
-                inputs0.stream().filter(input -> input.src != null),
-                input -> input.file.path,
-                input -> input.src.iface.path
-            );
-            if (isAnyModified) {
-                inputs = inputs0;
-            } else {
-                inputs = Collections.emptyList();
-            }
-            break;
-        case only_changed:
-            List<InputFile> toProcess = new ArrayList<>(inputs0.size());
-            boolean anyModified = false;
-            for (InputFile input : inputs0) {
-                if (input.src != null) {
-                    if (FileUtils.isModified(input.file.path, input.src.iface.path)) {
-                        toProcess.add(input);
-                        anyModified = true;
-                    }
-                } else {
-                    toProcess.add(input);
-                }
-            }
-            if (anyModified) {
-                inputs = toProcess;
-            } else {
-                inputs = Collections.emptyList();
-            }
-            break;
-        default:
-            throw new IllegalArgumentException();
-        }
-        if (inputs.isEmpty())
-            return;
 
         List<Path> srcRoots = new ArrayList<>();
         srcRoots.add(o.srcRoot);
@@ -329,6 +296,11 @@ public final class Main {
 
                 Files.createDirectories(src.iface.path.getParent());
                 FileUtils.writeFile(src.iface.path, ifaceText, o.encoding);
+            }
+
+            // 6. Touch timestamp file
+            if (o.timestamp != null) {
+                Files.write(Paths.get(o.timestamp), new byte[0]);
             }
         }
     }

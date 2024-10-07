@@ -1,7 +1,7 @@
 package sqlg3.tx.runtime;
 
 import sqlg3.tx.api.IDBCommon;
-import sqlg3.tx.api.SQLGCallException;
+import sqlg3.tx.api.TxCallException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -50,7 +50,7 @@ final class TransactionContext {
             } catch (InvocationTargetException ex) {
                 error = ex.getTargetException();
             } catch (ReflectiveOperationException ex) {
-                error = new SQLGCallException("Error calling DAO method " + iface.getCanonicalName() + "." + method.getName(), ex);
+                error = new TxCallException("Error calling DAO method " + iface.getCanonicalName() + "." + method.getName(), ex);
             } catch (Throwable ex) {
                 error = ex;
             }

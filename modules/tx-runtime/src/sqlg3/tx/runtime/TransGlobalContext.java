@@ -24,7 +24,7 @@ public final class TransGlobalContext {
             Impl sqlg = iface.getAnnotation(Impl.class);
             return iface.getClassLoader().loadClass(sqlg.value());
         } catch (ClassNotFoundException ex) {
-            throw new SQLGCallException("Cannot find implementation for " + iface.getCanonicalName());
+            throw new TxCallException("Cannot find implementation for " + iface.getCanonicalName());
         }
     }
 

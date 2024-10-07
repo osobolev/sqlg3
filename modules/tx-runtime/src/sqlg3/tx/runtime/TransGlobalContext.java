@@ -1,7 +1,7 @@
 package sqlg3.tx.runtime;
 
 import sqlg3.tx.api.Impl;
-import sqlg3.tx.api.SQLGCallException;
+import sqlg3.tx.api.TxCallException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,9 +20,12 @@ public final class TransGlobalContext {
     }
 
     private static Class<?> getImplClass(Class<?> iface) {
+        Class<Impl> annotationClass = Impl.class;
+        Impl implAnnotation = iface.getAnnotation(annotationClass);
+        if (implAnnotation == null)
+            throw new TxCallException("No " + annotationClass.getCanonicalName() + " annotation found");
         try {
-            Impl sqlg = iface.getAnnotation(Impl.class);
-            return iface.getClassLoader().loadClass(sqlg.value());
+            return iface.getClassLoader().loadClass(implAnnotation.value());
         } catch (ClassNotFoundException ex) {
             throw new TxCallException("Cannot find implementation for " + iface.getCanonicalName());
         }

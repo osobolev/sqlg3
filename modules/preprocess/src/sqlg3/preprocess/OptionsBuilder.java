@@ -20,7 +20,7 @@ public final class OptionsBuilder {
     public Path srcRoot = Paths.get(".");
 
     public Path destRoot;
-    public String ifacePack = "api";
+    public String ifacePack = "./api";
 
     public Charset encoding = StandardCharsets.UTF_8;
     public int tabSize = 4;

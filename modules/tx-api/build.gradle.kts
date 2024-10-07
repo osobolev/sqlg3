@@ -1,4 +1,0 @@
-plugins {
-    `module-lib`
-    `lib`
-}

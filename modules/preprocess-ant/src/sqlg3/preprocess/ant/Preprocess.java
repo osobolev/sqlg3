@@ -204,7 +204,7 @@ public class Preprocess extends Task {
                 files.add(dir.resolve(srcFile));
             }
         }
-
+        options.javacOptions = javacOptions.stream().map(JavacOption::getArg).filter(Objects::nonNull).collect(Collectors.toList());
         try {
             new Main(options.build()).workFiles(
                 files,

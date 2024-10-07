@@ -220,7 +220,7 @@ public final class Main {
                     continue;
                 ParseResult parsed = src.parsed;
                 Class<?> cls = new ClassCompiler(tmpDir).compileAndLoad(
-                    srcRoots, compFiles[i], input.file.fullClassName, o.encoding, o.classpath, javacOptions
+                    srcRoots, compFiles[i], input.file.fullClassName, o.encoding, o.classpath, o.javacOptions
                 );
                 if (GBase.class.isAssignableFrom(cls)) {
                     MethodRunner runner = new MethodRunner(

@@ -7,12 +7,15 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class OptionsBuilder {
 
     public Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"));
     public boolean cleanup = true;
     public String classpath = null;
+    public List<String> javacOptions = new ArrayList<>();
     public boolean unpreprocess = false;
     public boolean addInterface = false;
     public boolean txrpc = true;
@@ -46,7 +49,7 @@ public final class OptionsBuilder {
             destRoot = this.destRoot;
         }
         return new Options(
-            tmpDir, cleanup, classpath, unpreprocess, addInterface, txrpc, srcRoot, destRoot, ifacePack,
+            tmpDir, cleanup, classpath, javacOptions, unpreprocess, addInterface, txrpc, srcRoot, destRoot, ifacePack,
             encoding, tabSize, driverClass, mapperClass, checkerClass, url, user, pass, warn, log, runtimeMapperClass
         );
     }

@@ -23,6 +23,11 @@ public final class QueryPiece implements QueryLike {
     }
 
     @Override
+    public CharSequence getSqlChars() {
+        return sql;
+    }
+
+    @Override
     public String getSql() {
         return sql;
     }
@@ -36,9 +41,9 @@ public final class QueryPiece implements QueryLike {
      * Concatenation of query pieces. Parameter <code>that</code> can contain nulls (they are ignored).
      * Line break is inserted between pieces.
      */
-    public QueryPiece add(QueryPiece... that) {
+    public QueryPiece add(QueryLike... that) {
         QueryBuilder buf = new QueryBuilder(this);
-        for (QueryPiece piece : that) {
+        for (QueryLike piece : that) {
             buf.append(piece);
         }
         return buf.toQuery();

@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  * in query (as <code>:paramName</code>) should be accessible as variables in the current scope.
  * <p>
  * You can use query pieces to build larger queries manually using {@link sqlg3.runtime.QueryBuilder} or methods
- * like {@link sqlg3.runtime.QueryPiece#add(sqlg3.runtime.QueryPiece...)}, but also you can reference query pieces in
+ * like {@link sqlg3.runtime.QueryPiece#add(sqlg3.runtime.QueryLike...)}, but also you can reference query pieces in
  * javadoc comments used for queries as <code>&amp;piece</code>, example:
  * <pre>
  * /**

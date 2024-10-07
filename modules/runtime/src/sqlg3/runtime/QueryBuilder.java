@@ -27,9 +27,14 @@ public final class QueryBuilder implements QueryLike {
     /**
      * @param piece initial query piece (not null)
      */
-    public QueryBuilder(QueryPiece piece) {
-        this.sql = new StringBuilder(piece.sql);
-        this.data = new ArrayList<>(Arrays.asList(piece.data));
+    public QueryBuilder(QueryLike piece) {
+        this.sql = new StringBuilder(piece.getSqlChars());
+        this.data = new ArrayList<>(piece.getParameters());
+    }
+
+    @Override
+    public CharSequence getSqlChars() {
+        return sql;
     }
 
     @Override
@@ -48,29 +53,7 @@ public final class QueryBuilder implements QueryLike {
     }
 
     /**
-     * Appends query piece. Parameter <code>that</code> can be null (then it is ignored).
-     * Line break is inserted between pieces, so it is safer to use than {@link #appendLit(QueryPiece)} for user.
-     */
-    public QueryBuilder append(QueryPiece that) {
-        if (that != null) {
-            append(that.sql, Arrays.asList(that.data), true);
-        }
-        return this;
-    }
-
-    /**
-     * Appends query piece. Parameter <code>that</code> can be null (then it is ignored).
-     * Nothing is inserted between pieces. Usually used by preprocessor-generated code.
-     */
-    public QueryBuilder appendLit(QueryPiece that) {
-        if (that != null) {
-            append(that.sql, Arrays.asList(that.data), false);
-        }
-        return this;
-    }
-
-    /**
-     * Same as {@link #append(QueryPiece)}
+     * Same as {@link #append(QueryLike)}
      */
     public QueryBuilder append(CharSequence sql, Parameter... params) {
         append(sql, Arrays.asList(params), true);
@@ -78,7 +61,18 @@ public final class QueryBuilder implements QueryLike {
     }
 
     /**
-     * Same as {@link #appendLit(QueryPiece)}
+     * Appends query piece. Parameter <code>that</code> can be null (then it is ignored).
+     * Line break is inserted between pieces, so it is safer to use than {@link #appendLit(QueryLike)} for user.
+     */
+    public QueryBuilder append(QueryLike that) {
+        if (that != null) {
+            append(that.getSqlChars(), that.getParameters(), true);
+        }
+        return this;
+    }
+
+    /**
+     * Same as {@link #appendLit(QueryLike)}
      */
     public QueryBuilder appendLit(CharSequence sql, Parameter... params) {
         append(sql, Arrays.asList(params), false);
@@ -86,23 +80,20 @@ public final class QueryBuilder implements QueryLike {
     }
 
     /**
-     * Appends query builder. Parameter <code>that</code> can be null (then it is ignored).
-     * Line break is inserted between pieces.
+     * Appends numeric query piece.
+     * Nothing is inserted between pieces. Usually used by preprocessor-generated code.
      */
-    public QueryBuilder append(QueryBuilder that) {
-        if (that != null) {
-            append(that.sql, that.data, true);
-        }
-        return this;
+    public QueryBuilder appendLit(Number sql) {
+        return appendLit(sql.toString());
     }
 
     /**
      * Appends query piece. Parameter <code>that</code> can be null (then it is ignored).
      * Nothing is inserted between pieces. Usually used by preprocessor-generated code.
      */
-    public QueryBuilder appendLit(QueryBuilder that) {
+    public QueryBuilder appendLit(QueryLike that) {
         if (that != null) {
-            append(that.sql, that.data, false);
+            append(that.getSqlChars(), that.getParameters(), false);
         }
         return this;
     }
@@ -138,14 +129,6 @@ public final class QueryBuilder implements QueryLike {
         } else {
             buf.append(sql);
         }
-    }
-
-    /**
-     * Appends numeric query piece.
-     * Nothing is inserted between pieces. Usually used by preprocessor-generated code.
-     */
-    public QueryBuilder appendLit(Number sql) {
-        return appendLit(sql.toString());
     }
 
     /**

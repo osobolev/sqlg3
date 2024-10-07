@@ -120,6 +120,7 @@ public class MapperImpl implements Mapper {
             return notNull ? int.class : Integer.class;
         case LONG:
             return notNull ? long.class : Long.class;
+        case FLOAT:
         default:
             return notNull ? double.class : Double.class;
         }

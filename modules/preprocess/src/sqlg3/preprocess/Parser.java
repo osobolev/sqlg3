@@ -242,30 +242,13 @@ final class Parser extends ParserBase {
         }
     }
 
-    private void parseClass() {
-        int count = 1;
+    private void pairBraces(int startCount) {
+        int count = startCount;
         while (!eof()) {
             Token t = get();
             if (t.getType() == Java8Lexer.LBRACE) {
                 count++;
             } else if (t.getType() == Java8Lexer.RBRACE) {
-                count--;
-                if (count <= 0) {
-                    next();
-                    break;
-                }
-            }
-            next();
-        }
-    }
-
-    private void parseRecord() {
-        int count = 1;
-        while (!eof()) {
-            Token t = get();
-            if (t.getType() == Java8Lexer.LPAREN) {
-                count++;
-            } else if (t.getType() == Java8Lexer.RPAREN) {
                 count--;
                 if (count <= 0) {
                     next();
@@ -371,8 +354,8 @@ final class Parser extends ParserBase {
                 if (annotations.contains(BUSINESS_ANNOTATION) || annotations.contains(CHECK_PARAMS_ANNOTATION)) {
                     if (!eof()) {
                         MethodEntry entry = parseMethodHeader(lastComment, annotations);
-                        parseMethodBody(entry == null ? identBeforeParen : entry.methodToCall);
                         if (entry != null) {
+                            parseMethodBody(entry.methodToCall);
                             entries.add(entry);
                         }
                     }
@@ -386,45 +369,31 @@ final class Parser extends ParserBase {
                 break;
             } else if (id == Java8Lexer.LBRACE) {
                 next();
-                parseMethodBody(identBeforeParen);
+                if (identBeforeParen != null) {
+                    parseMethodBody(identBeforeParen);
+                } else {
+                    pairBraces(1);
+                }
                 lastComment = null;
                 identBeforeParen = null;
                 prevNonWhitespace = null;
                 continue;
             } else if (id == Java8Lexer.LPAREN) {
                 identBeforeParen = lastIdent;
+            } else if (id == Java8Lexer.SEMI) {
+                identBeforeParen = null;
+            } else if (id == Java8Lexer.COMMENT) {
+                lastComment = t.getText();
             } else if (id == Java8Lexer.Identifier) {
                 if (isClassToken(t, prevNonWhitespace)) {
-                    next();
-                    skipSpaces();
-                    if (!eof()) {
-                        Token name = get();
-                        if (name.getType() == Java8Lexer.Identifier) {
-                            Token lpar = skipTo(Java8Lexer.LPAREN);
-                            if (lpar != null && !eof()) {
-                                parseRecord();
-                            }
-                        }
-                    }
+                    pairBraces(0);
                     prevNonWhitespace = null;
                     continue;
                 }
                 lastIdent = t.getText();
-            } else if (id == Java8Lexer.COMMENT) {
-                lastComment = t.getText();
             } else if (id == Java8Lexer.CLASS || id == Java8Lexer.INTERFACE) {
                 if (isClassToken(t, prevNonWhitespace)) {
-                    next();
-                    skipSpaces();
-                    if (!eof()) {
-                        Token name = get();
-                        if (name.getType() == Java8Lexer.Identifier) {
-                            Token lbrace = skipTo(Java8Lexer.LBRACE);
-                            if (lbrace != null && !eof()) {
-                                parseClass();
-                            }
-                        }
-                    }
+                    pairBraces(0);
                     prevNonWhitespace = null;
                     continue;
                 }

@@ -30,8 +30,4 @@ public final class MetaColumn implements Serializable {
         this.precision = precision;
         this.scale = scale;
     }
-
-    public int length() {
-        return length;
-    }
 }

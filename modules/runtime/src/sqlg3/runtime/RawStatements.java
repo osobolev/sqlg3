@@ -1,5 +1,6 @@
 package sqlg3.runtime;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -21,6 +22,12 @@ public final class RawStatements implements AutoCloseable {
         if (GBase.test != null) {
             GBase.test.checkSql(stmt, sql);
         }
+        return stmt;
+    }
+
+    public CallableStatement prepareCall(String sql) throws SQLException {
+        CallableStatement stmt = connection.prepareCall(sql);
+        toClose.add(stmt);
         return stmt;
     }
 

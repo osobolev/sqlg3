@@ -19,12 +19,12 @@ fun getMajorDepth(mod: ModuleComponentIdentifier): Int {
 tasks.withType(com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask::class).configureEach {
     resolutionStrategy {
         componentSelection {
-            all {
+            all(Action<com.github.benmanes.gradle.versions.updates.resolutionstrategy.ComponentSelectionWithCurrent> {
                 val majorDepth = getMajorDepth(candidate)
                 if (getMajor(candidate.version, majorDepth) != getMajor(currentVersion, majorDepth)) {
                     reject("Major update")
                 }
-            }
+            })
         }
     }
 }

@@ -1,5 +1,5 @@
 plugins {
-    id("com.github.ben-manes.versions") version "0.45.0"
+    id("com.github.ben-manes.versions") version "0.53.0"
 }
 
 fun getMajor(version: String, majorDepth: Int): String {

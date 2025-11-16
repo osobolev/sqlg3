@@ -21,10 +21,8 @@ tasks.register("lexer", JavaExec::class) {
     classpath = antlr
     args("-package", "sqlg3.preprocess.lexer", "-Xexact-output-dir", "-o", "src/sqlg3/preprocess/lexer", "-encoding", "UTF-8", "grammar/Java8Lexer.g4")
 }
-tasks {
-    withType(JavaCompile::class) {
-        dependsOn("lexer")
-    }
+tasks.withType(JavaCompile::class).configureEach {
+    dependsOn("lexer")
 }
 tasks.named("sourcesJar") {
     dependsOn("lexer")

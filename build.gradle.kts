@@ -13,7 +13,7 @@ fun getMajor(version: String, majorDepth: Int): String {
 
 fun getMajorDepth(mod: ModuleComponentIdentifier): Int {
     if (mod.group == "org.antlr") return 2
-    return 1
+    return 0
 }
 
 tasks.withType(com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask::class).configureEach {

@@ -12,7 +12,6 @@ fun getMajor(version: String, majorDepth: Int): String {
 }
 
 fun getMajorDepth(mod: ModuleComponentIdentifier): Int {
-    if (mod.group == "org.antlr") return 2
     return 0
 }
 

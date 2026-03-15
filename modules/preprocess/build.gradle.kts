@@ -7,11 +7,11 @@ val antlr by configurations.creating
 
 dependencies {
     api(project(":sqlg3-runtime"))
-    implementation("org.antlr:antlr4-runtime:4.9.3")
+    implementation("org.antlr:antlr4-runtime:4.13.2")
 
     manualRuntimeOnly("org.postgresql:postgresql:42.7.10")
 
-    antlr("org.antlr:antlr4:4.9.3")
+    antlr("org.antlr:antlr4:4.13.2")
 }
 
 tasks.register("lexer", JavaExec::class) {

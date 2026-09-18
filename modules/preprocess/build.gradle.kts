@@ -1,6 +1,6 @@
 plugins {
-    `module-lib`
-    `lib`
+    id("module-lib")
+    id("lib")
 }
 
 val antlr by configurations.creating

@@ -1,5 +1,5 @@
 plugins {
-    `lib`
+    id("lib")
 }
 
 dependencies {

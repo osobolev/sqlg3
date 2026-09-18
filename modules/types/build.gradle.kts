@@ -1,4 +1,4 @@
 plugins {
-    `module-lib`
-    `lib`
+    id("module-lib")
+    id("lib")
 }

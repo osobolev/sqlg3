@@ -3,7 +3,7 @@ plugins {
     id("lib")
 }
 
-val antlr by configurations.creating
+val antlr = configurations.create("antlr")
 
 dependencies {
     api(project(":sqlg3-runtime"))
